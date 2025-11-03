@@ -60,7 +60,7 @@ const MarketingCampaign = () => {
   const [codeFilter, setCodeFilter] = useState<string | undefined>(undefined);
   const [staffNameFilter, setStaffNameFilter] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
 
   // Fetch summary once
   useEffect(() => { dispatch(fetchReferralSummary()); }, [dispatch]);

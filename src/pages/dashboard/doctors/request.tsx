@@ -40,8 +40,7 @@ const VerificationRequest = () => {
   const [rowSelection, setRowSelection] = useState({});
   const [columnFilters, setColumnFilters] = useState<import('@tanstack/react-table').ColumnFiltersState>([]);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(storePageSize || 5);
-  // Removed filterStatus (filter UI removed)
+  const [pageSize, setPageSize] = useState(storePageSize || 10);
 
   // We can rely directly on Doctor type (updated to allow nullable isApproved & optional createdAt)
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
@@ -144,8 +143,8 @@ const VerificationRequest = () => {
       <div className="bg-gray-100 overflow-scroll h-full">
         <div className="lg:mx-8 mt-10 bg-white rounded-md flex flex-col mb-36">
           <div className="flex flex-wrap gap-4 justify-between items-center p-6">
-            <div className="flex items-center gap-8">
-              <h1 className="text-xl text-gray-800">
+            <div className="flex items-center flex-wrap gap-4 lg:gap-8">
+              <h1 className="text-xl text-gray-800 whitespace-nowrap">
                 Pending Doctor Approvals
               </h1>
               <input
@@ -153,7 +152,7 @@ const VerificationRequest = () => {
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="border rounded-lg hidden lg:block px-4 py-2 lg:w-96 lg:max-w-2xl focus:outline-none"
+                className="border rounded-lg hidden lg:block px-4 py-2 lg:w-72 xl:w-96 focus:outline-none"
               />
             </div>
             {/* Filter and export controls removed per request */}

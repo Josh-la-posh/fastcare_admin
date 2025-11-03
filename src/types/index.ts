@@ -81,6 +81,13 @@ export interface HospitalState {
   error: string | null;
    createLoading: boolean;
   createError: string | null;
+  // Pagination metadata for server-side hospital listing
+  totalCount?: number;
+  totalPages?: number;
+  currentPage?: number;
+  pageSize?: number;
+  hasNext?: boolean;
+  hasPrevious?: boolean;
 }
 
 

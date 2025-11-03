@@ -88,8 +88,8 @@ export const DashboardLayout = ({children, searchBar}: Props) => {
           icon: <User2 className='w-5 h-6'/>,
           url: '/doctors',
           children: [
-            {name: 'Verification request', url: '/doctors/request'},
             {name: 'All doctor', url: '/doctors/all-doctors'},
+            {name: 'Verification request', url: '/doctors/request'},
             // {name: 'Doctor detail', url: '/doctors/doctor-details'},
           ],
         },

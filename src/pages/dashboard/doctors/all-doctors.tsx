@@ -25,7 +25,8 @@ import {Loader} from '@/components/ui/loading';
 const AllDoctors = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);  
+  const [status, setStatus] = useState<number | ''>('');
 
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -34,13 +35,8 @@ const AllDoctors = () => {
     useSelector((state: RootState) => state.doctors);
 
   useEffect(() => {
-    // if you want API defaults on first load
-    if (page && pageSize) {
-      dispatch(fetchDoctors({page: page, pageSize: pageSize}));
-    } else {
-      dispatch(fetchDoctors()); // let API decide
-    }
-  }, [dispatch, page, pageSize]);
+    dispatch(fetchDoctors({ page, pageSize, status: status === '' ? undefined : status }));
+  }, [dispatch, page, pageSize, status]);
 
   const filteredDoctors = useMemo(() => {
     return doctors.filter(d => {
@@ -48,7 +44,6 @@ const AllDoctors = () => {
       const matchesName = searchTerm
         ? fullName.includes(searchTerm.toLowerCase())
         : true;
-
       return matchesName;
     });
   }, [doctors, searchTerm]);
@@ -77,7 +72,6 @@ const AllDoctors = () => {
       header: 'Status',
       cell: ({getValue}) => {
         const isAvailable = getValue() as boolean;
-
         const statusText = isAvailable ? 'Available' : 'Offline';
         const status = statusText.toLowerCase();
 
@@ -88,26 +82,6 @@ const AllDoctors = () => {
         return <span className={statusClasses}>{statusText}</span>;
       },
     },
-
-    // {
-    //   accessorKey: 'date',
-    //   header: 'Upcoming Appt',
-    //   cell: ({getValue}) => {
-    //     const value = getValue() as string;
-    //     const isPast = value?.toLowerCase().includes('ago');
-    //     return (
-    //       <span
-    //         className={
-    //           isPast
-    //             ? 'text-red-600 font-semibold'
-    //             : 'text-gray-700 font-semibold'
-    //         }
-    //       >
-    //         {value || '-'}
-    //       </span>
-    //     );
-    //   },
-    // },
     {
       id: 'action',
       header: 'Action',
@@ -130,33 +104,34 @@ const AllDoctors = () => {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  // const handleApplyFilter = (filters: any) => {
-  //   setSearchTerm(filters.name || '');
-  //   setFilterStatus(filters.status);
-  //   setPage(1);
-  // };
-
-  // const handleResetFilter = () => {
-  //   setSearchTerm('');
-  //   setFilterStatus(undefined);
-  //   setPage(1);
-  // };
-
   return (
     <DashboardLayout>
       <div className="bg-gray-100 overflow-scroll h-full">
         <div className="lg:mx-8 mt-10 bg-white rounded-md flex flex-col mb-36">
           {/* Header */}
           <div className="flex flex-wrap gap-4 justify-between items-center p-6">
-            <div className="flex items-center gap-8">
-              <h1 className="text-xl text-gray-800">All Doctors</h1>
+            <div className="flex items-center flex-wrap gap-4 lg:gap-8">
+              <h1 className="text-xl text-gray-800 whitespace-nowrap">All Doctors</h1>
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="border rounded-lg px-4 py-2 lg:w-96 lg:max-w-2xl focus:outline-none"
+                className="border rounded-lg px-4 py-2 lg:w-72 xl:w-96 focus:outline-none"
               />
+              <div className="flex items-center gap-2">
+                <label htmlFor="statusFilter" className="text-sm text-gray-600">Status:</label>
+                <select
+                  id="statusFilter"
+                  value={status}
+                  onChange={e => { const v = e.target.value; setStatus(v === '' ? '' : Number(v)); setPage(1); }}
+                  className="border rounded-md px-3 py-2 text-sm bg-white"
+                >
+                  <option value="">All</option>
+                  <option value="2">Approved</option>
+                  <option value="3">Rejected</option>
+                </select>
+              </div>
             </div>
             {/* <div className="flex gap-4 items-center mr-24">
               <AllDoctorFilter

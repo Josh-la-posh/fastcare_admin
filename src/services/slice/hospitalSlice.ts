@@ -10,6 +10,12 @@ const initialState: HospitalState = {
   error: null,
     createLoading: false,
   createError: null,
+  totalCount: 0,
+  totalPages: 1,
+  currentPage: 1,
+  pageSize: 10,
+  hasNext: false,
+  hasPrevious: false,
 };
 
 const hospitalSlice = createSlice({
@@ -29,7 +35,14 @@ const hospitalSlice = createSlice({
       })
       .addCase(fetchHospitals.fulfilled, (state, action) => {
         state.loading = false;
-        state.hospitals = action.payload;
+        // New structured payload with hospitals + meta
+        state.hospitals = action.payload.hospitals;
+        state.totalCount = action.payload.totalCount;
+        state.totalPages = action.payload.totalPages;
+        state.currentPage = action.payload.currentPage;
+        state.pageSize = action.payload.pageSize;
+        state.hasNext = action.payload.hasNext;
+        state.hasPrevious = action.payload.hasPrevious;
       })
       .addCase(fetchHospitals.rejected, (state, action) => {
         state.loading = false;

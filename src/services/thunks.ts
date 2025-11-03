@@ -77,10 +77,28 @@ export const createHospital = createAsyncThunk(
 
 export const fetchHospitals = createAsyncThunk(
   "hospitals/fetchAll",
-  async (_, { rejectWithValue }) => {
+  async (
+    params: { page?: number; pageSize?: number } | undefined,
+    { rejectWithValue }
+  ) => {
     try {
-      const res = await apiClient.get("/Hospitals");
-      return res.data; 
+      const { page, pageSize } = params || {};
+      const qs = new URLSearchParams();
+      if (page) qs.set('Page', String(page));
+      if (pageSize) qs.set('PageSize', String(pageSize));
+      const query = qs.toString();
+      const url = query ? `/Hospitals/paginated?${query}` : '/Hospitals/paginated';
+      const res = await apiClient.get(url);
+      const data = res.data?.data ?? [];
+      return {
+        hospitals: Array.isArray(data) ? data : [],
+        totalCount: res.data?.metaData?.totalCount ?? data.length,
+        totalPages: res.data?.metaData?.totalPages ?? 1,
+        currentPage: res.data?.metaData?.currentPage ?? (page ?? 1),
+        pageSize: res.data?.metaData?.pageSize ?? (pageSize ?? data.length),
+        hasNext: res.data?.metaData?.hasNext ?? false,
+        hasPrevious: res.data?.metaData?.hasPrevious ?? false,
+      };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to fetch hospitals"));
     }
@@ -188,14 +206,19 @@ export const updateHospitalFormData = createAsyncThunk(
 export const fetchDoctors = createAsyncThunk(
   'doctors/fetchDoctors',
   async (
-    params: { page?: number; pageSize?: number } | undefined,
+    params: { page?: number; pageSize?: number; status?: number } | undefined,
     { rejectWithValue }
   ) => {
     try {
-      const { page, pageSize } = params || {};
-      const res = await apiClient.get(
-        `/doctors?page=${page ?? ''}&pageSize=${pageSize ?? ''}`
-      );
+      const { page, pageSize, status } = params || {};
+      // Build query string conditionally
+      const qs = new URLSearchParams();
+      if (typeof status === 'number') qs.set('Status', String(status));
+      if (page) qs.set('Page', String(page));
+      if (pageSize) qs.set('PageSize', String(pageSize));
+      const query = qs.toString();
+      const endpoint = query ? `/doctors/filter-by-status?${query}` : '/doctors';
+      const res = await apiClient.get(endpoint);
       const data = res.data.data.flat();
       return {
         doctors: data,
@@ -214,10 +237,20 @@ export const fetchDoctors = createAsyncThunk(
 
 export const fetchPendingDoctors = createAsyncThunk(
  'doctors/fetchPendingDoctors',
-  async ({ page, pageSize }: { page: number; pageSize: number }, { rejectWithValue }) => {
+  async (
+    { page, pageSize, status }: { page: number; pageSize: number; status?: number | null },
+    { rejectWithValue }
+  ) => {
     try {
-      const res = await apiClient.get(`/doctors/pending-approval?page=${page}&pageSize=${pageSize}`);
-      const data = res.data.data.flat(); 
+      // Build query params only including status when provided (1,2,3)
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('pageSize', String(pageSize));
+      if (status) {
+        params.set('status', String(status));
+      }
+      const res = await apiClient.get(`/doctors/pending-approval?${params.toString()}`);
+      const data = res.data.data.flat();
       return {
         doctors: data,
         totalCount: res.data.metaData?.totalCount ?? data.length,

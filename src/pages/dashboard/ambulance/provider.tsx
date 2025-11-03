@@ -45,7 +45,7 @@ const Providers = () => {
   const [rowSelection, setRowSelection] = useState({});
   const [columnFilters, setColumnFilters] = useState<any[]>([]);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
   const [selectedProvider, setSelectedProvider] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
 

@@ -55,7 +55,7 @@ const Checkers = () => {
 
   // pagination (1-based)
   const [pageNumber, setPageNumber] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
 
   // persist API-level filters so paging reuses them
   const [apiFilters, setApiFilters] = useState<{ Status: number; PatientName?: string; Date?: string }>({

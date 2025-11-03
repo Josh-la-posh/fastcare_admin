@@ -95,7 +95,7 @@ const Refunds = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { refunds, loading, error, metaData, exporting } = useSelector((s: RootState) => s.refunds);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
   const [appliedFilters, setAppliedFilters] = useState<Record<string, unknown>>({});
   const hasAppliedFilters = useMemo(() => {
     return Object.values(appliedFilters).some(v => v !== undefined && v !== null && v !== '');

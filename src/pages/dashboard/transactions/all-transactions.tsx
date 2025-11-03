@@ -197,7 +197,7 @@ const AllTransactions = () => {
   });
 
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
   const [appliedFilters, setAppliedFilters] = useState<Record<string, unknown>>({});
 
   // Backend only expects Status as 'completed' or 'failed'. Map any user-chosen variant.

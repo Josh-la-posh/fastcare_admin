@@ -20,7 +20,6 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 
@@ -50,24 +49,29 @@ export const AllHospitals = () => {
     date?: string | null;
     id: string | number;
   }
-  // Column filters not used for search (handled manually)
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(5);
+  // Server-side pagination state (1-based page for backend)
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
   // get hospitals from redux
-  const {hospitals, loading, error} = useSelector(
+  const {hospitals, loading, error, totalCount, totalPages, currentPage, pageSize: storePageSize} = useSelector(
     (state: RootState) => state.hospitals,
   );
 
-  // fetch once
+  // Sync local pageSize with store (in case backend overrides)
   useEffect(() => {
-    if (!hospitals || !Array.isArray(hospitals) || !hospitals.length) {
-      dispatch(fetchHospitals());
+    if (storePageSize && storePageSize !== pageSize) {
+      setPageSize(storePageSize);
     }
-  }, [dispatch, hospitals]);
+  }, [storePageSize, pageSize]);
+
+  // Fetch hospitals whenever page or pageSize changes
+  useEffect(() => {
+    dispatch(fetchHospitals({ page, pageSize }));
+  }, [dispatch, page, pageSize]);
 
   // map into table data
   const mappedHospitals = useMemo(() => {
@@ -123,35 +127,18 @@ export const AllHospitals = () => {
     },
   ];
 
+  // Client-side table (no internal pagination since server-side is used)
   const table = useReactTable({
     data: mappedHospitals,
     columns,
-    state: {
-      sorting,
-      columnVisibility,
-      rowSelection,
-      pagination: {pageIndex, pageSize},
-    },
+    state: { sorting, columnVisibility, rowSelection },
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    onPaginationChange: updater => {
-      if (typeof updater === 'function') {
-        const newState = updater(table.getState().pagination);
-        setPageIndex(newState.pageIndex);
-        setPageSize(newState.pageSize);
-      } else {
-        setPageIndex(updater.pageIndex);
-        setPageSize(updater.pageSize);
-      }
-    },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
   });
-
-  const totalPages = table.getPageCount();
 
   return (
     <DashboardLayout>
@@ -282,15 +269,12 @@ export const AllHospitals = () => {
                 {/* Pagination */}
                 <div className="p-4 flex items-center justify-end">
                   <Pagination
-                    totalEntriesSize={table.getFilteredRowModel().rows.length}
-                    currentPage={pageIndex + 1}
-                    totalPages={totalPages}
+                    totalEntriesSize={totalCount ?? hospitals.length}
+                    currentPage={currentPage ?? page}
+                    totalPages={totalPages ?? 1}
                     pageSize={pageSize}
-                    onPageChange={p => setPageIndex(p - 1)}
-                    onPageSizeChange={size => {
-                      setPageSize(size); // update page size
-                      setPageIndex(0); // reset to first page
-                    }}
+                    onPageChange={(p) => setPage(p)}
+                    onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
                   />
                 </div>
               </>

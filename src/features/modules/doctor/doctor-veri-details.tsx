@@ -81,6 +81,24 @@ export default function DoctorVerificationDetails({data, open, setOpen}: Props) 
                           </Button>
                         </>
                       );
+                    } else if (statusRaw === 'approved') {
+                      return (
+                        <Button
+                          onClick={handleReject}
+                          className="py-2 w-28 bg-red-100 text-red-500 border border-red-500"
+                        >
+                          Reject
+                        </Button>
+                      )
+                    } else if (statusRaw === 'rejected') {
+                      return (
+                        <Button
+                          onClick={handleApprove}
+                          className="py-2 bg-green-500 w-28 border-none"
+                        >
+                          Approve
+                        </Button>
+                      )
                     }
                     // Badge display for terminal states
                     let label = data.registrationStatus || 'Pending';

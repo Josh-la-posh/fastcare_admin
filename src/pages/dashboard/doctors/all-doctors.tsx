@@ -26,7 +26,6 @@ const AllDoctors = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);  
-  const [status, setStatus] = useState<number | ''>('');
 
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -35,8 +34,8 @@ const AllDoctors = () => {
     useSelector((state: RootState) => state.doctors);
 
   useEffect(() => {
-    dispatch(fetchDoctors({ page, pageSize, status: status === '' ? undefined : status }));
-  }, [dispatch, page, pageSize, status]);
+    dispatch(fetchDoctors({ page, pageSize, status: 2 }));
+  }, [dispatch, page, pageSize]);
 
   const filteredDoctors = useMemo(() => {
     return doctors.filter(d => {
@@ -119,26 +118,7 @@ const AllDoctors = () => {
                 onChange={e => setSearchTerm(e.target.value)}
                 className="border rounded-lg px-4 py-2 lg:w-72 xl:w-96 focus:outline-none"
               />
-              <div className="flex items-center gap-2">
-                <label htmlFor="statusFilter" className="text-sm text-gray-600">Status:</label>
-                <select
-                  id="statusFilter"
-                  value={status}
-                  onChange={e => { const v = e.target.value; setStatus(v === '' ? '' : Number(v)); setPage(1); }}
-                  className="border rounded-md px-3 py-2 text-sm bg-white"
-                >
-                  <option value="">All</option>
-                  <option value="2">Approved</option>
-                  <option value="3">Rejected</option>
-                </select>
-              </div>
             </div>
-            {/* <div className="flex gap-4 items-center mr-24">
-              <AllDoctorFilter
-                onApply={handleApplyFilter}
-                onReset={handleResetFilter}
-              />
-            </div> */}
           </div>
 
           {/* Table */}

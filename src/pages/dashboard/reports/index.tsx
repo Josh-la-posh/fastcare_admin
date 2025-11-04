@@ -48,7 +48,7 @@ const UnifiedReports = () => {
   // Appointment table
   const apptColumns: ColumnDef<AppointmentRow>[] = [
     { accessorKey: 'date', header: 'Date', cell: ({ getValue }) => { const raw = getValue<string | null>(); return raw && raw.includes('T') ? raw.split('T')[0] : raw || '-'; } },
-    { accessorKey: 'doctorName', header: 'Doctor in charge', cell: ({ getValue }) => getValue<string | null>() || '-' },
+    // { accessorKey: 'doctorName', header: 'Doctor in charge', cell: ({ getValue }) => getValue<string | null>() || '-' },
     { accessorKey: 'patientName', header: 'Patient Name', cell: ({ getValue }) => getValue<string | null>() || '-' },
     { accessorKey: 'duration', header: 'Session Duration', cell: ({ getValue }) => getValue<string | null>() || '-' },
   ];

@@ -22,7 +22,7 @@ import {
 } from '@tanstack/react-table';
 import {useSelector, useDispatch} from 'react-redux';
 import {RootState, AppDispatch} from '@/services/store';
-import {fetchPendingDoctors} from '@/services/thunks';
+import {fetchDoctors} from '@/services/thunks';
 import {Pagination} from '@/components/ui/pagination';
 import DoctorVerificationDetails from '@/features/modules/doctor/doctor-veri-details';
 import {Loader} from '@/components/ui/loading';
@@ -30,7 +30,7 @@ import { Doctor } from '@/types';
 
 const VerificationRequest = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const {pendingDoctors, loading, error, totalCount, currentPage, totalPages, pageSize: storePageSize} = useSelector(
+  const {doctors, loading, error, totalCount, currentPage, totalPages, pageSize: storePageSize} = useSelector(
     (state: RootState) => state.doctors,
   );
 
@@ -41,20 +41,21 @@ const VerificationRequest = () => {
   const [columnFilters, setColumnFilters] = useState<import('@tanstack/react-table').ColumnFiltersState>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(storePageSize || 10);
+  const [status, setStatus] = useState<undefined | number>(undefined);
 
   // We can rely directly on Doctor type (updated to allow nullable isApproved & optional createdAt)
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [openVerify, setOpenVerify] = useState(false);
 
  useEffect(() => {
-   dispatch(fetchPendingDoctors({ page, pageSize }));
- }, [dispatch, page, pageSize]);
+   dispatch(fetchDoctors({ page, pageSize, status }));
+ }, [dispatch, page, pageSize, status]);
 
   const filteredDoctors = useMemo(() => {
-    if (!searchTerm) return pendingDoctors;
+    if (!searchTerm) return doctors;
     const term = searchTerm.toLowerCase();
-    return pendingDoctors.filter(d => `${d.firstName} ${d.lastName}`.toLowerCase().includes(term));
-  }, [pendingDoctors, searchTerm]);
+    return doctors.filter(d => `${d.firstName} ${d.lastName}`.toLowerCase().includes(term));
+  }, [doctors, searchTerm]);
 
   const columns: ColumnDef<Doctor>[] = [
     {
@@ -156,6 +157,21 @@ const VerificationRequest = () => {
               />
             </div>
             {/* Filter and export controls removed per request */}
+            
+            <div className="flex items-center gap-2">
+              <label htmlFor="statusFilter" className="text-sm text-gray-600">Status:</label>
+              <select
+                id="statusFilter"
+                value={status}
+                onChange={e => { const v = e.target.value; setStatus(v === '' ? undefined : Number(v)); setPage(1); }}
+                className="border rounded-md px-3 py-2 text-sm bg-white"
+              >
+                <option value="">All</option>
+                <option value="1">Pending</option>
+                <option value="2">Approved</option>
+                <option value="3">Rejected</option>
+              </select>
+            </div>
           </div>
 
           <div className="flex-1  lg:px-0 lg:mt-4">

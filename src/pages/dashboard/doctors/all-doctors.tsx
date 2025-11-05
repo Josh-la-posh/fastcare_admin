@@ -1,5 +1,5 @@
 import {DashboardLayout} from '@/layout/dashboard-layout';
-import {useEffect, useState, useMemo} from 'react';
+import {useEffect, useState} from 'react';
 import {
   Table,
   TableBody,
@@ -19,11 +19,14 @@ import {useNavigate} from 'react-router-dom';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/services/store';
 import {fetchDoctors} from '@/services/thunks';
+import { Button } from '@/components/ui/button';
 import {Doctor} from '@/types';
 import {Loader} from '@/components/ui/loading';
 
 const AllDoctors = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  // activeSearch is the term sent to backend; lets user type freely without triggering fetch each keystroke
+  const [activeSearch, setActiveSearch] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);  
 
@@ -34,18 +37,10 @@ const AllDoctors = () => {
     useSelector((state: RootState) => state.doctors);
 
   useEffect(() => {
-    dispatch(fetchDoctors({ page, pageSize, status: 2 }));
-  }, [dispatch, page, pageSize]);
+    dispatch(fetchDoctors({ page, pageSize, status: 2, search: activeSearch }));
+  }, [dispatch, page, pageSize, activeSearch]);
 
-  const filteredDoctors = useMemo(() => {
-    return doctors.filter(d => {
-      const fullName = `${d.firstName} ${d.lastName}`.toLowerCase();
-      const matchesName = searchTerm
-        ? fullName.includes(searchTerm.toLowerCase())
-        : true;
-      return matchesName;
-    });
-  }, [doctors, searchTerm]);
+  // Removed client-side filteredDoctors; using backend search instead
 
   const columns: ColumnDef<Doctor>[] = [
     {
@@ -98,7 +93,7 @@ const AllDoctors = () => {
   ];
 
   const table = useReactTable({
-    data: filteredDoctors,
+    data: doctors,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -116,8 +111,23 @@ const AllDoctors = () => {
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    setPage(1);
+                    setActiveSearch(searchTerm.trim() || undefined);
+                  }
+                }}
                 className="border rounded-lg px-4 py-2 lg:w-72 xl:w-96 focus:outline-none"
               />
+              <Button
+                onClick={() => {
+                  setPage(1);
+                  setActiveSearch(searchTerm.trim() || undefined);
+                }}
+                disabled={loading}
+              >
+                {loading ? 'Searching...' : 'Search'}
+              </Button>
             </div>
           </div>
 

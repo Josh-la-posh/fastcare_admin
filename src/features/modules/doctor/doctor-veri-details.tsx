@@ -64,9 +64,9 @@ export default function DoctorVerificationDetails({data, open, setOpen}: Props) 
             <div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  {data.profileImage ? (
+                  {data.photo ? (
                     <img
-                      src={data.profileImage}
+                      src={data.photo}
                       alt={data.name}
                       className="w-16 h-16 rounded-full object-cover border"
                     />

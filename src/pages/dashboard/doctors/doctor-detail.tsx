@@ -74,7 +74,7 @@ const DoctorDetails = () => {
             <div className="flex items-center gap-4">
               <Avatar className="w-14 h-14 rounded-lg">
                 <AvatarImage
-                  src={selectedDoctor?.profileImage || '/images/user.png'}
+                  src={selectedDoctor?.photo || '/images/user.png'}
                   alt="Doctor"
                 />
                 <AvatarFallback className="uppercase bg-primary text-white font-bold">

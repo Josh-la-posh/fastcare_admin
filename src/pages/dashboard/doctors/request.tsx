@@ -1,5 +1,5 @@
 import {DashboardLayout} from '@/layout/dashboard-layout';
-import {useState, useMemo, useEffect} from 'react';
+import {useState, useEffect} from 'react';
 import {Button} from '@/components/ui/button';
 import {
   Table,
@@ -35,6 +35,8 @@ const VerificationRequest = () => {
   );
 
   const [searchTerm, setSearchTerm] = useState('');
+  // activeSearch holds the term last sent to backend; decouples input typing from network calls
+  const [activeSearch, setActiveSearch] = useState<string | undefined>(undefined);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
@@ -48,14 +50,11 @@ const VerificationRequest = () => {
   const [openVerify, setOpenVerify] = useState(false);
 
  useEffect(() => {
-   dispatch(fetchDoctors({ page, pageSize, status }));
- }, [dispatch, page, pageSize, status]);
+   // Fetch doctors when page, pageSize or status changes; include activeSearch if present
+   dispatch(fetchDoctors({ page, pageSize, status, search: activeSearch }));
+ }, [dispatch, page, pageSize, status, activeSearch]);
 
-  const filteredDoctors = useMemo(() => {
-    if (!searchTerm) return doctors;
-    const term = searchTerm.toLowerCase();
-    return doctors.filter(d => `${d.firstName} ${d.lastName}`.toLowerCase().includes(term));
-  }, [doctors, searchTerm]);
+  // Removed client-side filteredDoctors; backend search used instead
 
   const columns: ColumnDef<Doctor>[] = [
     {
@@ -124,7 +123,7 @@ const VerificationRequest = () => {
   ];
 
   const table = useReactTable({
-    data: filteredDoctors,
+    data: doctors,
     columns,
     state: {sorting, columnVisibility, rowSelection, columnFilters},
     onSortingChange: setSorting,
@@ -153,8 +152,25 @@ const VerificationRequest = () => {
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    setPage(1);
+                    setActiveSearch(searchTerm.trim() || undefined);
+                  }
+                }}
                 className="border rounded-lg hidden lg:block px-4 py-2 lg:w-72 xl:w-96 focus:outline-none"
               />
+              <Button
+                variant="default"
+                className="hidden lg:inline-flex"
+                onClick={() => {
+                  setPage(1);
+                  setActiveSearch(searchTerm.trim() || undefined);
+                }}
+                disabled={loading}
+              >
+                {loading ? 'Searching...' : 'Search'}
+              </Button>
             </div>
             {/* Filter and export controls removed per request */}
             

@@ -125,44 +125,39 @@ export const exportHospitals = createAsyncThunk(
 );
 
 
-// Fetch hospital by ID
-export const fetchHospitalById = createAsyncThunk(
-  "hospitals/fetchById",
-  async (id: string, { rejectWithValue }) => {
-    try {
-      const res = await apiClient.get(`/Hospitals/${id}`);
-       return res.data; 
-    } catch (error) {
-      return rejectWithValue(getErrorMessage(error, "Failed to fetch hospital"));
+// Fetch doctors (supports optional Status & Search)
+export const fetchDoctors = createAsyncThunk(
+    'doctors/fetchDoctors',
+    async (
+      params: { page?: number; pageSize?: number; status?: number; search?: string } | undefined,
+      { rejectWithValue }
+    ) => {
+      try {
+        const { page, pageSize, status, search } = params || {};
+        const qs = new URLSearchParams();
+        if (typeof status === 'number') qs.set('Status', String(status));
+        if (search && search.trim()) qs.set('Search', search.trim());
+        if (page) qs.set('Page', String(page));
+        if (pageSize) qs.set('PageSize', String(pageSize));
+        const query = qs.toString();
+        const endpoint = query ? `/doctors/filter-by-status?${query}` : '/doctors';
+        const res = await apiClient.get(endpoint);
+        const data = res.data.data.flat();
+        return {
+          doctors: data,
+          totalCount: res.data.metaData?.totalCount ?? data.length,
+          totalPages: res.data.metaData?.totalPages ?? 1,
+          currentPage: res.data.metaData?.currentPage ?? 1,
+          pageSize: res.data.metaData?.pageSize ?? pageSize ?? data.length,
+          hasNext: res.data.metaData?.hasNext ?? false,
+          hasPrevious: res.data.metaData?.hasPrevious ?? false,
+        };
+      } catch (error) {
+        return rejectWithValue(getErrorMessage(error, 'Failed to fetch doctors'));
+      }
     }
-  }
-);
-
-// Activate hospital
-export const activateHospital = createAsyncThunk(
-  'hospitals/activate',
-  async (id: number | string, { rejectWithValue }) => {
-    try {
-      const res = await apiClient.put(`/Hospitals/${id}/activate`);
-      return res.data; // expect updated hospital
-    } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to activate hospital'));
-    }
-  }
-);
-
-// Deactivate hospital
-export const deactivateHospital = createAsyncThunk(
-  'hospitals/deactivate',
-  async (id: number | string, { rejectWithValue }) => {
-    try {
-      const res = await apiClient.put(`/Hospitals/${id}/deactivate`);
-      return res.data; // expect updated hospital or status
-    } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to deactivate hospital'));
-    }
-  }
-);
+  );
+// Removed orphaned deactivate hospital leftover lines from previous patch.
 
 
 // Using generic record type for hospital update to avoid any
@@ -203,37 +198,7 @@ export const updateHospitalFormData = createAsyncThunk(
   }
 );
 
-export const fetchDoctors = createAsyncThunk(
-  'doctors/fetchDoctors',
-  async (
-    params: { page?: number; pageSize?: number; status?: number } | undefined,
-    { rejectWithValue }
-  ) => {
-    try {
-      const { page, pageSize, status } = params || {};
-      // Build query string conditionally
-      const qs = new URLSearchParams();
-      if (typeof status === 'number') qs.set('Status', String(status));
-      if (page) qs.set('Page', String(page));
-      if (pageSize) qs.set('PageSize', String(pageSize));
-      const query = qs.toString();
-      const endpoint = query ? `/doctors/filter-by-status?${query}` : '/doctors';
-      const res = await apiClient.get(endpoint);
-      const data = res.data.data.flat();
-      return {
-        doctors: data,
-        totalCount: res.data.metaData?.totalCount ?? data.length,
-        totalPages: res.data.metaData?.totalPages ?? 1,
-        currentPage: res.data.metaData?.currentPage ?? 1,
-        pageSize: res.data.metaData?.pageSize ?? pageSize ?? data.length,
-        hasNext: res.data.metaData?.hasNext ?? false,
-        hasPrevious: res.data.metaData?.hasPrevious ?? false,
-      };
-    } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to fetch doctors'));
-    }
-  }
-);
+// Removed duplicate fetchDoctors without search support.
 
 export const fetchPendingDoctors = createAsyncThunk(
  'doctors/fetchPendingDoctors',

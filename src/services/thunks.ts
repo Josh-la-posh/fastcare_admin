@@ -105,6 +105,48 @@ export const fetchHospitals = createAsyncThunk(
   }
 );
 
+// Fetch a single hospital by ID
+export const fetchHospitalById = createAsyncThunk(
+  'hospitals/fetchById',
+  async (id: string | number, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get(`/Hospitals/${id}`);
+      const hospital = res.data?.data ?? res.data; // support either wrapped or direct response
+      return hospital;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to fetch hospital'));
+    }
+  }
+);
+
+// Activate hospital by ID
+export const activateHospital = createAsyncThunk(
+  'hospitals/activateHospital',
+  async (id: string | number, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/Hospitals/${id}/activate`);
+      const updated = res.data?.data ?? res.data;
+      return updated; // should include id & isActive true
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to activate hospital'));
+    }
+  }
+);
+
+// Deactivate hospital by ID
+export const deactivateHospital = createAsyncThunk(
+  'hospitals/deactivateHospital',
+  async (id: string | number, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/Hospitals/${id}/deactivate`);
+      const updated = res.data?.data ?? res.data;
+      return updated; // should include id & isActive false
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to deactivate hospital'));
+    }
+  }
+);
+
 // Export hospitals list (format: csv = 0, excel = 1)
 export const exportHospitals = createAsyncThunk(
   "hospitals/export",

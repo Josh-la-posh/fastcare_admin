@@ -23,6 +23,7 @@ export default function DoctorVerificationDetails({data, open, setOpen}: Props) 
   const [openConfirm, setOpenConfirm] = useState(false);
   const [openReject, setOpenReject] = useState(false);
   const [openLicense, setOpenLicense] = useState(false);
+  const [openPhoto, setOpenPhoto] = useState(false);
 
   const licenseDataUri = data?.licenseContent
     ? `data:${data.licenseType || 'image/jpeg'};base64,${data.licenseContent}`
@@ -65,11 +66,22 @@ export default function DoctorVerificationDetails({data, open, setOpen}: Props) 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   {data.photo ? (
-                    <img
-                      src={data.photo}
-                      alt={data.name}
-                      className="w-16 h-16 rounded-full object-cover border"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setOpenPhoto(true)}
+                      className="group relative focus:outline-none"
+                      aria-label="View profile photo full size"
+                      title="Click to enlarge"
+                    >
+                      <img
+                        src={data.photo}
+                        alt={data.name || 'Doctor profile photo'}
+                        className="w-16 h-16 rounded-full object-cover border group-hover:ring-2 group-hover:ring-primary/50 transition"
+                      />
+                      <span className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/20 flex items-center justify-center text-[10px] text-white font-medium opacity-0 group-hover:opacity-100 transition">
+                        View
+                      </span>
+                    </button>
                   ) : (
                     <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
                       No Photo
@@ -239,6 +251,52 @@ export default function DoctorVerificationDetails({data, open, setOpen}: Props) 
             </div>
           ) : (
             <p className="text-gray-500">No license document available.</p>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Full size profile photo preview modal */}
+      <Dialog open={openPhoto} onOpenChange={setOpenPhoto}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader className="flex w-full items-center justify-between">
+            <DialogTitle className="flex w-full items-center justify-between border-b">
+              <span className="text-gray-800 text-xl font-normal py-3">Profile Photo</span>
+              <button
+                onClick={() => setOpenPhoto(false)}
+                type="button"
+                className="p-1 border border-gray-300 rounded-full hover:bg-gray-100"
+              >
+                <X className="w-5 h-5 text-primary" />
+              </button>
+            </DialogTitle>
+          </DialogHeader>
+          {data?.photo ? (
+            <div className="space-y-4">
+              <img
+                src={data.photo}
+                alt={data.name || 'Doctor profile photo full size'}
+                className="w-full max-h-[70vh] object-contain rounded border"
+              />
+              <div className="flex gap-3">
+                <a
+                  href={data.photo}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-3 py-2 border text-sm rounded-md hover:bg-gray-50"
+                >
+                  Open in New Tab
+                </a>
+                <a
+                  href={data.photo}
+                  download={`doctor-photo-${data.id || 'profile'}`}
+                  className="inline-flex items-center px-3 py-2 border text-sm rounded-md hover:bg-gray-50"
+                >
+                  Download
+                </a>
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-500">No profile photo available.</p>
           )}
         </DialogContent>
       </Dialog>

@@ -22,6 +22,11 @@ export default function DoctorVerificationDetails({data, open, setOpen}: Props) 
  
   const [openConfirm, setOpenConfirm] = useState(false);
   const [openReject, setOpenReject] = useState(false);
+  const [openLicense, setOpenLicense] = useState(false);
+
+  const licenseDataUri = data?.licenseContent
+    ? `data:${data.licenseType || 'image/jpeg'};base64,${data.licenseContent}`
+    : undefined;
 
   const handleReject = () => {
     setOpen(false);
@@ -37,7 +42,7 @@ export default function DoctorVerificationDetails({data, open, setOpen}: Props) 
     <>
       <Dialog open={open} onOpenChange={setOpen}>
        
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-w-xl h-[99%] overflow-y-auto">
           <DialogHeader className="flex w-full items-center justify-between">
             <DialogTitle className="flex w-full items-center justify-between border-b">
               <span className="text-gray-800 text-xl font-normal py-3">
@@ -58,7 +63,20 @@ export default function DoctorVerificationDetails({data, open, setOpen}: Props) 
           {data ? (
             <div>
               <div className="flex items-center justify-between">
-                <h1 className="text-primary  text-xl">{data.name}</h1>
+                <div className="flex items-center gap-4">
+                  {data.profileImage ? (
+                    <img
+                      src={data.profileImage}
+                      alt={data.name}
+                      className="w-16 h-16 rounded-full object-cover border"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                      No Photo
+                    </div>
+                  )}
+                  <h1 className="text-primary  text-xl font-semibold">{data.name}</h1>
+                </div>
 
                 <div className="flex items-center gap-3">
                   {(() => {
@@ -140,6 +158,50 @@ export default function DoctorVerificationDetails({data, open, setOpen}: Props) 
                     {data.licenseExpirationDate || '--'}
                   </span>
                 </div>
+                {/* License document preview */}
+                {licenseDataUri ? (
+                  <div className="mt-6 space-y-3">
+                    <h2 className="text-primary border-b text-lg mb-2">License Document</h2>
+                    <div className="relative group">
+                      <img
+                        src={licenseDataUri}
+                        alt="Doctor License"
+                        className="w-full max-h-64 object-contain rounded border shadow-sm"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition" />
+                    </div>
+                    <div className="flex gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setOpenLicense(true)}
+                        className="text-sm"
+                      >
+                        View Full Size
+                      </Button>
+                      <a
+                        href={licenseDataUri}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-3 py-2 border text-sm rounded-md hover:bg-gray-50"
+                      >
+                        Open in New Tab
+                      </a>
+                      {/* <a
+                        href={licenseDataUri}
+                        download={`license-${data.id}`}
+                        className="inline-flex items-center px-3 py-2 border text-sm rounded-md hover:bg-gray-50"
+                      >
+                        Download
+                      </a> */}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-6">
+                    <h2 className="text-primary border-b text-lg mb-2">License Document</h2>
+                    <p className="text-gray-500 text-sm">No license document uploaded.</p>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -151,6 +213,35 @@ export default function DoctorVerificationDetails({data, open, setOpen}: Props) 
       <Confirm open={openConfirm} setOpen={setOpenConfirm} data={data} />
 
       <Reject open={openReject} setOpen={setOpenReject} data={data} />
+
+      {/* Full size license preview modal */}
+      <Dialog open={openLicense} onOpenChange={setOpenLicense}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader className="flex w-full items-center justify-between">
+            <DialogTitle className="flex w-full items-center justify-between border-b">
+              <span className="text-gray-800 text-xl font-normal py-3">License Document Preview</span>
+              <button
+                onClick={() => setOpenLicense(false)}
+                type="button"
+                className="p-1 border border-gray-300 rounded-full hover:bg-gray-100"
+              >
+                <X className="w-5 h-5 text-primary" />
+              </button>
+            </DialogTitle>
+          </DialogHeader>
+          {licenseDataUri ? (
+            <div className="w-full">
+              <img
+                src={licenseDataUri}
+                alt="Doctor License Full"
+                className="w-full max-h-[70vh] object-contain rounded border"
+              />
+            </div>
+          ) : (
+            <p className="text-gray-500">No license document available.</p>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

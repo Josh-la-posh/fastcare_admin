@@ -123,7 +123,17 @@ const UnifiedReports = () => {
                       </TableHeader>
                       <TableBody>
                         {userTable.getRowModel().rows.map(r => (
-                          <TableRow key={r.id}>
+                          <TableRow
+                            key={r.id}
+                            onClick={() => {
+                              const dateVal = (r.original as UserReportRow).date;
+                              if (dateVal) {
+                                navigate(`/reports/users/user-details/${encodeURIComponent(dateVal)}`);
+                              }
+                            }}
+                            className="cursor-pointer hover:bg-gray-50"
+                            title="View user details for this date"
+                          >
                             {r.getVisibleCells().map(c => (
                               <TableCell key={c.id}>{flexRender(c.column.columnDef.cell, c.getContext())}</TableCell>
                             ))}

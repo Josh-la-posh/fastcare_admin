@@ -310,7 +310,7 @@ export const disapproveDoctor = createAsyncThunk(
   ) => {
     const { doctorId, reason } = payload;
     try {
-      const res = await apiClient.put(`/doctors/${doctorId}/disapprove`, { reason });
+      const res = await apiClient.put(`/doctors/${doctorId}/disapprove`, {  RejectionReason: reason });
       return res.data; // updated doctor object expected
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Disapproval failed"));

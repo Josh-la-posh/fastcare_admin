@@ -10,6 +10,7 @@ import {useState} from 'react';
 import Confirm from './confirm';
 import Reject from './reject';
 import {Doctor} from '@/types';
+import {normalizeImageSrc} from '@/utils/imgFormatter';
 
 type Props = {
   data?: Doctor;
@@ -28,6 +29,8 @@ export default function DoctorVerificationDetails({data, open, setOpen}: Props) 
   const licenseDataUri = data?.licenseContent
     ? `data:${data.licenseType || 'image/jpeg'};base64,${data.licenseContent}`
     : undefined;
+
+  const imgSrc = normalizeImageSrc(data?.photo);
 
   const handleReject = () => {
     setOpen(false);
@@ -74,9 +77,10 @@ export default function DoctorVerificationDetails({data, open, setOpen}: Props) 
                       title="Click to enlarge"
                     >
                       <img
-                        src={data.photo}
+                        src={imgSrc || ''}
                         alt={data.name || 'Doctor profile photo'}
                         className="w-16 h-16 rounded-full object-cover border group-hover:ring-2 group-hover:ring-primary/50 transition"
+                        referrerPolicy="no-referrer"
                       />
                       <span className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/20 flex items-center justify-center text-[10px] text-white font-medium opacity-0 group-hover:opacity-100 transition">
                         View

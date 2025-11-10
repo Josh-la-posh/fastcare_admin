@@ -34,7 +34,7 @@ const UnifiedReports = () => {
   const { list: emergencyList, metaData: emergencyMeta, loading: emergencyLoading, error: emergencyError, filters: emergencyFilters } = useSelector((s: RootState) => s.emergencyReports);
 
   // Fetch users & appointments when their pagination changes
-  useEffect(() => { dispatch(fetchUserReports({ Page: userFilters.Page || 1, PageSize: userFilters.PageSize || 20 })); }, [dispatch, userFilters.Page, userFilters.PageSize]);
+  useEffect(() => { dispatch(fetchUserReports({ Page: userFilters.Page || 1, PageSize: userFilters.PageSize || 10 })); }, [dispatch, userFilters.Page, userFilters.PageSize]);
   useEffect(() => { dispatch(fetchAppointmentReports({ ...apptFilters })); }, [dispatch, apptFilters]);
 
   // Users table
@@ -85,7 +85,7 @@ const UnifiedReports = () => {
 
   return (
     <DashboardLayout>
-      <div className="bg-gray-100 h-full overflow-auto">
+      <div className="bg-gray-100 h-screen pb-20 overflow-auto">
         <div className="mx-4 md:mx-8 mt-10 bg-white rounded-md px-2 py-6 lg:p-6">
           <h1 className="text-xl font-semibold text-gray-800 mb-4">Reports</h1>
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
@@ -101,16 +101,16 @@ const UnifiedReports = () => {
             </TabsList>
 
             <TabsContent value="signup" className="focus:outline-none" hidden={activeTab !== 'signup'}>
-              <div className="flex flex-col h-[600px]">
-                <div className="flex-1 overflow-auto">
-                  {userLoading ? (
-                    <div className="flex items-center justify-center h-64 text-sm text-gray-500">Loading signup reports...</div>
-                  ) : userEmpty ? (
-                    <div className="flex flex-col items-center justify-center h-64 text-gray-600">
-                      <p className="font-medium">No signup report data yet</p>
-                      <p className="text-sm">Reports will appear once users register.</p>
-                    </div>
-                  ) : (
+              <div className="flex-1 h-full overflow-y-scroll">
+                {userLoading ? (
+                  <div className="flex items-center justify-center h-64 text-sm text-gray-500">Loading signup reports...</div>
+                ) : userEmpty ? (
+                  <div className="flex flex-col items-center justify-center h-64 text-gray-600">
+                    <p className="font-medium">No signup report data yet</p>
+                    <p className="text-sm">Reports will appear once users register.</p>
+                  </div>
+                ) : (
+                  <div className="h-full overflow-auto">
                     <Table className="min-w-[600px]">
                       <TableHeader>
                         {userTable.getHeaderGroups().map(hg => (
@@ -141,19 +141,19 @@ const UnifiedReports = () => {
                         ))}
                       </TableBody>
                     </Table>
-                  )}
-                  {userError && <div className="p-4 text-sm text-red-600">{userError}</div>}
-                </div>
-                <div className="p-4 flex items-center justify-end">
-                  <Pagination
-                    totalEntriesSize={userMeta?.totalCount || userList.length}
-                    currentPage={userFilters.Page || 1}
-                    totalPages={userMeta?.totalPages || 1}
-                    onPageChange={p => dispatch(setReportPage(p))}
-                    pageSize={userFilters.PageSize || 20}
-                    onPageSizeChange={s => dispatch(setReportPageSize(s))}
-                  />
-                </div>
+                    <div className="p-4 flex items-center justify-end">
+                      <Pagination
+                        totalEntriesSize={userMeta?.totalCount || userList.length}
+                        currentPage={userFilters.Page || 1}
+                        totalPages={userMeta?.totalPages || 1}
+                        onPageChange={p => dispatch(setReportPage(p))}
+                        pageSize={userFilters.PageSize || 20}
+                        onPageSizeChange={s => dispatch(setReportPageSize(s))}
+                      />
+                    </div>
+                  </div>
+                )}
+                {userError && <div className="p-4 text-sm text-red-600">{userError}</div>}
               </div>
             </TabsContent>
 

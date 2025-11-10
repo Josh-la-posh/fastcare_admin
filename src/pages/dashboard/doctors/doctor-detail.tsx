@@ -11,6 +11,7 @@ import {AppDispatch, RootState} from '@/services/store';
 import {fetchDoctorById, fetchDoctorDashboardById} from '@/services/thunks';
 import {Loader} from '@/components/ui/loading';
 import DelectDoctor from '@/features/modules/doctor/delete';
+import { normalizeImageSrc } from '@/utils/imgFormatter';
 
 const DoctorDetails = () => {
   const [open, setOpen] = useState(false);
@@ -49,6 +50,8 @@ const DoctorDetails = () => {
   }, [activeTab, setSearchParams]);
 
   const navigate = useNavigate()
+  
+  const photoSrc = selectedDoctor?.photo !== null ? normalizeImageSrc(selectedDoctor?.photo) : normalizeImageSrc(selectedDoctor?.profileImage);
 
   return (
     <DashboardLayout>
@@ -74,7 +77,7 @@ const DoctorDetails = () => {
             <div className="flex items-center gap-4">
               <Avatar className="w-14 h-14 rounded-lg">
                 <AvatarImage
-                  src={selectedDoctor?.profileImage || '/images/user.png'}
+                  src={photoSrc || '/images/user.png'}
                   alt="Doctor"
                 />
                 <AvatarFallback className="uppercase bg-primary text-white font-bold">

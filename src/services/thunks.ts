@@ -343,6 +343,34 @@ export const deleteDoctor = createAsyncThunk(
   }
 );
 
+// Activate doctor by ID
+export const activateDoctor = createAsyncThunk(
+  'doctors/activateDoctor',
+  async (id: string | number, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/doctors/${id}/activate`);
+      const updated = res.data?.data ?? res.data;
+      return updated; // should include id & isActive true
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to activate doctor'));
+    }
+  }
+);
+
+// Deactivate doctor by ID
+export const deactivateDoctor = createAsyncThunk(
+  'doctors/deactivateDoctor',
+  async (id: string | number, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/doctors/${id}/deactivate`);
+      const updated = res.data?.data ?? res.data;
+      return updated; // should include id & isActive false
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to deactivate doctor'));
+    }
+  }
+);
+
 export const fetchFAQs = createAsyncThunk(
   "faq/fetchFAQs",
   async (_, { rejectWithValue }) => {

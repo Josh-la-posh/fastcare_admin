@@ -11,10 +11,12 @@ import {AppDispatch, RootState} from '@/services/store';
 import {fetchDoctorById, fetchDoctorDashboardById} from '@/services/thunks';
 import {Loader} from '@/components/ui/loading';
 import DelectDoctor from '@/features/modules/doctor/delete';
+import ToggleDoctorStatus from '@/features/modules/doctor/toggle-status';
 import { normalizeImageSrc } from '@/utils/imgFormatter';
 
 const DoctorDetails = () => {
   const [open, setOpen] = useState(false);
+  const [showToggle, setShowToggle] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') || 'information';
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -107,11 +109,11 @@ const DoctorDetails = () => {
             </div>
 
             <Button
-              onClick={() => setOpen(true)}
-              variant="destructive"
+              onClick={() => setShowToggle(true)}
+              variant={selectedDoctor?.isActive ? 'destructive' : 'default'}
               className="py-3 rounded-md"
             >
-              Delete account
+              {selectedDoctor?.isActive ? 'Deactivate Doctor' : 'Activate Doctor'}
             </Button>
           </div>
 
@@ -170,6 +172,17 @@ const DoctorDetails = () => {
       )}
 
       <DelectDoctor open={open} setOpen={setOpen} data={selectedDoctor} />
+      
+      {selectedDoctor && (
+        <ToggleDoctorStatus
+          open={showToggle}
+          setOpen={setShowToggle}
+          doctorId={selectedDoctor.id}
+          doctorUserId={id!}
+          isActive={selectedDoctor.isActive}
+          doctorName={`${selectedDoctor.firstName} ${selectedDoctor.lastName}`}
+        />
+      )}
     </DashboardLayout>
   );
 };

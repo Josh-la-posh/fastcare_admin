@@ -59,6 +59,7 @@ export const ReportingFilter = ({onApply, onReset}: any) => {
               className="border border-gray-300 rounded-md py-2 px-3 w-full outline-none"
               value={startDate ?? ''}
               onChange={e => setStartDate(e.target.value || null)}
+              max={new Date().toISOString().split('T')[0]}
             />
             <p className="text-md font-semibold">To</p>
             <input
@@ -66,6 +67,7 @@ export const ReportingFilter = ({onApply, onReset}: any) => {
               className="border border-gray-300 rounded-md py-2 px-3 w-full outline-none"
               value={endDate ?? ''}
               onChange={e => setEndDate(e.target.value || null)}
+              max={new Date().toISOString().split('T')[0]}
             />
           </div>
         </div>

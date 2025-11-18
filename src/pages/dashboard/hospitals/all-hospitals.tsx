@@ -35,6 +35,7 @@ import {Loader} from '@/components/ui/loading';
 
 export const AllHospitals = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeSearch, setActiveSearch] = useState<string | undefined>(undefined);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
@@ -70,8 +71,8 @@ export const AllHospitals = () => {
 
   // Fetch hospitals whenever page or pageSize changes
   useEffect(() => {
-    dispatch(fetchHospitals({ page, pageSize }));
-  }, [dispatch, page, pageSize]);
+    dispatch(fetchHospitals({ page, pageSize, search: activeSearch }));
+  }, [dispatch, page, pageSize, activeSearch]);
 
   // map into table data
   const mappedHospitals = useMemo(() => {
@@ -80,8 +81,9 @@ export const AllHospitals = () => {
       return [];
     }
     
-    const base: HospitalRow[] = hospitals.map((item, index) => ({
-      sn: index + 1,
+    // Server-side search now, so no client filtering
+    return hospitals.map((item, index) => ({
+      sn: index + 1 + (page - 1) * pageSize,
       code: item.hospitalCode || '',
       name: item.hospitalName || '',
       email: item.email || '--',
@@ -95,12 +97,7 @@ export const AllHospitals = () => {
       date: item.date,
       id: item.id,
     }));
-    if (!searchTerm.trim()) return base;
-    const q = searchTerm.trim().toLowerCase();
-    return base.filter(h =>
-      h.name.toLowerCase().includes(q) || h.code.toLowerCase().includes(q),
-    );
-  }, [hospitals, searchTerm]);
+  }, [hospitals, page, pageSize]);
 
   const columns: ColumnDef<HospitalRow>[] = [
     {accessorKey: 'sn', header: 'S/N'},
@@ -148,14 +145,32 @@ export const AllHospitals = () => {
           <div className="flex flex-wrap gap-4 justify-between items-center p-6">
             <div className="flex items-center gap-8">
               <h1 className="text-lg text-gray-800">All Hospitals</h1>
-              <div className="hidden lg:block lg:w-96 lg:max-w-2xl">
-                <Input
-                  label="Search Hospital Name / Code"
-                  placeholder="Search by name or code"
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  fullWidth
-                />
+              <div className="hidden lg:flex lg:items-center lg:gap-3">
+                <div className="lg:w-96 lg:max-w-2xl">
+                  <Input
+                    label="Search Hospital Name"
+                    placeholder="Search by name"
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        setPage(1);
+                        setActiveSearch(searchTerm.trim() || undefined);
+                      }
+                    }}
+                    fullWidth
+                  />
+                </div>
+                <Button
+                  onClick={() => {
+                    setPage(1);
+                    setActiveSearch(searchTerm.trim() || undefined);
+                  }}
+                  disabled={loading}
+                  className="mt-6"
+                >
+                  {loading ? 'Searching...' : 'Search'}
+                </Button>
               </div>
             </div>
             <div className="flex gap-4 items-center">

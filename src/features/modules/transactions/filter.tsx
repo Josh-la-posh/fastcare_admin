@@ -94,6 +94,7 @@ export const TransactionFilter = ({ onApply, onReset }: TransactionFilterProps) 
             <SelectContent>
               <SelectItem value="registration">Registration</SelectItem>
               <SelectItem value="consultation">Consultation</SelectItem>
+              <SelectItem value="emergency">Emergency</SelectItem>
             </SelectContent>
           </Select>
         </div>

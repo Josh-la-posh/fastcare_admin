@@ -73,7 +73,7 @@ export const ReportingFilter = ({onApply, onReset}: any) => {
         </div>
 
         {/* Patient */}
-        <div className="flex flex-col gap-2">
+        {/* <div className="flex flex-col gap-2">
           <Label>Doctor</Label>
           <input
             type="text"
@@ -82,10 +82,10 @@ export const ReportingFilter = ({onApply, onReset}: any) => {
             value={doctor}
             onChange={e => setDoctor(e.target.value)}
           />
-        </div>
+        </div> */}
 
         {/* Hospital */}
-        <div className="flex flex-col gap-2">
+        {/* <div className="flex flex-col gap-2">
           <Label>Hospital</Label>
           <input
             type="text"
@@ -94,9 +94,9 @@ export const ReportingFilter = ({onApply, onReset}: any) => {
             value={hospital}
             onChange={e => setHospital(e.target.value)}
           />
-        </div>
+        </div> */}
 
-        <div className="flex flex-col gap-2">
+        {/* <div className="flex flex-col gap-2">
           <Label>Clinic</Label>
           <input
             type="text"
@@ -105,7 +105,7 @@ export const ReportingFilter = ({onApply, onReset}: any) => {
             value={clinic}
             onChange={e => setClinic(e.target.value)}
           />
-        </div>
+        </div> */}
         <div className="flex flex-col gap-2">
           <Label>Session duration</Label>
           <input
@@ -117,7 +117,7 @@ export const ReportingFilter = ({onApply, onReset}: any) => {
           />
         </div>
 
-        <div className="flex flex-col gap-2">
+        {/* <div className="flex flex-col gap-2">
           <Label>Appointment list</Label>
           <input
             type="text"
@@ -126,7 +126,7 @@ export const ReportingFilter = ({onApply, onReset}: any) => {
             value={appointment}
             onChange={e => setAppointment(e.target.value)}
           />
-        </div>
+        </div> */}
 
         <div className="mt-6">
           <Button className="py-2.5 rounded-md w-44" onClick={handleApply}>

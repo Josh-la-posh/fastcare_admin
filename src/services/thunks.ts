@@ -78,14 +78,15 @@ export const createHospital = createAsyncThunk(
 export const fetchHospitals = createAsyncThunk(
   "hospitals/fetchAll",
   async (
-    params: { page?: number; pageSize?: number } | undefined,
+    params: { page?: number; pageSize?: number; search?: string } | undefined,
     { rejectWithValue }
   ) => {
     try {
-      const { page, pageSize } = params || {};
+      const { page, pageSize, search } = params || {};
       const qs = new URLSearchParams();
       if (page) qs.set('Page', String(page));
       if (pageSize) qs.set('PageSize', String(pageSize));
+      if (search && search.trim()) qs.set('search', search.trim());
       const query = qs.toString();
       const url = query ? `/Hospitals/paginated?${query}` : '/Hospitals/paginated';
       const res = await apiClient.get(url);

@@ -30,10 +30,13 @@ export default function ToggleDoctorStatus({ open, setOpen, doctorId, doctorUser
       } else {
         await dispatch(activateDoctor(doctorId)).unwrap();
       }
-      // refresh selected doctor detail
-      dispatch(fetchDoctorById(String(doctorUserId)));
       setOpen(false);
       setOpenSuccess(true);
+      setTimeout(() => {
+        setOpenSuccess(false);
+        // refresh selected doctor detail
+        dispatch(fetchDoctorById(String(doctorUserId)));
+      }, 2000);
     } catch (e) {
       toast.error(typeof e === 'string' ? e : 'Action failed');
     } finally {
@@ -63,7 +66,7 @@ export default function ToggleDoctorStatus({ open, setOpen, doctorId, doctorUser
           <div className="flex flex-col gap-8 mt-8">
             <h1 className="text-center text-xl font-semibold text-gray-900">{actionWord} Doctor</h1>
             {doctorName && <p className="text-center text-gray-600 font-medium">{doctorName}</p>}
-            <p className="text-lg text-gray-800">{bodyText}</p>
+            <p className="text-lg text-center text-gray-800">{bodyText}</p>
           </div>
           <DialogFooter className="flex items-center justify-between mt-24">
             <Button className="py-3" variant="link" onClick={() => setOpen(false)}>

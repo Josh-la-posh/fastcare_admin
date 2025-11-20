@@ -54,7 +54,7 @@ export const AppRouter = () => {
   <Route path={ROUTES.reports.root} element={<UnifiedReports />} />
   <Route path={ROUTES.reports.userdetails} element={<UsersDetails />} />
   {/* Redirect legacy paths to new unified reports with tab query */}
-  <Route path="/reports/users" element={<Navigate to="/reports?tab=signup" replace />} />
+  <Route path="/reports/users" element={<Navigate to="/reports?tab=signup&signupTab=patient" replace />} />
   <Route path="/reports/reporting" element={<Navigate to="/reports?tab=appointment" replace />} />
   <Route path="/reports/emergency-call" element={<Navigate to="/reports?tab=emergency" replace />} />
 

@@ -4,7 +4,7 @@ import { DashboardLayout } from '@/layout/dashboard-layout';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/services/store';
-import { fetchUserReports, fetchAppointmentReports } from '@/services/thunks';
+import { fetchPatientReports, fetchDoctorReports, fetchAppointmentReports } from '@/services/thunks';
 import { setReportPage, setReportPageSize } from '@/services/slice/userReportsSlice';
 import { setAppointmentPage, setAppointmentPageSize, setAppointmentFilters } from '@/services/slice/appointmentReportsSlice';
 import { Pagination } from '@/components/ui/pagination';
@@ -33,8 +33,31 @@ const UnifiedReports = () => {
   const { list: apptList, metaData: apptMeta, loading: apptLoading, error: apptError, filters: apptFilters } = useSelector((s: RootState) => s.appointmentReports);
   const { list: emergencyList, metaData: emergencyMeta, loading: emergencyLoading, error: emergencyError, filters: emergencyFilters } = useSelector((s: RootState) => s.emergencyReports);
 
-  // Fetch users & appointments when their pagination changes
-  useEffect(() => { dispatch(fetchUserReports({ Page: userFilters.Page || 1, PageSize: userFilters.PageSize || 10 })); }, [dispatch, userFilters.Page, userFilters.PageSize]);
+  // Tab query param sync
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const initialTab = searchParams.get('tab') ?? 'signup';
+  const validTabs = ['signup','appointment','emergency'];
+  const [activeTab, setActiveTab] = useState(validTabs.includes(initialTab) ? initialTab : 'signup');
+  
+  // Nested signup tab (patient/doctor)
+  const initialSignupTab = searchParams.get('signupTab') ?? 'patient';
+  const validSignupTabs = ['patient', 'doctor'];
+  const [signupTab, setSignupTab] = useState(validSignupTabs.includes(initialSignupTab) ? initialSignupTab : 'patient');
+
+  // Fetch patients, doctors & appointments when their pagination changes
+  useEffect(() => { 
+    if (activeTab === 'signup' && signupTab === 'patient') {
+      dispatch(fetchPatientReports({ Page: userFilters.Page || 1, PageSize: userFilters.PageSize || 10 })); 
+    }
+  }, [dispatch, userFilters.Page, userFilters.PageSize, activeTab, signupTab]);
+  
+  useEffect(() => { 
+    if (activeTab === 'signup' && signupTab === 'doctor') {
+      dispatch(fetchDoctorReports({ Page: userFilters.Page || 1, PageSize: userFilters.PageSize || 10 })); 
+    }
+  }, [dispatch, userFilters.Page, userFilters.PageSize, activeTab, signupTab]);
+  
   useEffect(() => { dispatch(fetchAppointmentReports({ ...apptFilters })); }, [dispatch, apptFilters]);
 
   // Users table
@@ -68,18 +91,23 @@ const UnifiedReports = () => {
   const emergencyTable = useReactTable({ data: emergencyList as EmergencyRow[], columns: emergencyColumns, getCoreRowModel: getCoreRowModel() });
   const emergencyEmpty = !emergencyLoading && emergencyList.length === 0;
 
-  // Tab query param sync
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const initialTab = searchParams.get('tab') ?? 'signup';
-  const validTabs = ['signup','appointment','emergency'];
-  const [activeTab, setActiveTab] = useState(validTabs.includes(initialTab) ? initialTab : 'signup');
-
   const handleTabChange = (val: string) => {
     setActiveTab(val);
     // Preserve other params if later added
     const sp = new URLSearchParams(searchParams.toString());
     sp.set('tab', val);
+    // Reset signup tab when switching away from signup
+    if (val !== 'signup') {
+      sp.delete('signupTab');
+    }
+    navigate({ pathname: '/reports', search: sp.toString() }, { replace: true });
+  };
+
+  const handleSignupTabChange = (val: string) => {
+    setSignupTab(val);
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.set('tab', 'signup');
+    sp.set('signupTab', val);
     navigate({ pathname: '/reports', search: sp.toString() }, { replace: true });
   };
 
@@ -101,13 +129,21 @@ const UnifiedReports = () => {
             </TabsList>
 
             <TabsContent value="signup" className="focus:outline-none" hidden={activeTab !== 'signup'}>
+              {/* Nested tabs for Patient and Doctor */}
+              <Tabs value={signupTab} onValueChange={handleSignupTabChange} className="w-full">
+                <TabsList className="flex gap-2 mb-4">
+                  <TabsTrigger value="patient">Patient Signup</TabsTrigger>
+                  <TabsTrigger value="doctor">Doctor Signup</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="patient" className="focus:outline-none" hidden={signupTab !== 'patient'}>
               <div className="flex-1 h-full overflow-y-scroll">
                 {userLoading ? (
-                  <div className="flex items-center justify-center h-64 text-sm text-gray-500">Loading signup reports...</div>
+                  <div className="flex items-center justify-center h-64 text-sm text-gray-500">Loading patient signup reports...</div>
                 ) : userEmpty ? (
                   <div className="flex flex-col items-center justify-center h-64 text-gray-600">
-                    <p className="font-medium">No signup report data yet</p>
-                    <p className="text-sm">Reports will appear once users register.</p>
+                    <p className="font-medium">No patient signup report data yet</p>
+                    <p className="text-sm">Reports will appear once patients register.</p>
                   </div>
                 ) : (
                   <div className="h-full overflow-auto">
@@ -128,11 +164,11 @@ const UnifiedReports = () => {
                             onClick={() => {
                               const dateVal = (r.original as UserReportRow).date;
                               if (dateVal) {
-                                navigate(`/reports/users/user-details/${encodeURIComponent(dateVal)}`);
+                                navigate(`/reports/users/user-details/${encodeURIComponent(dateVal)}?type=patient`);
                               }
                             }}
                             className="cursor-pointer hover:bg-gray-50"
-                            title="View user details for this date"
+                            title="View patient details for this date"
                           >
                             {r.getVisibleCells().map(c => (
                               <TableCell key={c.id}>{flexRender(c.column.columnDef.cell, c.getContext())}</TableCell>
@@ -155,6 +191,65 @@ const UnifiedReports = () => {
                 )}
                 {userError && <div className="p-4 text-sm text-red-600">{userError}</div>}
               </div>
+            </TabsContent>
+
+                <TabsContent value="doctor" className="focus:outline-none" hidden={signupTab !== 'doctor'}>
+              <div className="flex-1 h-full overflow-y-scroll">
+                {userLoading ? (
+                  <div className="flex items-center justify-center h-64 text-sm text-gray-500">Loading doctor signup reports...</div>
+                ) : userEmpty ? (
+                  <div className="flex flex-col items-center justify-center h-64 text-gray-600">
+                    <p className="font-medium">No doctor signup report data yet</p>
+                    <p className="text-sm">Reports will appear once doctors register.</p>
+                  </div>
+                ) : (
+                  <div className="h-full overflow-auto">
+                    <Table className="min-w-[600px]">
+                      <TableHeader>
+                        {userTable.getHeaderGroups().map(hg => (
+                          <TableRow key={hg.id}>
+                            {hg.headers.map(h => (
+                              <TableHead key={h.id}>{flexRender(h.column.columnDef.header, h.getContext())}</TableHead>
+                            ))}
+                          </TableRow>
+                        ))}
+                      </TableHeader>
+                      <TableBody>
+                        {userTable.getRowModel().rows.map(r => (
+                          <TableRow
+                            key={r.id}
+                            onClick={() => {
+                              const dateVal = (r.original as UserReportRow).date;
+                              if (dateVal) {
+                                navigate(`/reports/users/user-details/${encodeURIComponent(dateVal)}?type=doctor`);
+                              }
+                            }}
+                            className="cursor-pointer hover:bg-gray-50"
+                            title="View doctor details for this date"
+                          >
+                            {r.getVisibleCells().map(c => (
+                              <TableCell key={c.id}>{flexRender(c.column.columnDef.cell, c.getContext())}</TableCell>
+                            ))}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    <div className="p-4 flex items-center justify-end">
+                      <Pagination
+                        totalEntriesSize={userMeta?.totalCount || userList.length}
+                        currentPage={userFilters.Page || 1}
+                        totalPages={userMeta?.totalPages || 1}
+                        onPageChange={p => dispatch(setReportPage(p))}
+                        pageSize={userFilters.PageSize || 20}
+                        onPageSizeChange={s => dispatch(setReportPageSize(s))}
+                      />
+                    </div>
+                  </div>
+                )}
+                {userError && <div className="p-4 text-sm text-red-600">{userError}</div>}
+              </div>
+                </TabsContent>
+              </Tabs>
             </TabsContent>
 
             <TabsContent value="appointment" className="focus:outline-none" hidden={activeTab !== 'appointment'}>

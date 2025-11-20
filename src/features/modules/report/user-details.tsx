@@ -16,11 +16,11 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import {Pagination} from '@/components/ui/pagination';
-import {useNavigate, useParams} from 'react-router-dom';
+import {useNavigate, useParams, useSearchParams} from 'react-router-dom';
 import {ArrowLeft} from 'lucide-react';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/services/store';
-import {fetchUserReportDetail, exportUserReportDetail} from '@/services/thunks';
+import {fetchPatientReportDetail, fetchDoctorReportDetail, exportUserReportDetail} from '@/services/thunks';
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from '@/components/ui/dropdown-menu';
 import {setDetailPage, setDetailPageSize} from '@/services/slice/userReportsSlice';
 
@@ -35,6 +35,8 @@ const UsersDetails = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const {id: dateParam} = useParams<{id: string}>();
+  const [searchParams] = useSearchParams();
+  const reportType = searchParams.get('type') || 'patient'; // default to patient
   const decodedDate = dateParam ? decodeURIComponent(dateParam) : '';
   const {
     detail,
@@ -50,11 +52,12 @@ const UsersDetails = () => {
 
   useEffect(() => {
     if (decodedDate) {
+      const fetchThunk = reportType === 'doctor' ? fetchDoctorReportDetail : fetchPatientReportDetail;
       dispatch(
-        fetchUserReportDetail({Date: decodedDate, Page: page, PageSize: pageSize}),
+        fetchThunk({Date: decodedDate, Page: page, PageSize: pageSize}),
       );
     }
-  }, [dispatch, decodedDate, page, pageSize]);
+  }, [dispatch, decodedDate, page, pageSize, reportType]);
 
   const columns: ColumnDef<UserReportDetailRow>[] = [
     {

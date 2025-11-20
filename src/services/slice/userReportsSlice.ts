@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { UserReportsState } from '@/types';
-import { fetchUserReports, fetchUserReportDetail, exportUserReportDetail } from '@/services/thunks';
+import { fetchPatientReports, fetchDoctorReports, fetchPatientReportDetail, fetchDoctorReportDetail, exportUserReportDetail } from '@/services/thunks';
 
 const initialState: UserReportsState = {
   list: [],
@@ -38,22 +38,36 @@ const userReportsSlice = createSlice({
   },
   extraReducers: builder => {
     builder
-      // List
-      .addCase(fetchUserReports.pending, state => {
+      // Patient List
+      .addCase(fetchPatientReports.pending, state => {
         state.loadingList = true;
         state.errorList = null;
       })
-      .addCase(fetchUserReports.fulfilled, (state, action) => {
+      .addCase(fetchPatientReports.fulfilled, (state, action) => {
         state.loadingList = false;
         state.list = action.payload.list;
         state.metaData = action.payload.metaData;
       })
-      .addCase(fetchUserReports.rejected, (state, action) => {
+      .addCase(fetchPatientReports.rejected, (state, action) => {
         state.loadingList = false;
         state.errorList = action.payload as string;
       })
-      // Detail
-      .addCase(fetchUserReportDetail.pending, (state, action) => {
+      // Doctor List
+      .addCase(fetchDoctorReports.pending, state => {
+        state.loadingList = true;
+        state.errorList = null;
+      })
+      .addCase(fetchDoctorReports.fulfilled, (state, action) => {
+        state.loadingList = false;
+        state.list = action.payload.list;
+        state.metaData = action.payload.metaData;
+      })
+      .addCase(fetchDoctorReports.rejected, (state, action) => {
+        state.loadingList = false;
+        state.errorList = action.payload as string;
+      })
+      // Patient Detail
+      .addCase(fetchPatientReportDetail.pending, (state, action) => {
         // If requesting a new date, reset first
         const requestedDate = (action.meta.arg as { Date: string }).Date;
         if (requestedDate !== state.detailFilters.Date) {
@@ -65,13 +79,36 @@ const userReportsSlice = createSlice({
         state.loadingDetail = true;
         state.errorDetail = null;
       })
-      .addCase(fetchUserReportDetail.fulfilled, (state, action) => {
+      .addCase(fetchPatientReportDetail.fulfilled, (state, action) => {
         state.loadingDetail = false;
         state.detail = action.payload.detail;
         state.detailMeta = action.payload.detailMeta;
         state.detailFilters.Date = action.payload.selectedDate;
       })
-      .addCase(fetchUserReportDetail.rejected, (state, action) => {
+      .addCase(fetchPatientReportDetail.rejected, (state, action) => {
+        state.loadingDetail = false;
+        state.errorDetail = action.payload as string;
+      })
+      // Doctor Detail
+      .addCase(fetchDoctorReportDetail.pending, (state, action) => {
+        // If requesting a new date, reset first
+        const requestedDate = (action.meta.arg as { Date: string }).Date;
+        if (requestedDate !== state.detailFilters.Date) {
+          state.detail = [];
+          state.detailMeta = null;
+          state.detailFilters.Date = requestedDate;
+          state.detailFilters.Page = 1;
+        }
+        state.loadingDetail = true;
+        state.errorDetail = null;
+      })
+      .addCase(fetchDoctorReportDetail.fulfilled, (state, action) => {
+        state.loadingDetail = false;
+        state.detail = action.payload.detail;
+        state.detailMeta = action.payload.detailMeta;
+        state.detailFilters.Date = action.payload.selectedDate;
+      })
+      .addCase(fetchDoctorReportDetail.rejected, (state, action) => {
         state.loadingDetail = false;
         state.errorDetail = action.payload as string;
       })

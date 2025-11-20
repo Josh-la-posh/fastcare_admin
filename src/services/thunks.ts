@@ -906,17 +906,17 @@ export const toggleAdminUserActive = createAsyncThunk(
 );
 
 // -------------------------------------------------
-// User Reports Thunks
+// User Reports Thunks (Patient & Doctor)
 // -------------------------------------------------
 
-export const fetchUserReports = createAsyncThunk(
-  'userReports/fetchAll',
+export const fetchPatientReports = createAsyncThunk(
+  'userReports/fetchPatients',
   async (
     params: { Page?: number; PageSize?: number } | undefined,
     { rejectWithValue }
   ) => {
     try {
-      const res = await apiClient.get('/Account/get-users-report', { params });
+      const res = await apiClient.get('/Account/patients-report/summary', { params });
       const rawList: unknown = res.data.data || [];
       const list = Array.isArray(rawList) ? rawList.map(item => {
         const d = item as { date?: string; userCount?: number };
@@ -927,20 +927,42 @@ export const fetchUserReports = createAsyncThunk(
       }) : [];
       return { list, metaData: res.data.metaData || null };
     } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to fetch user reports'));
+      return rejectWithValue(getErrorMessage(error, 'Failed to fetch patient reports'));
     }
   }
 );
 
-export const fetchUserReportDetail = createAsyncThunk(
-  'userReports/fetchDetail',
+export const fetchDoctorReports = createAsyncThunk(
+  'userReports/fetchDoctors',
+  async (
+    params: { Page?: number; PageSize?: number } | undefined,
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get('/Account/doctors-report/summary', { params });
+      const rawList: unknown = res.data.data || [];
+      const list = Array.isArray(rawList) ? rawList.map(item => {
+        const d = item as { date?: string; userCount?: number };
+        return {
+          date: d.date || '',
+          userCount: typeof d.userCount === 'number' ? d.userCount : 0,
+        };
+      }) : [];
+      return { list, metaData: res.data.metaData || null };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to fetch doctor reports'));
+    }
+  }
+);
+
+export const fetchPatientReportDetail = createAsyncThunk(
+  'userReports/fetchPatientDetail',
   async (
     params: { Date: string; Page?: number; PageSize?: number },
     { rejectWithValue }
   ) => {
     try {
-      const { Date, ...rest } = params;
-      const res = await apiClient.get(`/Account/get-users-report-detail/${Date}`, { params: rest });
+      const res = await apiClient.get('/Account/patients-report/detail', { params });
       const rawDetail: unknown = res.data.data || [];
       const detail = Array.isArray(rawDetail) ? rawDetail.map(item => {
         const d = item as { date?: string; email?: string; fullName?: string; phoneNumber?: string };
@@ -951,9 +973,34 @@ export const fetchUserReportDetail = createAsyncThunk(
             phoneNumber: d.phoneNumber || '',
         };
       }) : [];
-      return { detail, detailMeta: res.data.metaData || null, selectedDate: Date };
+      return { detail, detailMeta: res.data.metaData || null, selectedDate: params.Date };
     } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to fetch user report detail'));
+      return rejectWithValue(getErrorMessage(error, 'Failed to fetch patient report detail'));
+    }
+  }
+);
+
+export const fetchDoctorReportDetail = createAsyncThunk(
+  'userReports/fetchDoctorDetail',
+  async (
+    params: { Date: string; Page?: number; PageSize?: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get('/Account/doctors-report/detail', { params });
+      const rawDetail: unknown = res.data.data || [];
+      const detail = Array.isArray(rawDetail) ? rawDetail.map(item => {
+        const d = item as { date?: string; email?: string; fullName?: string; phoneNumber?: string };
+        return {
+          date: d.date || '',
+            email: d.email || '',
+            fullName: d.fullName || '',
+            phoneNumber: d.phoneNumber || '',
+        };
+      }) : [];
+      return { detail, detailMeta: res.data.metaData || null, selectedDate: params.Date };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to fetch doctor report detail'));
     }
   }
 );

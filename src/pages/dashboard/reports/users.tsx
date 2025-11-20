@@ -18,7 +18,7 @@ import {Pagination} from '@/components/ui/pagination';
 import {useNavigate} from 'react-router-dom';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/services/store';
-import {fetchUserReports} from '@/services/thunks';
+import {fetchPatientReports} from '@/services/thunks';
 import {setReportPage, setReportPageSize} from '@/services/slice/userReportsSlice';
 
 interface UserReportRow {
@@ -37,7 +37,7 @@ const Users = () => {
   const pageSize = filters.PageSize || 20;
 
   useEffect(() => {
-    dispatch(fetchUserReports({Page: page, PageSize: pageSize}));
+    dispatch(fetchPatientReports({Page: page, PageSize: pageSize}));
   }, [dispatch, page, pageSize]);
 
   const columns: ColumnDef<UserReportRow>[] = [

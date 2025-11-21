@@ -5,14 +5,20 @@ import {
   DialogHeader,
   DialogFooter,
 } from '@/components/ui/dialog';
-
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 import { X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Success from '../dashboard/success';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/services/store';
-import { disapproveDoctor, fetchPendingDoctors } from '@/services/thunks';
+import { disapproveDoctor, fetchPendingDoctors, fetchRejectionReasons } from '@/services/thunks';
 import toast from 'react-hot-toast';
 
 import { Doctor } from '@/types';
@@ -28,9 +34,34 @@ export default function Reject({ open, setOpen, data }: Props) {
   const [loading, setLoading] = useState(false);
   const [reason, setReason] = useState('');
   const [touched, setTouched] = useState(false);
+  const [rejectionReasons, setRejectionReasons] = useState<string[]>([]);
+  const [loadingReasons, setLoadingReasons] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
 
-  const reasonValid = reason.trim().length > 2; // minimal length validation
+  const reasonValid = reason.trim().length > 0; // must select a reason
+
+  // Fetch rejection reasons when dialog opens
+  useEffect(() => {
+    if (open && rejectionReasons.length === 0) {
+      setLoadingReasons(true);
+      dispatch(fetchRejectionReasons())
+        .unwrap()
+        .then((data) => {
+          // Handle array of strings or array of objects with a reason property
+          if (Array.isArray(data)) {
+            const reasons = data.map(item => 
+              typeof item === 'string' ? item : item.reason || item.name || String(item)
+            );
+            setRejectionReasons(reasons);
+          }
+        })
+        .catch((err) => {
+          toast.error('Failed to load rejection reasons');
+          console.error(err);
+        })
+        .finally(() => setLoadingReasons(false));
+    }
+  }, [open, dispatch, rejectionReasons.length]);
 
   const handleReject = async () => {
     if (!data?.userId) return;
@@ -85,21 +116,39 @@ export default function Reject({ open, setOpen, data }: Props) {
               <label className="text-sm font-medium text-gray-700" htmlFor="reject-reason">
                 Rejection Reason <span className="text-red-500">*</span>
               </label>
-              <textarea
-                id="reject-reason"
-                className={`min-h-28 resize-y rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 ${touched && !reasonValid ? 'border-red-500' : 'border-gray-300'}`}
-                placeholder="Enter clear reason (e.g. License number mismatch, missing documentation, etc.)"
+              <Select
                 value={reason}
-                onChange={e => setReason(e.target.value)}
-                onBlur={() => setTouched(true)}
-                maxLength={500}
-              />
-              <div className="flex justify-between text-xs">
-                <span className={touched && !reasonValid ? 'text-red-500' : 'text-gray-500'}>
-                  {touched && !reasonValid ? 'Reason must be at least 3 characters.' : 'Provide a concise, helpful explanation (max 500 chars).'}
+                onValueChange={(value) => {
+                  setReason(value);
+                  setTouched(true);
+                }}
+                disabled={loadingReasons}
+              >
+                <SelectTrigger 
+                  id="reject-reason"
+                  className={`${touched && !reasonValid ? 'border-red-500' : 'border-gray-300'}`}
+                >
+                  <SelectValue placeholder={loadingReasons ? "Loading reasons..." : "Select a rejection reason"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {rejectionReasons.length > 0 ? (
+                    rejectionReasons.map((reasonOption, index) => (
+                      <SelectItem key={index} value={reasonOption}>
+                        {reasonOption}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="" disabled>
+                      No rejection reasons available
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              {touched && !reasonValid && (
+                <span className="text-xs text-red-500">
+                  Please select a rejection reason.
                 </span>
-                <span className="text-gray-400">{reason.length}/500</span>
-              </div>
+              )}
             </div>
           </div>
 

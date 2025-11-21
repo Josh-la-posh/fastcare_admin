@@ -311,10 +311,23 @@ export const disapproveDoctor = createAsyncThunk(
   ) => {
     const { doctorId, reason } = payload;
     try {
-      const res = await apiClient.put(`/doctors/${doctorId}/disapprove`, {  RejectionReason: reason });
+      const res = await apiClient.put(`/doctors/${doctorId}/disapprove`, {  rejectReason: reason });
       return res.data; // updated doctor object expected
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Disapproval failed"));
+    }
+  }
+);
+
+// Fetch rejection reasons
+export const fetchRejectionReasons = createAsyncThunk(
+  "doctors/fetchRejectionReasons",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get('/doctors/rejection-reasons');
+      return res.data.data || res.data; // handle different response structures
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch rejection reasons"));
     }
   }
 );

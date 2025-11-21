@@ -64,7 +64,7 @@ export default function Reject({ open, setOpen, data }: Props) {
   }, [open, dispatch, rejectionReasons.length]);
 
   const handleReject = async () => {
-    if (!data?.userId) return;
+    if (!data?.id) return;
     setTouched(true);
     if (!reasonValid) return; // don't proceed if invalid
     setLoading(true);
@@ -138,9 +138,9 @@ export default function Reject({ open, setOpen, data }: Props) {
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem value="" disabled>
+                    <div className="px-2 py-1.5 text-sm text-gray-500">
                       No rejection reasons available
-                    </SelectItem>
+                    </div>
                   )}
                 </SelectContent>
               </Select>

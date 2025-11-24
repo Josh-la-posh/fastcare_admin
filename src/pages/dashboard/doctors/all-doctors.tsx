@@ -62,11 +62,13 @@ const AllDoctors = () => {
       header: 'License Number',
     },
     {
-      accessorKey: 'isDoctorAvailable',
+      accessorKey: 'status',
       header: 'Status',
-      cell: ({getValue}) => {
-        const isAvailable = getValue() as boolean;
-        const statusText = isAvailable ? 'Available' : 'Offline';
+      cell: ({row}) => {
+        const statusText = row.original.status.toLowerCase() === 'available' ? 'Online' 
+          : row.original.status.toLowerCase() === 'offline' ? 'Offline'
+          : row.original.status.toLowerCase() === 'inconsultation' ? 'In Consultation'
+          : 'Unknown';
         const status = statusText.toLowerCase();
 
         let statusClasses = 'py-1 text-md font-semibold w-fit ';

@@ -46,7 +46,7 @@ export default function DoctorVerificationDetails({data, open, setOpen}: Props) 
     <>
       <Dialog open={open} onOpenChange={setOpen}>
        
-        <DialogContent className="max-w-xl h-fit overflow-y-auto">
+        <DialogContent className="max-w-xl h-[95%] overflow-y-auto">
           <DialogHeader className="flex w-full items-center justify-between">
             <DialogTitle className="flex w-full items-center justify-between border-b">
               <span className="text-gray-800 text-xl font-normal py-3">

@@ -117,7 +117,7 @@ const UnifiedReports = () => {
         <div className="mx-4 md:mx-8 mt-10 bg-white rounded-md px-2 py-6 lg:p-6">
           <h1 className="text-xl font-semibold text-gray-800 mb-4">Reports</h1>
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="hidden lg:flex flex-wrap gap-2 mb-6">
+            <TabsList className="hidden lg:flex justify-start flex-wrap gap-2 mb-6">
               <TabsTrigger value="signup">Signup Report</TabsTrigger>
               <TabsTrigger value="appointment">Appointment Report</TabsTrigger>
               <TabsTrigger value="emergency">Emergency Call Report</TabsTrigger>

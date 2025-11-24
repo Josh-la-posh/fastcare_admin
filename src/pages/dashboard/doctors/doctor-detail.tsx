@@ -95,15 +95,12 @@ const DoctorDetails = () => {
                   <p className="text-gray-600 text-md">
                     {selectedDoctor?.specialization}
                   </p>
-                  {selectedDoctor?.isDoctorAvailable ? (
-                    <span className="bg-green-100 text-green-500 p-1 text-sm">
-                      Available
-                    </span>
-                  ) : (
-                    <span className="bg-red-100 text-red-500 p-1 text-sm">
-                      Not Available
-                    </span>
-                  )}
+                  <span className={`${selectedDoctor?.status.toLowerCase() === 'available' ? 'bg-green-100  text-green-500' : selectedDoctor?.status.toLowerCase() === 'offline' ? 'bg-red-100  text-red-500' : selectedDoctor?.status.toLowerCase() === 'inconsultation' ? 'bg-blue-100 text-blue-500' : 'bg-yellow-100 text-yellow-red-500'} p-1 text-sm`}>
+                    {selectedDoctor?.status.toLowerCase() === 'available' ? 'Online' 
+                      : selectedDoctor?.status.toLowerCase() === 'offline' ? 'Offline'
+                      : selectedDoctor?.status.toLowerCase() === 'inconsultation' ? 'In Consultation'
+                      : 'Unknown'}
+                  </span>
                 </div>
               </div>
             </div>

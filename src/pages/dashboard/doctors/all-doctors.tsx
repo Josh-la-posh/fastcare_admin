@@ -65,14 +65,19 @@ const AllDoctors = () => {
       accessorKey: 'status',
       header: 'Status',
       cell: ({row}) => {
-        const statusText = row.original.status.toLowerCase() === 'available' ? 'Online' 
+        const statusText = row.original.isActive === false ? 'Inactive' 
+          : row.original.status.toLowerCase() === 'available' ? 'Online' 
           : row.original.status.toLowerCase() === 'offline' ? 'Offline'
           : row.original.status.toLowerCase() === 'inconsultation' ? 'In Consultation'
           : 'Unknown';
         const status = statusText.toLowerCase();
 
-        let statusClasses = 'py-1 text-md font-semibold w-fit ';
-        if (status === 'available') statusClasses += 'text-green-700';
+        let statusClasses = 'p-2 text-md font-semibold w-fit ';
+        if (status === 'inactive') statusClasses += 'bg-red-100  text-red-500';
+        if (status === 'online') statusClasses += 'bg-green-100  text-green-500';
+        if (status === 'offline') statusClasses += 'bg-red-100  text-red-500';
+        if (status === 'in consultation') statusClasses += 'bg-blue-100 text-blue-500';
+        if (status === 'unknown') statusClasses += 'bg-yellow-100 text-yellow-red-500';
         else statusClasses += 'text-red-800';
 
         return <span className={statusClasses}>{statusText}</span>;

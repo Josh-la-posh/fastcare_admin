@@ -1,4 +1,5 @@
-import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import success from '/svg/success.png';
 import { X } from "lucide-react";
 
@@ -26,6 +27,9 @@ export default function Success({ open, setOpen, text, title, onClose }: Props) 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="flex flex-col gap-3">
+        <VisuallyHidden>
+          <DialogTitle>{title || 'Success'}</DialogTitle>
+        </VisuallyHidden>
         <DialogHeader className="flex items-end justify-end gap-4">
           <button
             onClick={handleClose}

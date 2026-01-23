@@ -3,15 +3,20 @@ import { UserReportsState } from '@/types';
 import { fetchPatientReports, fetchDoctorReports, fetchPatientReportDetail, fetchDoctorReportDetail, exportUserReportDetail } from '@/services/thunks';
 
 const initialState: UserReportsState = {
-  list: [],
+  patientList: [],
+  doctorList: [],
   detail: [],
-  metaData: null,
+  patientMeta: null,
+  doctorMeta: null,
   detailMeta: null,
-  loadingList: false,
+  loadingPatient: false,
+  loadingDoctor: false,
   loadingDetail: false,
-  errorList: null,
+  errorPatient: null,
+  errorDoctor: null,
   errorDetail: null,
-  filters: { Page: 1, PageSize: 20 },
+  patientFilters: { Page: 1, PageSize: 20 },
+  doctorFilters: { Page: 1, PageSize: 20 },
   detailFilters: { Page: 1, PageSize: 20, Date: '' },
   exportingDetail: false,
   exportDetailError: null,
@@ -21,12 +26,19 @@ const userReportsSlice = createSlice({
   name: 'userReports',
   initialState,
   reducers: {
-    setReportPage(state, action) {
-      state.filters.Page = action.payload;
+    setPatientPage(state, action) {
+      state.patientFilters.Page = action.payload;
     },
-    setReportPageSize(state, action) {
-      state.filters.PageSize = action.payload;
-      state.filters.Page = 1; // reset page
+    setPatientPageSize(state, action) {
+      state.patientFilters.PageSize = action.payload;
+      state.patientFilters.Page = 1;
+    },
+    setDoctorPage(state, action) {
+      state.doctorFilters.Page = action.payload;
+    },
+    setDoctorPageSize(state, action) {
+      state.doctorFilters.PageSize = action.payload;
+      state.doctorFilters.Page = 1;
     },
     setDetailPage(state, action) {
       state.detailFilters.Page = action.payload;
@@ -40,31 +52,31 @@ const userReportsSlice = createSlice({
     builder
       // Patient List
       .addCase(fetchPatientReports.pending, state => {
-        state.loadingList = true;
-        state.errorList = null;
+        state.loadingPatient = true;
+        state.errorPatient = null;
       })
       .addCase(fetchPatientReports.fulfilled, (state, action) => {
-        state.loadingList = false;
-        state.list = action.payload.list;
-        state.metaData = action.payload.metaData;
+        state.loadingPatient = false;
+        state.patientList = action.payload.list;
+        state.patientMeta = action.payload.metaData;
       })
       .addCase(fetchPatientReports.rejected, (state, action) => {
-        state.loadingList = false;
-        state.errorList = action.payload as string;
+        state.loadingPatient = false;
+        state.errorPatient = action.payload as string;
       })
       // Doctor List
       .addCase(fetchDoctorReports.pending, state => {
-        state.loadingList = true;
-        state.errorList = null;
+        state.loadingDoctor = true;
+        state.errorDoctor = null;
       })
       .addCase(fetchDoctorReports.fulfilled, (state, action) => {
-        state.loadingList = false;
-        state.list = action.payload.list;
-        state.metaData = action.payload.metaData;
+        state.loadingDoctor = false;
+        state.doctorList = action.payload.list;
+        state.doctorMeta = action.payload.metaData;
       })
       .addCase(fetchDoctorReports.rejected, (state, action) => {
-        state.loadingList = false;
-        state.errorList = action.payload as string;
+        state.loadingDoctor = false;
+        state.errorDoctor = action.payload as string;
       })
       // Patient Detail
       .addCase(fetchPatientReportDetail.pending, (state, action) => {
@@ -127,5 +139,5 @@ const userReportsSlice = createSlice({
   },
 });
 
-export const { setReportPage, setReportPageSize, setDetailPage, setDetailPageSize } = userReportsSlice.actions;
+export const { setPatientPage, setPatientPageSize, setDoctorPage, setDoctorPageSize, setDetailPage, setDetailPageSize } = userReportsSlice.actions;
 export default userReportsSlice.reducer;

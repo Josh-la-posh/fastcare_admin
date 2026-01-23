@@ -68,16 +68,15 @@ const AllDoctors = () => {
         const statusText = row.original.isActive === false ? 'Inactive' 
           : row.original.status.toLowerCase() === 'available' ? 'Online' 
           : row.original.status.toLowerCase() === 'offline' ? 'Offline'
-          : row.original.status.toLowerCase() === 'inconsultation' ? 'In Consultation'
-          : 'Unknown';
+          : row.original.status.toLowerCase() === 'inconsultation' ? 'Active'
+          : 'Inactive';
         const status = statusText.toLowerCase();
 
         let statusClasses = 'p-2 text-md font-semibold w-fit ';
-        if (status === 'inactive') statusClasses += 'bg-red-100  text-red-500';
-        if (status === 'online') statusClasses += 'bg-green-100  text-green-500';
-        if (status === 'offline') statusClasses += 'bg-red-100  text-red-500';
+        if (status === 'inactive') statusClasses += 'text-white bg-red-500 ';
+        if (status === 'online') statusClasses += 'bg-green-100 text-green-500';
+        if (status === 'offline') statusClasses += 'bg-red-100 text-red-500';
         if (status === 'in consultation') statusClasses += 'bg-blue-100 text-blue-500';
-        if (status === 'unknown') statusClasses += 'bg-yellow-100 text-yellow-red-500';
         else statusClasses += 'text-red-800';
 
         return <span className={statusClasses}>{statusText}</span>;

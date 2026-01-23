@@ -9,6 +9,7 @@ import { updateHospitalFormData, fetchHospitalById } from '@/services/thunks';
 import { Hospital } from '@/types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { BankSelect } from '@/components/ui/bank-select';
 
@@ -42,6 +43,8 @@ const HospitalDetail = ({ data, isEditing, onCancel, onUpdated }: Props) => {
   const dispatch = useDispatch<AppDispatch>();
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [hasRegistrationFee, setHasRegistrationFee] = useState(false);
+  const [registrationFee, setRegistrationFee] = useState('');
 
   const form = useForm<EditFormValues>({
     resolver: zodResolver(editSchema),
@@ -50,7 +53,7 @@ const HospitalDetail = ({ data, isEditing, onCancel, onUpdated }: Props) => {
     },
     mode: 'onChange'
   });
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors, isDirty } } = form;
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = form;
 
   // populate on data load
   useEffect(() => {
@@ -71,15 +74,23 @@ const HospitalDetail = ({ data, isEditing, onCancel, onUpdated }: Props) => {
       bankCode: data.bankCode || '',
       invoiceBankCode: data.invoiceBankCode || '',
     });
+    // Initialize registration fee state from data
+    const regFee = data.registrationFee ?? 0;
+    setHasRegistrationFee(regFee > 0);
+    setRegistrationFee(regFee > 0 ? regFee.toString() : '');
   }, [data, reset]);
 
-  const watched = watch();
-  const isFormComplete = (() => {
-    const required: (keyof EditFormValues)[] = ['hospitalName','hospitalCode','physicalConsultationFee','virtualConsultationFee','hospitalAddresses','address','phoneNumber','email','accountNumber','invoiceAccountNumber','bankCode','invoiceBankCode'];
-    if (!required.every(k => typeof watched[k] === 'string' && (watched[k] as string).trim().length > 0)) return false;
-    const hasErr = required.some(k => (errors as Record<string, unknown>)[k]);
-    return !hasErr;
-  })();
+  // Scroll to first error field when validation fails
+  const scrollToError = () => {
+    const firstErrorKey = Object.keys(errors)[0] as keyof EditFormValues | undefined;
+    if (firstErrorKey) {
+      const element = document.querySelector(`[name="${firstErrorKey}"]`) as HTMLElement;
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.focus();
+      }
+    }
+  };
 
   const onSubmit = async (values: EditFormValues) => {
     if (!data) return;
@@ -97,6 +108,10 @@ const HospitalDetail = ({ data, isEditing, onCancel, onUpdated }: Props) => {
         if (!apiKey) return;
         fd.append(apiKey, numeric.includes(key) ? String(Number(val)) : val);
       });
+      // Add registration fee
+      const regFeeValue = hasRegistrationFee ? Number(registrationFee || '0') : 0;
+      fd.append('RegistrationFee', String(regFeeValue));
+      
       if (logoFile) fd.append('LogoContent', logoFile);
       await dispatch(updateHospitalFormData({ id: data.id, formData: fd })).unwrap();
       toast.success('Hospital updated');
@@ -110,7 +125,7 @@ const HospitalDetail = ({ data, isEditing, onCancel, onUpdated }: Props) => {
   if (!data) return null;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="mt-10 mx-6 space-y-8" noValidate>
+    <form onSubmit={handleSubmit(onSubmit, scrollToError)} className="mt-10 mx-6 space-y-8" noValidate>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-10 mt-6">
         <Input label="Hospital Code" disabled={!isEditing} requiredIndicator required {...register('hospitalCode')} error={errors.hospitalCode?.message} />
         <Input label="Hospital Name" disabled={!isEditing} requiredIndicator required {...register('hospitalName')} error={errors.hospitalName?.message} />
@@ -133,13 +148,47 @@ const HospitalDetail = ({ data, isEditing, onCancel, onUpdated }: Props) => {
       </div>
       {isEditing && (
         <div className="flex flex-col gap-6">
+          {/* Registration Fee Toggle */}
+          <div className="border rounded-lg p-4 bg-gray-50">
+            <div className="flex items-center gap-3">
+              <Switch
+                id="registration-fee-toggle"
+                checked={hasRegistrationFee}
+                onCheckedChange={(checked) => {
+                  setHasRegistrationFee(checked);
+                  if (!checked) setRegistrationFee('');
+                }}
+              />
+              <label htmlFor="registration-fee-toggle" className="text-gray-800 font-medium cursor-pointer">
+                Registration Fee
+              </label>
+            </div>
+            {hasRegistrationFee && (
+              <div className="mt-4 w-full">
+                <Input
+                  label="Registration Fee"
+                  type="number"
+                  min={0}
+                  max={999999}
+                  inputMode="numeric"
+                  placeholder="e.g. 2000"
+                  value={registrationFee}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setRegistrationFee(v);
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
           <div>
             <label className="text-sm font-medium text-gray-700">Logo Content</label>
             <input type="file" accept="image/png,image/jpeg" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setLogoFile(f); const r = new FileReader(); r.onloadend = () => setPreviewUrl(r.result as string); r.readAsDataURL(f);} }} className="mt-2" />
             {previewUrl && <img src={previewUrl} alt="Preview" className="h-24 mt-2 object-contain" />}
           </div>
           <div className="flex gap-4">
-            <Button type="submit" disabled={!isFormComplete || !isDirty} className="w-40 disabled:opacity-50 disabled:cursor-not-allowed">Update Hospital</Button>
+            <Button type="submit" className="w-40">Update Hospital</Button>
             {onCancel && <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>}
           </div>
         </div>

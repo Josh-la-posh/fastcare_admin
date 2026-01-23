@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import { X } from "lucide-react";
 
 import { logout } from "@/services/slice/authSlice";
@@ -25,6 +26,9 @@ export default function LogOut({ open, setOpen }: Props) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="flex flex-col gap-6">
+        <VisuallyHidden>
+          <DialogTitle>Log out</DialogTitle>
+        </VisuallyHidden>
         <DialogHeader className="flex items-end justify-end gap-4">
           <button
             onClick={() => setOpen(false)}

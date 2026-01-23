@@ -1,5 +1,6 @@
 
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import deactivate from '/svg/deactivate.svg';
 
 import { X } from "lucide-react";
@@ -21,6 +22,9 @@ export default function Deactivate({ open, setOpen, text }: Props) {
       <>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent className="flex flex-col gap-3 py-10">
+            <VisuallyHidden>
+              <DialogTitle>Deactivate Confirmation</DialogTitle>
+            </VisuallyHidden>
             <DialogHeader className="flex items-end justify-end gap-4">
               <button
                 onClick={() => setOpen(false)}

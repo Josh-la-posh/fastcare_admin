@@ -132,6 +132,10 @@ export const DashboardLayout = ({children, searchBar}: Props) => {
           name: 'Marketing campaign',
           icon: <Share2Icon className='w-5 h-6' />,
           url: '/marketing-campaign',
+          children: [
+            {name: 'Ad Campaign', url: '/marketing-campaign'},
+            {name: 'Promotional Code', url: '/marketing-campaign/referral-codes'},
+          ],
         },
 
         {

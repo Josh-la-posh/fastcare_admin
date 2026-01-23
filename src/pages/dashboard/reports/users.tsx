@@ -19,7 +19,7 @@ import {useNavigate} from 'react-router-dom';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/services/store';
 import {fetchPatientReports} from '@/services/thunks';
-import {setReportPage, setReportPageSize} from '@/services/slice/userReportsSlice';
+import {setPatientPage, setPatientPageSize} from '@/services/slice/userReportsSlice';
 
 interface UserReportRow {
   date: string;
@@ -29,12 +29,12 @@ interface UserReportRow {
 const Users = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const {list, metaData, loadingList, errorList, filters} = useSelector(
+  const {patientList, patientMeta, loadingPatient, errorPatient, patientFilters} = useSelector(
     (s: RootState) => s.userReports,
   );
 
-  const page = filters.Page || 1;
-  const pageSize = filters.PageSize || 20;
+  const page = patientFilters.Page || 1;
+  const pageSize = patientFilters.PageSize || 20;
 
   useEffect(() => {
     dispatch(fetchPatientReports({Page: page, PageSize: pageSize}));
@@ -75,14 +75,14 @@ const Users = () => {
   ];
 
   const table = useReactTable({
-    data: list as UserReportRow[],
+    data: patientList as UserReportRow[],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const totalPages = metaData?.totalPages || 1;
+  const totalPages = patientMeta?.totalPages || 1;
 
-  const empty = !loadingList && list.length === 0;
+  const empty = !loadingPatient && patientList.length === 0;
 
   return (
     <DashboardLayout>
@@ -95,7 +95,7 @@ const Users = () => {
           </div>
 
           <div className="flex-1 overflow-auto lg:px-0 lg:mt-4">
-            {loadingList ? (
+            {loadingPatient ? (
               <div className="flex items-center justify-center h-64 text-sm text-gray-500">
                 Loading reports...
               </div>
@@ -143,19 +143,19 @@ const Users = () => {
                 </TableBody>
               </Table>
             )}
-            {errorList && (
-              <div className="p-4 text-sm text-red-600">{errorList}</div>
+            {errorPatient && (
+              <div className="p-4 text-sm text-red-600">{errorPatient}</div>
             )}
           </div>
 
           <div className="p-4 flex items-center justify-end">
             <Pagination
-              totalEntriesSize={metaData?.totalCount || list.length}
+              totalEntriesSize={patientMeta?.totalCount || patientList.length}
               currentPage={page}
               totalPages={totalPages}
-              onPageChange={p => dispatch(setReportPage(p))}
+              onPageChange={p => dispatch(setPatientPage(p))}
               pageSize={pageSize}
-              onPageSizeChange={s => dispatch(setReportPageSize(s))}
+              onPageSizeChange={s => dispatch(setPatientPageSize(s))}
             />
           </div>
         </div>

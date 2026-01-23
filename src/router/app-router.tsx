@@ -16,6 +16,7 @@ import VerificationRequest from '@/pages/dashboard/doctors/request';
 
 import DoctorDetails from '@/pages/dashboard/doctors/doctor-detail';
 import MarketingCampaign from '@/pages/dashboard/marketing';
+import ReferralCodes from '@/pages/dashboard/marketing/referral-codes';
 import Amenities from '@/pages/dashboard/ambulance/amenities';
 import Providers from '@/pages/dashboard/ambulance/provider';
 import Request from '@/pages/dashboard/ambulance/request';
@@ -65,6 +66,7 @@ export const AppRouter = () => {
         <Route path={ROUTES.doctors.details} element={<DoctorDetails />} />
 
         <Route path={ROUTES.marketing} element={<MarketingCampaign />} />
+        <Route path={ROUTES.referral.codes} element={<ReferralCodes />} />
 
         <Route path={ROUTES.ambulance.amenities} element={<Amenities />} />
         <Route path={ROUTES.ambulance.providers} element={<Providers />} />

@@ -553,17 +553,25 @@ export interface UserReportDetailItem {
 }
 
 export interface UserReportsState {
-  list: UserReportItem[];
+  patientList: UserReportItem[];
+  doctorList: UserReportItem[];
   detail: UserReportDetailItem[];
-  metaData: MetaData | null; // for list
+  patientMeta: MetaData | null;
+  doctorMeta: MetaData | null;
   detailMeta: MetaData | null; // for detail pagination
-  loadingList: boolean;
+  loadingPatient: boolean;
+  loadingDoctor: boolean;
   loadingDetail: boolean;
-  errorList: string | null;
+  errorPatient: string | null;
+  errorDoctor: string | null;
   errorDetail: string | null;
   exportingDetail?: boolean;
   exportDetailError?: string | null;
-  filters: {
+  patientFilters: {
+    Page?: number;
+    PageSize?: number;
+  };
+  doctorFilters: {
     Page?: number;
     PageSize?: number;
   };

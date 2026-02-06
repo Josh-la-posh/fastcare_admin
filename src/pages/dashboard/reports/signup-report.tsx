@@ -123,7 +123,7 @@ const SignupReport = () => {
     <DashboardLayout>
       <div className="bg-gray-100 h-screen pb-20 overflow-auto">
         <div className="mx-4 md:mx-8 mt-10 bg-white rounded-md px-2 py-6 lg:p-6">
-          <h1 className="text-xl font-semibold text-gray-800 mb-4">Signup Report</h1>
+          {/* <h1 className="text-xl font-semibold text-gray-800 mb-4">Signup Report</h1> */}
           
           {/* Nested tabs for Patient and Doctor */}
           <Tabs value={signupTab} onValueChange={setSignupTab} className="w-full">

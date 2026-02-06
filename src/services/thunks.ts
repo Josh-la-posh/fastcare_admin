@@ -541,6 +541,180 @@ export const deactivateAmbulanceProvider = createAsyncThunk(
   }
 );
 
+// -------------------------------------------------
+// Ambulances Thunks
+// -------------------------------------------------
+
+export const fetchAmbulances = createAsyncThunk(
+  "ambulances/fetchAll",
+  async (ambulanceProviderId: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get(`/Ambulances/provider/${ambulanceProviderId}`);
+      return res.data?.data ?? res.data ?? [];
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch ambulances"));
+    }
+  }
+);
+
+// -------------------------------------------------
+// Drivers Thunks
+// -------------------------------------------------
+
+export const fetchDrivers = createAsyncThunk(
+  "drivers/fetchAll",
+  async (ambulanceProviderId: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get(`/Drivers/provider/${ambulanceProviderId}`);
+      return res.data?.data ?? res.data ?? [];
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch drivers"));
+    }
+  }
+);
+
+export const addDriver = createAsyncThunk(
+  "drivers/add",
+  async (payload: {
+    name: string;
+    email: string;
+    phoneNumber: string;
+    address: string;
+    licenseNumber: string;
+    ambulanceProviderId: string;
+  }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post("/Drivers", payload);
+      return res.data?.data ?? res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to add driver"));
+    }
+  }
+);
+
+// -------------------------------------------------
+// Respondents Thunks
+// -------------------------------------------------
+
+export const fetchRespondents = createAsyncThunk(
+  "respondents/fetchAll",
+  async (ambulanceProviderId: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get(`/Respondents/provider/${ambulanceProviderId}`);
+      return res.data?.data ?? res.data ?? [];
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch respondents"));
+    }
+  }
+);
+
+export const fetchRespondentsById = createAsyncThunk(
+  "respondents/fetchById",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get(`/Respondents/${id}`);
+      return res.data?.data ?? res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch respondent"));
+    }
+  }
+);
+
+// -------------------------------------------------
+// Responders Note Thunks
+// -------------------------------------------------
+
+export const fetchRespondersNote = createAsyncThunk(
+  "respondersNote/fetchAll",
+  async (responderId: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get(`/RespondersNote/responder/${responderId}`);
+      return res.data?.data ?? res.data ?? [];
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch responders notes"));
+    }
+  }
+);
+
+// -------------------------------------------------
+// Ambulance Requests Thunks
+// -------------------------------------------------
+
+export const fetchAmbulanceRequests = createAsyncThunk(
+  "ambulanceRequests/fetchAll",
+  async (providerId: string | undefined, { rejectWithValue }) => {
+    try {
+      const url = providerId 
+        ? `/AmbulanceRequests/provider/${providerId}`
+        : "/AmbulanceRequests";
+      const res = await apiClient.get(url);
+      return res.data?.data ?? res.data ?? [];
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch ambulance requests"));
+    }
+  }
+);
+
+// -------------------------------------------------
+// Amenities Thunks
+// -------------------------------------------------
+
+export const fetchAmenities = createAsyncThunk(
+  "amenities/fetchAll",
+  async (ambulanceProviderId: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get(`/Amenities/provider/${ambulanceProviderId}`);
+      return res.data?.data ?? res.data ?? [];
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch amenities"));
+    }
+  }
+);
+
+export const fetchAmenityById = createAsyncThunk(
+  "amenities/fetchById",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get(`/Amenities/${id}`);
+      return res.data?.data ?? res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch amenity"));
+    }
+  }
+);
+
+export const createAmenity = createAsyncThunk(
+  "amenities/create",
+  async (payload: {
+    equipmentName: string;
+    description: string;
+    ambulanceProviderId: string;
+  }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.post("/Amenities", payload);
+      return res.data?.data ?? res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to create amenity"));
+    }
+  }
+);
+
+export const updateAmenity = createAsyncThunk(
+  "amenities/update",
+  async (payload: {
+    equipmentName: string;
+    description: string;
+    ambulanceProviderId: string;
+  }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/Amenities/${payload.equipmentName}`, payload);
+      return res.data?.data ?? res.data ?? payload;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to update amenity"));
+    }
+  }
+);
+
 export const fetchArticles = createAsyncThunk(
   "articles/fetchArticles",
   async (

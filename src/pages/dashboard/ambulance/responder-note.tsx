@@ -278,7 +278,7 @@ const ResponderNote = () => {
           {/* Pagination */}
           <div className="p-4 flex items-center justify-end">
             <Pagination
-              totalEntriesSize={notes.length}
+              totalEntriesSize={tableData.length}
             
               currentPage={page}
               totalPages={totalPages}

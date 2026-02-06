@@ -128,7 +128,7 @@ const Request = () => {
       request_id: request.id.slice(-8).toUpperCase(), 
       type: request.emergencyType || 'General',
       no: getAmbulanceDisplay(request),
-      time: formatDate(request.creationDate),
+      time: formatDate(request.creationDate ?? null),
       action: 'View details',
       isNew: false, 
       rawData: request, // Keep original data for details

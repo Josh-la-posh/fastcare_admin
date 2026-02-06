@@ -215,8 +215,130 @@ export interface AmbulanceProvider {
   serviceCharge: number;
 }
 
+export interface AmbulanceProviderState {
+  providers: AmbulanceProvider[];
+  selectedProvider: AmbulanceProvider | null;
+  loading: boolean;
+  error: string | null;
+  createLoading: boolean;
+  createError: string | null;
+}
 
+// Ambulance Types
+export interface Ambulance {
+  id: string;
+  ambulanceProviderId: string;
+  plateNumber: string;
+  amenities: string;
+  status: string;
+  pricePerKm: number | null;
+  baseRateFee: number | null;
+  address: string | null;
+  location: { latitude: number; longitude: number } | null;
+}
 
+export interface AllAmbulancesState {
+  ambulances: Ambulance[];
+  loading: boolean;
+  error: string | null;
+}
+
+// Ambulance Request Types
+export interface AmbulanceRequest {
+  id: string;
+  patientName: string;
+  ambulanceId: string;
+  ambulanceNumber: string | null;
+  pickupAddress: string | null;
+  pickupLocation: { latitude: number; longitude: number } | null;
+  dropoffAddress: string | null;
+  dropoffLocation: { latitude: number; longitude: number } | null;
+  status: string;
+  requestDate: string;
+  completedDate: string | null;
+  fare: number | null;
+  emergencyType?: string;
+  creationDate?: string;
+  ambulanceType?: string;
+}
+
+export interface AmbulanceRequestState {
+  requests: AmbulanceRequest[];
+  currentRequest: AmbulanceRequest | null;
+  loading: boolean;
+  error: string | null;
+  selectedRequestId: string | null;
+}
+
+// Driver Types
+export interface Driver {
+  id: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  address: string;
+  licenseNumber: string;
+  certificationStatus: string;
+  ambulanceProviderId: string;
+}
+
+export interface DriverState {
+  drivers: Driver[];
+  loading: boolean;
+  error: string | null;
+  currentDriver: Driver | null;
+}
+
+// Respondent Types
+export interface Respondent {
+  id: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  address: string;
+  professionalLicense: string;
+  certificationStatus: string;
+  ambulanceProviderId: string;
+}
+
+export interface RespondentsState {
+  respondents: Respondent[];
+  selectedRespondents: Respondent | null;
+  loading: boolean;
+  error: string | null;
+}
+
+// Amenity Types
+export interface Amenity {
+  equipmentName: string;
+  description: string;
+  ambulanceProviderId: string;
+}
+
+export interface AmenitiesState {
+  amenities: Amenity[];
+  selectedAmenity: Amenity | null;
+  loading: boolean;
+  error: string | null;
+  createLoading: boolean;
+  createError: string | null;
+  updateLoading: boolean;
+  updateError: string | null;
+}
+
+// Responders Note Types
+export interface ResponderNote {
+  id: string;
+  note: string;
+  responderId: string;
+  createdAt: string;
+}
+
+export interface RespondersNoteState {
+  notes: ResponderNote[];
+  loading: boolean;
+  error: string | null;
+}
 
 export interface FAQ {
   id: number;

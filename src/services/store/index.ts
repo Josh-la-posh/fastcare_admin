@@ -18,6 +18,13 @@ import appFeedbackReducer from '../slice/appFeedbackSlice'
 import marketingCampaignsReducer from '../slice/marketingCampaignSlice'
 import adCampaignsReducer from '../slice/adCampaignSlice'
 import promoCodesReducer from '../slice/promoCodeSlice'
+// Ambulance-related reducers
+import allAmbulancesReducer from '../slice/allAmbulancesSlice'
+import ambulanceProvidersReducer from '../slice/ambulanceProviderSlice'
+import driversReducer from '../slice/driverSlice'
+import respondentsReducer from '../slice/respondentsSlice'
+import ambulanceRequestsReducer from '../slice/ambulanceRequestSlice'
+import amenitiesReducer from '../slice/amenitiesSlice'
 
 
 export const store = configureStore({
@@ -41,6 +48,13 @@ export const store = configureStore({
     marketingCampaigns: marketingCampaignsReducer,
     adCampaigns: adCampaignsReducer,
     promoCodes: promoCodesReducer,
+    // Ambulance-related stores
+    allAmbulances: allAmbulancesReducer,
+    ambulanceProviders: ambulanceProvidersReducer,
+    drivers: driversReducer,
+    respondents: respondentsReducer,
+    ambulanceRequests: ambulanceRequestsReducer,
+    amenities: amenitiesReducer,
   },
 });
 

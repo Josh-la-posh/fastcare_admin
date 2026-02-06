@@ -251,7 +251,7 @@ const Responders = () => {
           {/* Pagination */}
           <div className="p-4 flex items-center justify-end">
             <Pagination
-              totalEntriesSize={drivers.length}
+              totalEntriesSize={tableData.length}
 
               currentPage={page}
               totalPages={totalPages}

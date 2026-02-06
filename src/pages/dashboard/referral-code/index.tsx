@@ -35,6 +35,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { AppDispatch, RootState } from '@/services/store';
 import { Loader } from '@/components/ui/loading';
 import { StatsCards } from '@/components/ui/stats-card';
+import GenerateCode from '@/components/form/settings/generate-code';
 
 // Dynamic stats will be derived from referral summary endpoint
 
@@ -42,16 +43,17 @@ interface ReferralRow {
   id: string;
   referral_code: string; // original table accessor maintained
   name: string;          // referring staff name
+  email: string;         // staff email
   total: number;         // total users registered
-  status: string;        // placeholder (API does not supply) -> '-'
-  date?: string;
+  status: string;        // Active/Inactive
+  dateCreated: string;   // date created
 }
 
-const MarketingCampaign = () => {
+const ReferralCodePage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { summary, codes, metaData, loadingSummary, loadingList, errorSummary, errorList } = useSelector((s: RootState) => s.referrals);
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm] = useState('');
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -81,8 +83,10 @@ const MarketingCampaign = () => {
       id: c.id,
       referral_code: c.code,
       name: (c.staffName || '-').trim(),
+      email: c.email || '-',
       total: c.totalUsersRegistered,
-      status: '-', // API does not provide status for referral codes
+      status: c.status || '-',
+      dateCreated: c.dateCreated || '-',
     }))
   ), [codes]);
 
@@ -111,47 +115,51 @@ const MarketingCampaign = () => {
       });
   };
 
-  const columns: ColumnDef<ReferralRow>[] = [
+  const columns: ColumnDef<ReferralRow>[] = [    
     {
+      accessorKey: 'dateCreated',
+      header: 'Date',
+    },{
       accessorKey: 'referral_code',
       header: 'Referral Code',
     },
     {
       accessorKey: 'name',
-      header: 'Referring Staff Name',
+      header: 'Name',
     },
-
+    {
+      accessorKey: 'email',
+      header: 'Email',
+    },
     {
       accessorKey: 'total',
-      header: 'Total Users Registered',
+      header: 'Reg. Users',
     },
-
     {
       accessorKey: 'status',
       header: 'Status',
       cell: ({getValue}) => {
-        const value = getValue() as string; // ✅ cast from unknown to string
+        const value = getValue() as string;
         const status = (value || '').toLowerCase();
 
-        let statusClasses = ' py-1  text-md font-medium w-fit';
+        let badgeClasses = 'inline-flex items-center rounded-sm px-2.5 py-1 text-xs font-semibold';
 
         if (status === 'approved' || status === 'active') {
-          statusClasses += '  text-green-500';
+          badgeClasses += ' bg-green-100 text-green-700';
         } else if (status === 'pending') {
-          statusClasses += '  text-yellow-500';
-        } else if (status === 'disputed') {
-          statusClasses += '  text-red-500';
+          badgeClasses += ' bg-yellow-100 text-yellow-700';
+        } else if (status === 'inactive') {
+          badgeClasses += ' bg-red-100 text-red-700';
         } else {
-          statusClasses += '  text-gray-500';
+          badgeClasses += ' bg-gray-100 text-gray-700';
         }
 
-        return <span className={statusClasses}>{value || '-'}</span>;
+        return <span className={badgeClasses}>{value || '-'}</span>;
       },
     },
-
     {
       id: 'action',
-      header: 'Action',
+      header: '',
       enableHiding: false,
       cell: ({row}) => (
         <button
@@ -160,7 +168,7 @@ const MarketingCampaign = () => {
           className="flex items-center justify-center gap-2 rounded-md bg-[#E4F1FC] px-3 py-2 font-semibold text-[#135E9B] focus:outline-none focus:ring-2 focus:ring-[#135E9B] focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600"
           disabled={loadingDetail && pendingBase?.id === row.original.id}
         >
-          {loadingDetail && pendingBase?.id === row.original.id ? 'Loading...' : 'View Details'}
+          {loadingDetail && pendingBase?.id === row.original.id ? 'Loading...' : 'View'}
         </button>
       ),
     },
@@ -226,12 +234,16 @@ const MarketingCampaign = () => {
 
   return (
     <DashboardLayout>
-      <div className="bg-gray-100 overflow-scroll h-full ">
+      <div className="bg-gray-100 overflow-scroll h-full space-y-10 pt-10">
+        <div className="flex items-center justify-between lg:mx-8">
+          <h1 className='text-[20px] font-semibold text-[#525755]'>All Referral Codes</h1>
+          <GenerateCode />
+        </div>
         <StatsCards stats={claimStats} error={!!errorSummary} />
 
-        <div className="lg:mx-8 mt-10 bg-white mb-32 rounded-md flex flex-col ">
-          <div className="flex flex-wrap gap-4 justify-between items-center p-6">
-            <div className="flex items-center gap-8">
+        <div className="lg:mx-8 bg-white mb-32 rounded-md flex flex-col ">
+          <div className="flex gap-4 justify-end items-center p-6">
+            {/* <div className="flex items-center gap-8">
               <input
                 type="text"
                 placeholder="Search..."
@@ -239,12 +251,12 @@ const MarketingCampaign = () => {
                 onChange={e => setSearchTerm(e.target.value)}
                 className="border rounded-lg hidden lg:block px-4 py-2 lg:w-96 lg:max-w-2xl focus:outline-none"
               />
-            </div>
+            </div> */}
             <div className="flex gap-4 items-center">
               <MarketingFilter onApply={handleApplyFilter} onReset={handleResetFilter} />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="py-2.5 w-44" disabled={loadingList}>
+                  <Button variant="ghost" className="py-2.5 w-fit" disabled={loadingList}>
                     <ArrowDownLeft size={30} />
                     Export
                   </Button>
@@ -283,13 +295,13 @@ const MarketingCampaign = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-auto px-6 lg:px-0 mt-4">
-            <Table className="min-w-[600px]">
+          <div className="flex-1 overflow-x-auto px-6 lg:px-0 mt-4">
+            <Table className="min-w-[800px]">
               <TableHeader>
                 {table.getHeaderGroups().map(headerGroup => (
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map(header => (
-                      <TableHead key={header.id}>
+                      <TableHead key={header.id} className="whitespace-nowrap">
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -318,9 +330,9 @@ const MarketingCampaign = () => {
                       {row.getVisibleCells().map(cell => (
                         <TableCell
                           key={cell.id}
-                          className={
+                          className={`whitespace-nowrap ${
                             cell.column.id === 'actions' ? 'text-right' : ''
-                          }
+                          }`}
                         >
                           {flexRender(
                             cell.column.columnDef.cell,
@@ -363,7 +375,7 @@ const MarketingCampaign = () => {
           <Summary
             open={detailOpen}
             onOpenChange={(o) => setDetailOpen(o)}
-            base={pendingBase ? { id: pendingBase.id, referral_code: pendingBase.referral_code, status: pendingBase.status, date: pendingBase.date } : null}
+            base={pendingBase ? { id: pendingBase.id, referral_code: pendingBase.referral_code, status: pendingBase.status, date: pendingBase.dateCreated } : null}
             selected={selected}
             loadingDetail={loadingDetail}
           />
@@ -373,4 +385,4 @@ const MarketingCampaign = () => {
   );
 };
 
-export default MarketingCampaign;
+export default ReferralCodePage;

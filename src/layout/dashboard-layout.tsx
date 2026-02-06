@@ -98,8 +98,11 @@ export const DashboardLayout = ({children, searchBar}: Props) => {
           name: 'Reports',
           icon: <PieChart className='w-5 h-6' />,
           url: '/reports',
-          // unified reports page with internal tabs, no children needed
-          children: [],
+          children: [
+            {name: 'Signup Report', url: '/reports/signup'},
+            {name: 'Appointment Report', url: '/reports/appointment'},
+            {name: 'Emergency Call Report', url: '/reports/emergency'},
+          ],
         },
 
         {
@@ -129,12 +132,19 @@ export const DashboardLayout = ({children, searchBar}: Props) => {
         },
 
         {
+          name: 'Referral code',
+          icon: <Share2Icon className='w-5 h-6' />,
+          url: '/referral-code',
+          children: [],
+        },
+
+        {
           name: 'Marketing campaign',
           icon: <Share2Icon className='w-5 h-6' />,
           url: '/marketing-campaign',
           children: [
-            {name: 'Ad Campaign', url: '/marketing-campaign'},
-            {name: 'Promotional Code', url: '/marketing-campaign/referral-codes'},
+            {name: 'Ad Campaigns', url: '/marketing-campaign/ad-campaigns'},
+            {name: 'Promotional Codes', url: '/marketing-campaign/promotional-codes'},
           ],
         },
 

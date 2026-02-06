@@ -102,7 +102,8 @@ const AllTransactions = () => {
   const columns: ColumnDef<TransactionRow>[] = [
     {
       accessorKey: 'date',
-      header: 'Date',
+      header: () => <span className="whitespace-nowrap">Date</span>,
+      cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('date')}</span>,
       filterFn: (row, id, filterValue) => {
         const rowDate = new Date(row.getValue(id));
         const start = filterValue?.start ? new Date(filterValue.start) : null;
@@ -116,32 +117,40 @@ const AllTransactions = () => {
 
     {
       accessorKey: 'transaction_id',
-      header: 'Transaction ID',
+      header: () => <span className="whitespace-nowrap">Transaction ID</span>,
+      cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('transaction_id')}</span>,
     },
 
-    { accessorKey: 'name', header: 'Patient Name' },
+    { 
+      accessorKey: 'name', 
+      header: () => <span className="whitespace-nowrap">Patient Name</span>,
+      cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('name')}</span>,
+    },
     {
       accessorKey: 'amount',
-      header: 'Amount',
+      header: () => <span className="whitespace-nowrap">Amount</span>,
+      cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('amount')}</span>,
     },
     {
       accessorKey: 'type',
-      header: 'Transaction Type',
+      header: () => <span className="whitespace-nowrap">Transaction Type</span>,
+      cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('type')}</span>,
     },
     {
       accessorKey: 'hospital',
-      header: 'Hospital',
+      header: () => <span className="whitespace-nowrap">Hospital</span>,
+      cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('hospital')}</span>,
     },
 
     {
       accessorKey: 'status',
-      header: 'Status',
+      header: () => <span className="whitespace-nowrap">Status</span>,
       cell: ({ getValue }) => {
         const status = (getValue() as string || '').toLowerCase();
         let label = status;
         if (status === 'completed') label = 'Successful';
         else if (status) label = label.charAt(0).toUpperCase() + label.slice(1);
-        let statusClasses = 'py-1 text-md font-semibold w-fit';
+        let statusClasses = 'py-1 text-md font-semibold w-fit whitespace-nowrap';
         if (status === 'completed' || status === 'approved' || status === 'successful') statusClasses += ' text-green-700';
         else if (status === 'pending') statusClasses += ' text-yellow-600';
         else if (status === 'failed' || status === 'rejected' || status === 'disputed') statusClasses += ' text-red-800';
@@ -151,7 +160,7 @@ const AllTransactions = () => {
     },
     {
           id: 'action',
-          header: 'Action',
+          header: () => <span className="whitespace-nowrap">Action</span>,
           enableHiding: false,
           cell: ({ row }) => {
 

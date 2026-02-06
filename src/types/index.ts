@@ -467,6 +467,9 @@ export interface ReferralCodeItem {
   code: string;
   totalUsersRegistered: number;
   staffName: string;
+  email?: string;
+  status: string;
+  dateCreated?: string;
 }
 
 export interface ReferralCodeUser {
@@ -492,6 +495,8 @@ export interface ReferralCodesState {
   loadingList: boolean;
   loadingDetail: boolean;
   generating: boolean;
+  activating: boolean;
+  deactivating: boolean;
   exportingList: boolean;
   exportingUsers: boolean;
   errorSummary: string | null;
@@ -610,4 +615,106 @@ export interface AppointmentReportsState {
     Page?: number;
     PageSize?: number;
   };
+}
+
+// -----------------------------
+// Marketing Campaign Types
+// -----------------------------
+
+export interface MarketingCampaignSummary {
+  couponCode: string;
+  totalMarketingCampaignEntryUsed: number;
+  name: string;
+}
+
+export interface MarketingCampaignItem {
+  id: string;
+  couponCode: string;
+  totalUsersRegistered: number;
+  name: string;
+  email: string;
+  dateCreated: string;
+  status: string;
+}
+
+export interface MarketingCampaignUser {
+  name: string;
+  email: string;
+  phoneNumber: string;
+  registrationDate: string;
+}
+
+export interface MarketingCampaignDetail {
+  id: string;
+  couponCode: string;
+  name: string;
+  email: string;
+  dateCreated: string;
+  status: string;
+  marketingCampaignEntryUsers: MarketingCampaignUser[];
+}
+
+export interface MarketingCampaignState {
+  summary: MarketingCampaignSummary | null;
+  list: MarketingCampaignItem[];
+  selected: MarketingCampaignDetail | null;
+  metaData: MetaData | null;
+  loading: boolean;
+  loadingSummary: boolean;
+  loadingDetail: boolean;
+  exporting: boolean;
+  error: string | null;
+  creating: boolean;
+  createError: string | null;
+  activating: boolean;
+  deactivating: boolean;
+}
+
+// -----------------------------
+// Ad Campaign (Feature Announcement) Types
+// -----------------------------
+
+export interface AdCampaignItem {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  startDate: string | null;
+  endDate: string | null;
+  image: string;
+}
+
+export interface AdCampaignState {
+  list: AdCampaignItem[];
+  metaData: MetaData | null;
+  loading: boolean;
+  error: string | null;
+  creating: boolean;
+  createError: string | null;
+}
+
+// -----------------------------
+// Promo Code Types
+// -----------------------------
+
+export interface PromoCodeItem {
+  id: string;
+  code: string;
+  description: string;
+  discountPercentage: number;
+  maxUsage: number;
+  usageCount: number;
+  startDate: string | null;
+  endDate: string | null;
+  status: number;
+  dateCreated: string;
+}
+
+export interface PromoCodeState {
+  list: PromoCodeItem[];
+  metaData: MetaData | null;
+  loading: boolean;
+  error: string | null;
+  activating: boolean;
+  deactivating: boolean;
 }

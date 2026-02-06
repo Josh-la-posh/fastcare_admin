@@ -7,6 +7,8 @@ import {
   exportReferralCodes,
   exportReferralCodeUsers,
   generateReferralCodes,
+  activateReferralCode,
+  deactivateReferralCode,
 } from '@/services/thunks';
 
 const initialState: ReferralCodesState = {
@@ -18,6 +20,8 @@ const initialState: ReferralCodesState = {
   loadingList: false,
   loadingDetail: false,
   generating: false,
+  activating: false,
+  deactivating: false,
   exportingList: false,
   exportingUsers: false,
   errorSummary: null,
@@ -131,6 +135,40 @@ const referralSlice = createSlice({
       .addCase(generateReferralCodes.rejected, (state, action) => {
         state.generating = false;
         state.generateError = action.payload as string || 'Failed to generate codes';
+      });
+
+    // Activate referral code
+    builder
+      .addCase(activateReferralCode.pending, state => {
+        state.activating = true;
+      })
+      .addCase(activateReferralCode.fulfilled, (state, action) => {
+        state.activating = false;
+        // Update the code status in the list
+        const index = state.codes.findIndex(c => c.id === action.payload.id);
+        if (index !== -1) {
+          state.codes[index].status = 'Active';
+        }
+      })
+      .addCase(activateReferralCode.rejected, state => {
+        state.activating = false;
+      });
+
+    // Deactivate referral code
+    builder
+      .addCase(deactivateReferralCode.pending, state => {
+        state.deactivating = true;
+      })
+      .addCase(deactivateReferralCode.fulfilled, (state, action) => {
+        state.deactivating = false;
+        // Update the code status in the list
+        const index = state.codes.findIndex(c => c.id === action.payload.id);
+        if (index !== -1) {
+          state.codes[index].status = 'Inactive';
+        }
+      })
+      .addCase(deactivateReferralCode.rejected, state => {
+        state.deactivating = false;
       });
   }
 });

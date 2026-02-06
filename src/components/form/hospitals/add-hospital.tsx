@@ -229,13 +229,15 @@ export default function AddHospital() {
       const virtualCharge = serviceCharges.find(sc => sc.type === 'virtual');
       const physicalCharge = serviceCharges.find(sc => sc.type === 'physical');
       
-      payload.append('RegistrationFee', String(registrationCharge ? Number(registrationCharge.amount) : 0));
+      const registrationFeeAmount = registrationCharge ? Number(registrationCharge.amount) : 0;
+      payload.append('RegistrationFee', String(registrationFeeAmount));
+      payload.append('IsRegistrationFeeEnabled', String(registrationFeeAmount > 0));
       payload.append('VirtualConsultationFee', String(virtualCharge ? Number(virtualCharge.amount) : 0));
       payload.append('PhysicalConsultationFee', String(physicalCharge ? Number(physicalCharge.amount) : 0));
 
   await dispatch(createHospital(payload)).unwrap();
-  // Refetch hospitals list to ensure UI reflects newly added hospital
-  dispatch(fetchHospitals());
+  // Refetch hospitals list with reset pagination and empty search
+  dispatch(fetchHospitals({ page: 1, pageSize: 10, search: '' }));
 
       // Close the add hospital dialog first, then show success
       setOpen(false);

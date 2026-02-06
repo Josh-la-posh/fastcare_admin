@@ -15,6 +15,9 @@ import userReportsReducer from '../slice/userReportsSlice'
 import appointmentReportsReducer from '../slice/appointmentReportsSlice'
 import emergencyReportsReducer from '../slice/emergencyReportsSlice'
 import appFeedbackReducer from '../slice/appFeedbackSlice'
+import marketingCampaignsReducer from '../slice/marketingCampaignSlice'
+import adCampaignsReducer from '../slice/adCampaignSlice'
+import promoCodesReducer from '../slice/promoCodeSlice'
 
 
 export const store = configureStore({
@@ -34,7 +37,10 @@ export const store = configureStore({
     userReports: userReportsReducer,
     appointmentReports: appointmentReportsReducer,
     emergencyReports: emergencyReportsReducer,
-    appFeedback: appFeedbackReducer
+    appFeedback: appFeedbackReducer,
+    marketingCampaigns: marketingCampaignsReducer,
+    adCampaigns: adCampaignsReducer,
+    promoCodes: promoCodesReducer,
   },
 });
 

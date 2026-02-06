@@ -6,9 +6,10 @@ import {
   fetchReferralSummary,
   fetchReferralCodes,
   fetchReferralCodeById,
-  exportReferralCodes,
   exportReferralCodeUsers,
   generateReferralCodes,
+  activateReferralCode,
+  deactivateReferralCode,
 } from '@/services/thunks';
 import { Button } from '@/components/ui/button';
 import { Loader } from '@/components/ui/loading';
@@ -17,8 +18,14 @@ import { Pagination } from '@/components/ui/pagination';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, X, CheckCircle2 } from 'lucide-react';
+import { Download, X, CheckCircle2, MoreVertical } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import { StatsCards } from '@/components/ui/stats-card';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import toast from 'react-hot-toast';
+import claim from '/svg/claim.svg';
+import approved from '/svg/approved.svg';
+import disputed from '/svg/top.svg';
 
 interface ReferralRow {
   id: string;
@@ -26,8 +33,8 @@ interface ReferralRow {
   staffName: string;
   email: string;
   totalUsersRegistered: number;
-  isActive: boolean;
-  date: string;
+  status: string;
+  dateCreated: string;
 }
 
 const ReferralCodesPage = () => {
@@ -42,6 +49,8 @@ const ReferralCodesPage = () => {
     loadingDetail,
     exportingList,
     exportingUsers,
+    activating,
+    deactivating,
     errorSummary,
     errorList,
     errorDetail,
@@ -52,6 +61,7 @@ const ReferralCodesPage = () => {
   const [pageSize, setPageSize] = useState(10);
   const [codeFilter, setCodeFilter] = useState('');
   const [staffFilter, setStaffFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
 
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -74,8 +84,14 @@ const ReferralCodesPage = () => {
 
   // Fetch list whenever filters/page change
   useEffect(() => {
-    dispatch(fetchReferralCodes({ Page: page, PageSize: pageSize, Code: codeFilter || undefined, StaffName: staffFilter || undefined }));
-  }, [dispatch, page, pageSize, codeFilter, staffFilter]);
+    dispatch(fetchReferralCodes({ 
+      Page: page, 
+      PageSize: pageSize, 
+      Code: codeFilter || undefined, 
+      StaffName: staffFilter || undefined,
+      Status: statusFilter ? Number(statusFilter) : undefined 
+    }));
+  }, [dispatch, page, pageSize, codeFilter, staffFilter, statusFilter]);
 
   // Fetch detail when modal opened and id set
   useEffect(() => {
@@ -90,23 +106,20 @@ const ReferralCodesPage = () => {
     staffName: c.staffName?.trim() || '-',
     email: c.email || '-',
     totalUsersRegistered: c.totalUsersRegistered,
-    isActive: c.isActive ?? true,
-    date: c.dateCreated ? new Date(c.dateCreated).toLocaleDateString('en-GB') : '-',
+    status: c.status || 'Unknown',
+    dateCreated: c.dateCreated ? new Date(c.dateCreated).toLocaleDateString('en-GB') : '-',
   })), [codes]);
 
-  const handleExportList = (format: number) => {
-    dispatch(exportReferralCodes({ format, Code: codeFilter || undefined, StaffName: staffFilter || undefined }))
-      .unwrap()
-      .then(payload => {
-        const blob = payload.blob as Blob;
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `referral-codes.${format === 1 ? 'xlsx' : 'csv'}`;
-        a.click();
-        URL.revokeObjectURL(url);
-      })
-      .catch(() => {/* swallow - errors reflected in slice state */});
+  // Get status label
+  const getStatusLabel = (status: string) => {
+    const s = (status || '').toLowerCase();
+    if (s === 'active') {
+      return { label: 'Active', className: 'text-green-600 bg-green-50' };
+    } else if (s === 'inactive' || s === 'deactivated') {
+      return { label: 'Inactive', className: 'text-gray-500 bg-gray-100' };
+    } else {
+      return { label: status || 'Unknown', className: 'text-gray-500 bg-gray-100' };
+    }
   };
 
   const handleExportUsers = (format: number) => {
@@ -123,6 +136,26 @@ const ReferralCodesPage = () => {
         URL.revokeObjectURL(url);
       })
       .catch(() => {/* error handled in slice */});
+  };
+
+  // Activate a referral code
+  const handleActivate = async (id: string) => {
+    try {
+      await dispatch(activateReferralCode(id)).unwrap();
+      toast.success('Referral code activated successfully');
+    } catch (error) {
+      toast.error(typeof error === 'string' ? error : 'Failed to activate code');
+    }
+  };
+
+  // Deactivate a referral code
+  const handleDeactivate = async (id: string) => {
+    try {
+      await dispatch(deactivateReferralCode(id)).unwrap();
+      toast.success('Referral code deactivated successfully');
+    } catch (error) {
+      toast.error(typeof error === 'string' ? error : 'Failed to deactivate code');
+    }
   };
 
   // Generate a random alphanumeric code
@@ -205,62 +238,36 @@ const ReferralCodesPage = () => {
           <Button className="px-6" onClick={openGenerateDialog}>Generate promo code</Button>
         </div>
 
-        {/* Summary Cards - matching the design */}
-        <div className="my-6 mx-8 flex flex-col lg:flex-row justify-between gap-6">
-          {/* Card 1: Total Referrals Used */}
-          <div className="flex items-center rounded-lg bg-white border border-gray-200 w-full overflow-hidden">
-            <div className="bg-[#E3F2FD] p-6 flex items-center justify-center">
-              <div className="w-10 h-10 bg-[#2196F3] rounded flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                  <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
-                </svg>
-              </div>
-            </div>
-            <div className="p-4 flex-1">
-              <h4 className="text-2xl font-bold text-gray-800">
-                {loadingSummary ? '...' : errorSummary ? <span className="text-red-600 text-sm">Err</span> : (summary?.totalReferralCodeUsed ?? 0)}
-              </h4>
-              <p className="text-sm text-gray-500">Total Referrals Used</p>
-            </div>
-          </div>
-
-          {/* Card 2: Most Used Code */}
-          <div className="flex items-center rounded-lg bg-white border border-gray-200 w-full overflow-hidden">
-            <div className="bg-[#E8F5E9] p-6 flex items-center justify-center">
-              <div className="w-10 h-10 bg-[#4CAF50] rounded flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                  <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
-                </svg>
-              </div>
-            </div>
-            <div className="p-4 flex-1">
-              <h4 className="text-2xl font-bold text-gray-800">
-                {loadingSummary ? '...' : errorSummary ? <span className="text-red-600 text-sm">Err</span> : (summary?.code ?? '-')}
-              </h4>
-              <p className="text-sm text-gray-500">Most Used Code</p>
-            </div>
-          </div>
-
-          {/* Card 3: Top Performing Staff */}
-          <div className="flex items-center rounded-lg bg-white border border-gray-200 w-full overflow-hidden">
-            <div className="bg-[#FFF8E1] p-6 flex items-center justify-center">
-              <div className="w-10 h-10 bg-[#FFC107] rounded flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                  <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
-                </svg>
-              </div>
-            </div>
-            <div className="p-4 flex-1">
-              <h4 className="text-2xl font-bold text-gray-800">
-                {loadingSummary ? '...' : errorSummary ? <span className="text-red-600 text-sm">Err</span> : (summary?.staffName?.trim() || '-')}
-              </h4>
-              <p className="text-sm text-gray-500">Top Performing Staff</p>
-            </div>
-          </div>
-        </div>
+        {/* Summary Cards */}
+        <StatsCards
+          stats={[
+            {
+              id: 1,
+              title: 'Total Referrals Used',
+              value: loadingSummary ? '...' : (summary?.totalReferralCodeUsed ?? 0),
+              borderColor: '#2f80ed',
+              bgColor: 'rgba(80, 159, 239, 0.2)',
+              icon: claim,
+            },
+            {
+              id: 2,
+              title: 'Most Used Code',
+              value: loadingSummary ? '...' : (summary?.code ?? '-'),
+              borderColor: '#0e9f2e',
+              bgColor: 'rgba(14, 159, 46, 0.05)',
+              icon: approved,
+            },
+            {
+              id: 3,
+              title: 'Top Performing Staff',
+              value: loadingSummary ? '...' : (summary?.staffName?.trim() || '-'),
+              borderColor: '#CFC923',
+              bgColor: 'rgba(207, 201, 35, 0.05)',
+              icon: disputed,
+            },
+          ]}
+          error={!!errorSummary}
+        />
 
         {/* Table Section */}
         <div className="lg:mx-8 mt-6 bg-white mb-32 rounded-md flex flex-col">
@@ -284,11 +291,22 @@ const ReferralCodesPage = () => {
 
           {/* Search and Filter Row */}
           <div className="flex flex-wrap gap-4 justify-between items-center p-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <div className="relative">
                 <Input
-                  className="w-64 pl-10"
-                  placeholder="Search user's name"
+                  className="w-48 pl-10"
+                  placeholder="Search by code"
+                  value={codeFilter}
+                  onChange={e => { setPage(1); setCodeFilter(e.target.value); }}
+                />
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <div className="relative">
+                <Input
+                  className="w-48 pl-10"
+                  placeholder="Search by staff name"
                   value={staffFilter}
                   onChange={e => { setPage(1); setStaffFilter(e.target.value); }}
                 />
@@ -296,12 +314,26 @@ const ReferralCodesPage = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              <Button variant="outline" className="gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
-                Filter
-              </Button>
+              <Select value={statusFilter} onValueChange={(val) => { setPage(1); setStatusFilter(val); }}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="1">Active</SelectItem>
+                  <SelectItem value="0">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+              {(codeFilter || staffFilter || statusFilter) && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => { setCodeFilter(''); setStaffFilter(''); setStatusFilter(''); setPage(1); }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  Clear filters
+                </Button>
+              )}
             </div>
             <Button variant="outline" disabled={exportingList} className="gap-2">
               {exportingList ? 'Exporting...' : 'Export'}
@@ -313,11 +345,11 @@ const ReferralCodesPage = () => {
             <Table className="min-w-[600px]">
               <TableHeader>
                 <TableRow className="bg-gray-50">
-                  <TableHead>Date</TableHead>
-                  <TableHead>Referral Code</TableHead>
-                  <TableHead>Name</TableHead>
+                  <TableHead>Code</TableHead>
+                  <TableHead>Staff Name</TableHead>
+                  <TableHead>Date Created</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Reg. Users</TableHead>
+                  <TableHead>No. of Users</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-24">Action</TableHead>
                 </TableRow>
@@ -334,29 +366,56 @@ const ReferralCodesPage = () => {
                     <TableCell colSpan={7} className="text-center py-10 text-sm text-gray-500">No promotion codes found</TableCell>
                   </TableRow>
                 ) : (
-                  rows.map(r => (
-                    <TableRow key={r.id} className="hover:bg-gray-50">
-                      <TableCell>{r.date || '-'}</TableCell>
-                      <TableCell className="font-medium">{r.code}</TableCell>
-                      <TableCell>{r.staffName}</TableCell>
-                      <TableCell>{r.email || '-'}</TableCell>
-                      <TableCell>{r.totalUsersRegistered}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${r.isActive ? 'text-green-600 bg-green-50' : 'text-gray-500 bg-gray-100'}`}>
-                          {r.isActive ? '● Active' : '● Deactivated'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <button
-                          type="button"
-                          onClick={() => { setSelectedId(r.id); setDetailOpen(true); }}
-                          className="text-primary font-medium hover:underline"
-                        >
-                          View Details
-                        </button>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  rows.map(r => {
+                    const statusInfo = getStatusLabel(r.status);
+                    return (
+                      <TableRow key={r.id} className="hover:bg-gray-50">
+                        <TableCell className="font-medium">{r.code}</TableCell>
+                        <TableCell>{r.staffName}</TableCell>
+                        <TableCell>{r.dateCreated}</TableCell>
+                        <TableCell>{r.email}</TableCell>
+                        <TableCell>{r.totalUsersRegistered}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${statusInfo.className}`}>
+                            ● {statusInfo.label}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="p-1 rounded hover:bg-gray-100"
+                                disabled={activating || deactivating}
+                              >
+                                <MoreVertical className="w-4 h-4 text-gray-500" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => { setSelectedId(r.id); setDetailOpen(true); }}>
+                                View Details
+                              </DropdownMenuItem>
+                              {(r.status || '').toLowerCase() !== 'active' ? (
+                                <DropdownMenuItem 
+                                  onClick={() => handleActivate(r.id)}
+                                  className="text-green-600"
+                                >
+                                  Activate
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem 
+                                  onClick={() => handleDeactivate(r.id)}
+                                  className="text-red-600"
+                                >
+                                  Deactivate
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>

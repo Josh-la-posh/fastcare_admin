@@ -10,13 +10,17 @@ import AllTransactions from '@/pages/dashboard/transactions/all-transactions';
 import Refunds from '@/pages/dashboard/transactions/refunds';
 import Checkers from '@/pages/dashboard/checker';
 import UsersDetails from '@/features/modules/report/user-details';
-import UnifiedReports from '@/pages/dashboard/reports';
+import SignupReport from '@/pages/dashboard/reports/signup-report';
+import AppointmentReport from '@/pages/dashboard/reports/appointment-report';
+import EmergencyCallReport from '@/pages/dashboard/reports/emergency-report';
 import Settings from '@/pages/dashboard/settings';
 import VerificationRequest from '@/pages/dashboard/doctors/request';
 
 import DoctorDetails from '@/pages/dashboard/doctors/doctor-detail';
-import MarketingCampaign from '@/pages/dashboard/marketing';
+import PromotionalCodes from '@/pages/dashboard/marketing/promotional-codes';
+import AdCampaigns from '@/pages/dashboard/marketing/ad-campaigns';
 import ReferralCodes from '@/pages/dashboard/marketing/referral-codes';
+import ReferralCodePage from '@/pages/dashboard/referral-code';
 import Amenities from '@/pages/dashboard/ambulance/amenities';
 import Providers from '@/pages/dashboard/ambulance/provider';
 import Request from '@/pages/dashboard/ambulance/request';
@@ -52,12 +56,15 @@ export const AppRouter = () => {
 
         <Route path={ROUTES.checkers} element={<Checkers />} />
 
-  <Route path={ROUTES.reports.root} element={<UnifiedReports />} />
+  <Route path={ROUTES.reports.signup} element={<SignupReport />} />
+  <Route path={ROUTES.reports.appointment} element={<AppointmentReport />} />
+  <Route path={ROUTES.reports.emergency} element={<EmergencyCallReport />} />
   <Route path={ROUTES.reports.userdetails} element={<UsersDetails />} />
-  {/* Redirect legacy paths to new unified reports with tab query */}
-  <Route path="/reports/users" element={<Navigate to="/reports?tab=signup&signupTab=patient" replace />} />
-  <Route path="/reports/reporting" element={<Navigate to="/reports?tab=appointment" replace />} />
-  <Route path="/reports/emergency-call" element={<Navigate to="/reports?tab=emergency" replace />} />
+  {/* Redirect legacy paths */}
+  <Route path="/reports" element={<Navigate to="/reports/signup" replace />} />
+  <Route path="/reports/users" element={<Navigate to="/reports/signup" replace />} />
+  <Route path="/reports/reporting" element={<Navigate to="/reports/appointment" replace />} />
+  <Route path="/reports/emergency-call" element={<Navigate to="/reports/emergency" replace />} />
 
         <Route path={ROUTES.settings} element={<Settings />} />
 
@@ -65,8 +72,10 @@ export const AppRouter = () => {
         <Route path={ROUTES.doctors.all} element={<AllDoctors />} />
         <Route path={ROUTES.doctors.details} element={<DoctorDetails />} />
 
-        <Route path={ROUTES.marketing} element={<MarketingCampaign />} />
+        <Route path={ROUTES.adCampaigns} element={<AdCampaigns />} />
+        <Route path={ROUTES.promotionalCodes} element={<PromotionalCodes />} />
         <Route path={ROUTES.referral.codes} element={<ReferralCodes />} />
+        <Route path={ROUTES.referralCode} element={<ReferralCodePage />} />
 
         <Route path={ROUTES.ambulance.amenities} element={<Amenities />} />
         <Route path={ROUTES.ambulance.providers} element={<Providers />} />

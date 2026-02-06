@@ -116,7 +116,8 @@ const Refunds = () => {
   const columns: ColumnDef<RefundRow>[] = [
     {
       accessorKey: 'date',
-      header: 'Date',
+      header: () => <span className="whitespace-nowrap">Date</span>,
+      cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('date')}</span>,
       filterFn: (row, id, filterValue) => {
         const rowDate = new Date(row.getValue(id));
         const start = filterValue?.start ? new Date(filterValue.start) : null;
@@ -129,34 +130,37 @@ const Refunds = () => {
     },
     {
       accessorKey: 'transaction_id',
-      header: 'Transaction ID',
+      header: () => <span className="whitespace-nowrap">Transaction ID</span>,
+      cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('transaction_id')}</span>,
     },
 
     {
       accessorKey: 'name',
-      header: 'Patient Name',
+      header: () => <span className="whitespace-nowrap">Patient Name</span>,
+      cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('name')}</span>,
     },
     {
       accessorKey: 'amount',
-      header: 'Refund Amount',
+      header: () => <span className="whitespace-nowrap">Refund Amount</span>,
       cell: ({ getValue }) => {
         const raw = getValue() as string;
         // Display backend raw numeric; optionally format later if needed
-        return <span>{raw}</span>;
+        return <span className="whitespace-nowrap">{raw}</span>;
       }
     },
     {
       accessorKey: 'reason',
-      header: 'Dispute Reason',
+      header: () => <span className="whitespace-nowrap">Dispute Reason</span>,
+      cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('reason')}</span>,
     },  
     {
       accessorKey: 'status',
-      header: 'Status',
+      header: () => <span className="whitespace-nowrap">Status</span>,
       cell: ({getValue}) => {
         const value = getValue() as string; // ✅ cast from unknown to string
         const status = (value || '').toLowerCase();
 
-        let statusClasses = ' py-1  text-md font-semibold w-fit';
+        let statusClasses = ' py-1 text-md font-semibold w-fit whitespace-nowrap';
 
         if (status === 'successful' || status === 'approved') {
           statusClasses += '  text-green-700';
@@ -173,7 +177,7 @@ const Refunds = () => {
     },
     {
       id: 'action',
-      header: 'Action',
+      header: () => <span className="whitespace-nowrap">Action</span>,
       enableHiding: false,
       cell: ({ row }) => {
 

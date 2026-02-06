@@ -787,7 +787,7 @@ export const fetchReferralSummary = createAsyncThunk(
 export const fetchReferralCodes = createAsyncThunk(
   "referrals/fetchCodes",
   async (
-    params: { Page?: number; PageSize?: number; Code?: string; StaffName?: string } | undefined,
+    params: { Page?: number; PageSize?: number; Code?: string; StaffName?: string; Status?: number } | undefined,
     { rejectWithValue }
   ) => {
     try {
@@ -860,6 +860,226 @@ export const generateReferralCodes = createAsyncThunk(
       return res.data; // assume returns generated codes or status
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to generate referral codes"));
+    }
+  }
+);
+
+export const activateReferralCode = createAsyncThunk(
+  "referrals/activate",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/ReferralCode/${id}/activate`);
+      return { id, data: res.data };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to activate referral code"));
+    }
+  }
+);
+
+export const deactivateReferralCode = createAsyncThunk(
+  "referrals/deactivate",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/ReferralCode/${id}/deactivate`);
+      return { id, data: res.data };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to deactivate referral code"));
+    }
+  }
+);
+
+// -------------------------------------------------
+// Marketing Campaign Thunks
+// -------------------------------------------------
+
+export const fetchMarketingCampaignSummary = createAsyncThunk(
+  "marketingCampaigns/fetchSummary",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/MarketingCampaignEntry/get-summary");
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch marketing campaign summary"));
+    }
+  }
+);
+
+export const fetchMarketingCampaigns = createAsyncThunk(
+  "marketingCampaigns/fetchAll",
+  async (
+    params: { Page?: number; PageSize?: number; CouponCode?: string; Name?: string; Status?: number } | undefined,
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get("/MarketingCampaignEntry", { params });
+      return { list: res.data.data || [], metaData: res.data.metaData || null };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch marketing campaigns"));
+    }
+  }
+);
+
+export const activateMarketingCampaign = createAsyncThunk(
+  "marketingCampaigns/activate",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/MarketingCampaignEntry/${id}/activate`);
+      return { id, data: res.data };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to activate campaign"));
+    }
+  }
+);
+
+export const deactivateMarketingCampaign = createAsyncThunk(
+  "marketingCampaigns/deactivate",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/MarketingCampaignEntry/${id}/deactivate`);
+      return { id, data: res.data };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to deactivate campaign"));
+    }
+  }
+);
+
+export const fetchMarketingCampaignById = createAsyncThunk(
+  "marketingCampaigns/fetchById",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get(`/MarketingCampaignEntry/${id}`);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch influencer code details"));
+    }
+  }
+);
+
+export const exportMarketingCampaigns = createAsyncThunk(
+  "marketingCampaigns/export",
+  async (
+    params: { format: number; CouponCode?: string; Name?: string; Status?: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get("/MarketingCampaignEntry/export", {
+        params,
+        responseType: "blob",
+      });
+      return { blob: res.data, format: params.format };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to export influencer codes"));
+    }
+  }
+);
+
+export const createMarketingCampaignEntry = createAsyncThunk(
+  "marketingCampaigns/create",
+  async (
+    data: { FirstName: string; LastName: string; UserName: string; Email: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const formData = new FormData();
+      formData.append("FirstName", data.FirstName);
+      formData.append("LastName", data.LastName);
+      formData.append("UserName", data.UserName);
+      formData.append("Email", data.Email);
+      
+      // Let axios set the Content-Type header automatically for FormData
+      // This ensures the boundary is properly set
+      const res = await apiClient.post("/MarketingCampaignEntry", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to create influencer code"));
+    }
+  }
+);
+
+// -------------------------------------------------
+// Ad Campaign (Feature Announcement) Thunks
+// -------------------------------------------------
+
+export const fetchAdCampaigns = createAsyncThunk(
+  "adCampaigns/fetchAll",
+  async (
+    params: { Page?: number; PageSize?: number } | undefined,
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get("/FeatureAnnouncement/paginated", { params });
+      return { list: res.data.data || [], metaData: res.data.metaData || null };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch ad campaigns"));
+    }
+  }
+);
+
+export const createAdCampaign = createAsyncThunk(
+  "adCampaigns/create",
+  async (
+    data: { Title: string; Description: string; StartDate?: string; EndDate?: string; ImageContent?: File },
+    { rejectWithValue }
+  ) => {
+    try {
+      const formData = new FormData();
+      formData.append("Title", data.Title);
+      formData.append("Description", data.Description);
+      if (data.StartDate) formData.append("StartDate", data.StartDate);
+      if (data.EndDate) formData.append("EndDate", data.EndDate);
+      if (data.ImageContent) formData.append("ImageContent", data.ImageContent);
+
+      const res = await apiClient.post("/FeatureAnnouncement", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to create ad campaign"));
+    }
+  }
+);
+
+// -------------------------------------------------
+// Promo Code Thunks
+// -------------------------------------------------
+
+export const fetchPromoCodes = createAsyncThunk(
+  "promoCodes/fetchAll",
+  async (
+    params: { Page?: number; PageSize?: number; Code?: string; Status?: number } | undefined,
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get("/PromoCode", { params });
+      return { list: res.data.data || [], metaData: res.data.metaData || null };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch promo codes"));
+    }
+  }
+);
+
+export const activatePromoCode = createAsyncThunk(
+  "promoCodes/activate",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/PromoCode/${id}/activate`);
+      return { id, data: res.data };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to activate promo code"));
+    }
+  }
+);
+
+export const deactivatePromoCode = createAsyncThunk(
+  "promoCodes/deactivate",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/PromoCode/${id}/deactivate`);
+      return { id, data: res.data };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to deactivate promo code"));
     }
   }
 );

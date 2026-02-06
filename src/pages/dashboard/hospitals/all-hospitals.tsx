@@ -100,12 +100,12 @@ export const AllHospitals = () => {
   }, [hospitals, page, pageSize]);
 
   const columns: ColumnDef<HospitalRow>[] = [
-    {accessorKey: 'sn', header: 'S/N'},
-    {accessorKey: 'code', header: 'Hospital Code'},
-    {accessorKey: 'name', header: 'Hospital Name'},
-    {accessorKey: 'email', header: 'Email'},
-    {accessorKey: 'hospitalAddress', header: 'Hospital Address'},
-    {accessorKey: 'clinic_no', header: 'No. Clinics'},
+    {accessorKey: 'sn', header: () => <span className="whitespace-nowrap">S/N</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('sn')}</span>},
+    {accessorKey: 'code', header: () => <span className="whitespace-nowrap">Hospital Code</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('code')}</span>},
+    {accessorKey: 'name', header: () => <span className="whitespace-nowrap">Hospital Name</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('name')}</span>},
+    {accessorKey: 'email', header: () => <span className="whitespace-nowrap">Email</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('email')}</span>},
+    {accessorKey: 'hospitalAddress', header: () => <span className="whitespace-nowrap">Hospital Address</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('hospitalAddress')}</span>},
+    {accessorKey: 'clinic_no', header: () => <span className="whitespace-nowrap">No. Clinics</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('clinic_no')}</span>},
     // {accessorKey: 'ip', header: 'Ip Address'},
     {
       id: 'action',

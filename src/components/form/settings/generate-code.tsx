@@ -70,7 +70,7 @@ export default function GenerateCode() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="py-3 w-40 rounded-md">Generate Code</Button>
+        <Button className="py-3 w-40 rounded-md">Generate New Code</Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader className="flex w-full items-center justify-between">

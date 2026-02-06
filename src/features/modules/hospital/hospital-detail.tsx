@@ -111,6 +111,7 @@ const HospitalDetail = ({ data, isEditing, onCancel, onUpdated }: Props) => {
       // Add registration fee
       const regFeeValue = hasRegistrationFee ? Number(registrationFee || '0') : 0;
       fd.append('RegistrationFee', String(regFeeValue));
+      fd.append('IsRegistrationFeeEnabled', String(regFeeValue > 0));
       
       if (logoFile) fd.append('LogoContent', logoFile);
       await dispatch(updateHospitalFormData({ id: data.id, formData: fd })).unwrap();

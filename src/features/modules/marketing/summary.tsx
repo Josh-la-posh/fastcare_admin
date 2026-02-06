@@ -87,7 +87,7 @@ export default function Summary({ open, onOpenChange, base, selected, loadingDet
           <div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-6">
-                <h1 className="text-lg text-primary">Code <span className="text-gray-600">{selected?.code || base.referral_code}</span></h1>
+                <h1 className="text-lg text-primary">Code <span className="text-gray-600 ml-4">{selected?.code || base.referral_code}</span></h1>
                 <span className={`rounded-md px-2 py-1 font-medium ${getStatusColor(base.status)}`}>{base.status || '-'}</span>
               </div>
               <div className="flex items-center gap-2">
@@ -119,16 +119,16 @@ export default function Summary({ open, onOpenChange, base, selected, loadingDet
               </div>
             </div>
             <div className="mt-6">
-              <h1 className="border-b text-lg text-primary">Referral Code Details</h1>
+              <h1 className="border-b text-base md:text-lg text-primary">Referral Code Details</h1>
             </div>
-            <div className="mt-4 grid grid-cols-1 gap-4 text-md md:grid-cols-4">
+            <div className="mt-4 grid grid-cols-2 gap-4 text-md md:grid-cols-4">
               <div className="flex flex-col gap-2"><span className="text-gray-600">Code</span><span className="text-gray-900">{selected?.code || base.referral_code}</span></div>
               <div className="flex flex-col gap-2"><span className="text-gray-600">Date Created</span><span className="text-gray-900">{selected?.dateCreated || base.date || '-'}</span></div>
               <div className="flex flex-col gap-2"><span className="text-gray-600">Users</span><span className="text-gray-900">{users.length}</span></div>
               <div className="flex flex-col gap-2"><span className="text-gray-600">Status</span><span className="text-gray-900">{base.status || '-'}</span></div>
             </div>
             <div className="mt-6">
-              <h1 className="mb-2 text-lg text-primary">Users Who Used This Code</h1>
+              <h1 className="mb-2 text-base md:text-lg text-primary">Users Who Used This Code</h1>
               {loadingDetail ? (
                 <div className="py-6"><Loader height="h-10" /></div>
               ) : (

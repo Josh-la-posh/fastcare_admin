@@ -59,28 +59,30 @@ const VerificationRequest = () => {
   const columns: ColumnDef<Doctor>[] = [
     {
       accessorKey: 'firstName',
-      header: 'Doctor Name',
-      cell: ({row}) => `${row.original.firstName} ${row.original.lastName}`,
+      header: () => <span className="whitespace-nowrap">Doctor Name</span>,
+      cell: ({row}) => <span className="whitespace-nowrap">{`${row.original.firstName} ${row.original.lastName}`}</span>,
     },
     {
       accessorKey: 'specialization',
-      header: 'Speciality',
+      header: () => <span className="whitespace-nowrap">Speciality</span>,
+      cell: ({row}) => <span className="whitespace-nowrap">{row.original.specialization}</span>,
     },
     {
       accessorKey: 'licenseNumber',
-      header: 'License Number',
+      header: () => <span className="whitespace-nowrap">License Number</span>,
+      cell: ({row}) => <span className="whitespace-nowrap">{row.original.licenseNumber}</span>,
     },
     {
       accessorKey: 'createdAt',
-      header: 'Submission Date',
+      header: () => <span className="whitespace-nowrap">Submission Date</span>,
       cell: ({ row }) => {
         const value = (row.original as Doctor).createdAt;
-        return value ? new Date(value).toLocaleDateString() : '--';
+        return <span className="whitespace-nowrap">{value ? new Date(value).toLocaleDateString() : '--'}</span>;
       }
     },
     {
       accessorKey: 'registrationStatus',
-      header: 'Status',
+      header: () => <span className="whitespace-nowrap">Status</span>,
       cell: ({ getValue }) => {
         const raw = (getValue() as string | null | undefined) || 'Pending';
         const status = raw.toLowerCase();

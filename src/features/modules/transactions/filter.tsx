@@ -56,6 +56,7 @@ export const TransactionFilter = ({ onApply, onReset }: TransactionFilterProps) 
             className="border border-gray-300 rounded-md py-2 px-3 outline-none"
             value={date ?? ''}
             onChange={e => setDate(e.target.value || null)}
+            max={new Date().toISOString().split('T')[0]}
           />
         </div>
 
@@ -93,6 +94,7 @@ export const TransactionFilter = ({ onApply, onReset }: TransactionFilterProps) 
             <SelectContent>
               <SelectItem value="registration">Registration</SelectItem>
               <SelectItem value="consultation">Consultation</SelectItem>
+              <SelectItem value="emergency">Emergency</SelectItem>
             </SelectContent>
           </Select>
         </div>

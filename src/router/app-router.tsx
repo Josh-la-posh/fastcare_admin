@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
 import { ROUTES } from './routes';
 
 import SignIn from '@/pages/auth/signin';
@@ -9,14 +9,18 @@ import HospitalDetails from '@/pages/dashboard/hospitals/hospital-details';
 import AllTransactions from '@/pages/dashboard/transactions/all-transactions';
 import Refunds from '@/pages/dashboard/transactions/refunds';
 import Checkers from '@/pages/dashboard/checker';
-import Users from '@/pages/dashboard/reports/users';
 import UsersDetails from '@/features/modules/report/user-details';
-import Reporting from '@/pages/dashboard/reports/reporting';
+import SignupReport from '@/pages/dashboard/reports/signup-report';
+import AppointmentReport from '@/pages/dashboard/reports/appointment-report';
+import EmergencyCallReport from '@/pages/dashboard/reports/emergency-report';
 import Settings from '@/pages/dashboard/settings';
 import VerificationRequest from '@/pages/dashboard/doctors/request';
 
 import DoctorDetails from '@/pages/dashboard/doctors/doctor-detail';
-import MarketingCampaign from '@/pages/dashboard/marketing';
+import PromotionalCodes from '@/pages/dashboard/marketing/promotional-codes';
+import AdCampaigns from '@/pages/dashboard/marketing/ad-campaigns';
+import ReferralCodes from '@/pages/dashboard/marketing/referral-codes';
+import ReferralCodePage from '@/pages/dashboard/referral-code';
 import Amenities from '@/pages/dashboard/ambulance/amenities';
 import Providers from '@/pages/dashboard/ambulance/provider';
 import Request from '@/pages/dashboard/ambulance/request';
@@ -29,7 +33,6 @@ import Tutorials from '@/pages/dashboard/helpdesk/tutorial';
 import Articles from '@/pages/dashboard/helpdesk/articles';
 import ArticleDetails from '@/pages/dashboard/helpdesk/article-details';
 import Feedbacks from '@/pages/dashboard/helpdesk/feedback';
-import EmergencyCall from '@/pages/dashboard/reports/emergency';
 import ProtectedRoutes from './ProtectedRoutes';
 
 import AllDoctors from '@/pages/dashboard/doctors/all-doctors';
@@ -54,10 +57,15 @@ export const AppRouter = () => {
 
         <Route path={ROUTES.checkers} element={<Checkers />} />
 
-        <Route path={ROUTES.reports.users} element={<Users />} />
-        <Route path={ROUTES.reports.userdetails} element={<UsersDetails />} />
-        <Route path={ROUTES.reports.reporting} element={<Reporting />} />
-        <Route path={ROUTES.reports.call} element={<EmergencyCall />} />
+  <Route path={ROUTES.reports.signup} element={<SignupReport />} />
+  <Route path={ROUTES.reports.appointment} element={<AppointmentReport />} />
+  <Route path={ROUTES.reports.emergency} element={<EmergencyCallReport />} />
+  <Route path={ROUTES.reports.userdetails} element={<UsersDetails />} />
+  {/* Redirect legacy paths */}
+  <Route path="/reports" element={<Navigate to="/reports/signup" replace />} />
+  <Route path="/reports/users" element={<Navigate to="/reports/signup" replace />} />
+  <Route path="/reports/reporting" element={<Navigate to="/reports/appointment" replace />} />
+  <Route path="/reports/emergency-call" element={<Navigate to="/reports/emergency" replace />} />
 
         <Route path={ROUTES.settings} element={<Settings />} />
 
@@ -65,7 +73,10 @@ export const AppRouter = () => {
         <Route path={ROUTES.doctors.all} element={<AllDoctors />} />
         <Route path={ROUTES.doctors.details} element={<DoctorDetails />} />
 
-        <Route path={ROUTES.marketing} element={<MarketingCampaign />} />
+        <Route path={ROUTES.adCampaigns} element={<AdCampaigns />} />
+        <Route path={ROUTES.promotionalCodes} element={<PromotionalCodes />} />
+        <Route path={ROUTES.referral.codes} element={<ReferralCodes />} />
+        <Route path={ROUTES.referralCode} element={<ReferralCodePage />} />
 
         <Route path={ROUTES.ambulance.amenities} element={<Amenities />} />
         <Route path={ROUTES.ambulance.all} element={<AllAmbulances />} />

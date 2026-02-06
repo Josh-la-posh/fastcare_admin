@@ -40,7 +40,7 @@ export default function NewRole() {
         <DialogHeader className="flex w-full items-center justify-between">
           <DialogTitle className="flex w-full items-center justify-between border-b">
             <span className="text-gray-800 text-2xl font-normal py-3">
-              New user
+              New role
             </span>
 
             <button
@@ -64,10 +64,10 @@ export default function NewRole() {
                 className="w-full border-gray-300 border rounded-lg px-3 py-3 mt-1 outline-none" />
               </div>
 
-              <div>
+              {/* <div>
                 <label className="text-gray-800">Role Permission</label>
                 <textarea rows={6} className="w-full border-gray-300 border rounded-lg px-3 py-3 mt-1 outline-none" />
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

@@ -41,26 +41,24 @@ export const Pagination = ({
         <span className="text-sm text-neutral-700">Rows per page</span>
 
         <Select
-  value={pageSize.toString()} // use the prop directly
-  onValueChange={val => {
-    const size = Number(val);
-    onPageSizeChange(size); // set the new page size
-    onPageChange(1);         // reset to page 1
-  }}
->
-  <SelectTrigger className="w-[80px] h-8 text-sm">
-    <SelectValue />
-  </SelectTrigger>
-  <SelectContent>
-    {[5, 10, 20, 50, 100].map(size => (
-      <SelectItem key={size} value={size.toString()}>
-        {size}
-      </SelectItem>
-    ))}
-  </SelectContent>
-</Select>
-
-
+          value={pageSize.toString()} // use the prop directly
+          onValueChange={val => {
+            const size = Number(val);
+            onPageSizeChange(size); // set the new page size
+            onPageChange(1);         // reset to page 1
+          }}
+        >
+          <SelectTrigger className="w-[80px] h-8 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {[10, 20, 50, 100].map(size => (
+              <SelectItem key={size} value={size.toString()}>
+                {size}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <div className="flex items-center gap-2">
           <button
             className="flex items-center justify-center w-8 h-8 rounded-full disabled:opacity-50"

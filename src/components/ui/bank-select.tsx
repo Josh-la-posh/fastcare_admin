@@ -84,6 +84,13 @@ export const BankSelect: React.FC<BankSelectProps> = ({
     }
   }, [open, loadBanks, banks.length]);
 
+  // Ensure we load banks eagerly when a preselected value exists so the input shows the bank name
+  React.useEffect(() => {
+    if (value && !banks.length && !loading) {
+      loadBanks();
+    }
+  }, [value, banks.length, loading, loadBanks]);
+
   // outside click
   React.useEffect(() => {
     const handler = (e: MouseEvent) => {

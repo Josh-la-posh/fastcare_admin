@@ -5,7 +5,7 @@ import { AmbulanceProvider, CreateAdminPayload, CreateAmbulanceProvider, CreateP
 import type { AxiosError } from 'axios';
 
 // Utility to safely extract API error messages including plain text bodies
-const getErrorMessage = (error: unknown, fallback: string): string => {
+export const getErrorMessage = (error: unknown, fallback: string): string => {
   if (typeof error === 'string') return error;
   if (error && typeof error === 'object') {
   const axiosErr = error as AxiosError<unknown>;
@@ -78,12 +78,73 @@ export const createHospital = createAsyncThunk(
 
 export const fetchHospitals = createAsyncThunk(
   "hospitals/fetchAll",
-  async (_, { rejectWithValue }) => {
+  async (
+    params: { page?: number; pageSize?: number; search?: string } | undefined,
+    { rejectWithValue }
+  ) => {
     try {
-      const res = await apiClient.get("/Hospitals");
-      return res.data; 
+      const { page, pageSize, search } = params || {};
+      const qs = new URLSearchParams();
+      if (page) qs.set('Page', String(page));
+      if (pageSize) qs.set('PageSize', String(pageSize));
+      if (search && search.trim()) qs.set('search', search.trim());
+      const query = qs.toString();
+      const url = query ? `/Hospitals/paginated?${query}` : '/Hospitals/paginated';
+      const res = await apiClient.get(url);
+      const data = res.data?.data ?? [];
+      return {
+        hospitals: Array.isArray(data) ? data : [],
+        totalCount: res.data?.metaData?.totalCount ?? data.length,
+        totalPages: res.data?.metaData?.totalPages ?? 1,
+        currentPage: res.data?.metaData?.currentPage ?? (page ?? 1),
+        pageSize: res.data?.metaData?.pageSize ?? (pageSize ?? data.length),
+        hasNext: res.data?.metaData?.hasNext ?? false,
+        hasPrevious: res.data?.metaData?.hasPrevious ?? false,
+      };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to fetch hospitals"));
+    }
+  }
+);
+
+// Fetch a single hospital by ID
+export const fetchHospitalById = createAsyncThunk(
+  'hospitals/fetchById',
+  async (id: string | number, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get(`/Hospitals/${id}`);
+      const hospital = res.data?.data ?? res.data; // support either wrapped or direct response
+      return hospital;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to fetch hospital'));
+    }
+  }
+);
+
+// Activate hospital by ID
+export const activateHospital = createAsyncThunk(
+  'hospitals/activateHospital',
+  async (id: string | number, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/Hospitals/${id}/activate`);
+      const updated = res.data?.data ?? res.data;
+      return updated; // should include id & isActive true
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to activate hospital'));
+    }
+  }
+);
+
+// Deactivate hospital by ID
+export const deactivateHospital = createAsyncThunk(
+  'hospitals/deactivateHospital',
+  async (id: string | number, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/Hospitals/${id}/deactivate`);
+      const updated = res.data?.data ?? res.data;
+      return updated; // should include id & isActive false
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to deactivate hospital'));
     }
   }
 );
@@ -108,52 +169,52 @@ export const exportHospitals = createAsyncThunk(
 );
 
 
-// Fetch hospital by ID
-export const fetchHospitalById = createAsyncThunk(
-  "hospitals/fetchById",
-  async (id: string, { rejectWithValue }) => {
-    try {
-      const res = await apiClient.get(`/Hospitals/${id}`);
-       return res.data; 
-    } catch (error) {
-      return rejectWithValue(getErrorMessage(error, "Failed to fetch hospital"));
+// Fetch doctors (supports optional Status & Search)
+export const fetchDoctors = createAsyncThunk(
+    'doctors/fetchDoctors',
+    async (
+      params: { page?: number; pageSize?: number; status?: number; search?: string } | undefined,
+      { rejectWithValue }
+    ) => {
+      try {
+        const { page, pageSize, status, search } = params || {};
+        const qs = new URLSearchParams();
+        if (typeof status === 'number') qs.set('Status', String(status));
+        if (search && search.trim()) qs.set('Search', search.trim());
+        if (page) qs.set('Page', String(page));
+        if (pageSize) qs.set('PageSize', String(pageSize));
+        const query = qs.toString();
+        const endpoint = query ? `/doctors/filter-by-status?${query}` : '/doctors';
+        const res = await apiClient.get(endpoint);
+        const data = res.data.data.flat();
+        return {
+          doctors: data,
+          totalCount: res.data.metaData?.totalCount ?? data.length,
+          totalPages: res.data.metaData?.totalPages ?? 1,
+          currentPage: res.data.metaData?.currentPage ?? 1,
+          pageSize: res.data.metaData?.pageSize ?? pageSize ?? data.length,
+          hasNext: res.data.metaData?.hasNext ?? false,
+          hasPrevious: res.data.metaData?.hasPrevious ?? false,
+        };
+      } catch (error) {
+        return rejectWithValue(getErrorMessage(error, 'Failed to fetch doctors'));
+      }
     }
-  }
-);
-
-// Activate hospital
-export const activateHospital = createAsyncThunk(
-  'hospitals/activate',
-  async (id: number | string, { rejectWithValue }) => {
-    try {
-      const res = await apiClient.put(`/Hospitals/${id}/activate`);
-      return res.data; // expect updated hospital
-    } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to activate hospital'));
-    }
-  }
-);
-
-// Deactivate hospital
-export const deactivateHospital = createAsyncThunk(
-  'hospitals/deactivate',
-  async (id: number | string, { rejectWithValue }) => {
-    try {
-      const res = await apiClient.put(`/Hospitals/${id}/deactivate`);
-      return res.data; // expect updated hospital or status
-    } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to deactivate hospital'));
-    }
-  }
-);
+  );
+// Removed orphaned deactivate hospital leftover lines from previous patch.
 
 
 // Using generic record type for hospital update to avoid any
 export const updateHospital = createAsyncThunk(
   "hospitals/updateHospital",
-  async (hospital: Record<string, unknown> & { id: string | number }, { rejectWithValue }) => {
+  async (
+    hospital: Record<string, unknown> & { id: string | number },
+    { rejectWithValue, dispatch }
+  ) => {
     try {
       const response = await apiClient.put(`/Hospitals/${hospital.id}`, hospital);
+      // Immediately trigger a refetch of all hospitals to ensure list stays current
+      dispatch(fetchHospitals());
       return response.data; // updated hospital
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Update failed"));
@@ -166,12 +227,14 @@ export const updateHospitalFormData = createAsyncThunk(
   "hospitals/updateHospitalFormData",
   async (
     { id, formData }: { id: string | number; formData: FormData },
-    { rejectWithValue }
+    { rejectWithValue, dispatch }
   ) => {
     try {
       const res = await apiClient.put(`/Hospitals/${id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
+      // Refetch hospitals list after form-data update (e.g., logo changes)
+      dispatch(fetchHospitals());
       return res.data;
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, 'Failed to update hospital'));
@@ -179,39 +242,24 @@ export const updateHospitalFormData = createAsyncThunk(
   }
 );
 
-export const fetchDoctors = createAsyncThunk(
-  'doctors/fetchDoctors',
-  async (
-    params: { page?: number; pageSize?: number } | undefined,
-    { rejectWithValue }
-  ) => {
-    try {
-      const { page, pageSize } = params || {};
-      const res = await apiClient.get(
-        `/doctors?page=${page ?? ''}&pageSize=${pageSize ?? ''}`
-      );
-      const data = res.data.data.flat();
-      return {
-        doctors: data,
-        totalCount: res.data.metaData?.totalCount ?? data.length,
-        totalPages: res.data.metaData?.totalPages ?? 1,
-        currentPage: res.data.metaData?.currentPage ?? 1,
-        pageSize: res.data.metaData?.pageSize ?? pageSize ?? data.length,
-        hasNext: res.data.metaData?.hasNext ?? false,
-        hasPrevious: res.data.metaData?.hasPrevious ?? false,
-      };
-    } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to fetch doctors'));
-    }
-  }
-);
+// Removed duplicate fetchDoctors without search support.
 
 export const fetchPendingDoctors = createAsyncThunk(
  'doctors/fetchPendingDoctors',
-  async ({ page, pageSize }: { page: number; pageSize: number }, { rejectWithValue }) => {
+  async (
+    { page, pageSize, status }: { page: number; pageSize: number; status?: number | null },
+    { rejectWithValue }
+  ) => {
     try {
-      const res = await apiClient.get(`/doctors/pending-approval?page=${page}&pageSize=${pageSize}`);
-      const data = res.data.data.flat(); 
+      // Build query params only including status when provided (1,2,3)
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('pageSize', String(pageSize));
+      if (status) {
+        params.set('status', String(status));
+      }
+      const res = await apiClient.get(`/doctors/pending-approval?${params.toString()}`);
+      const data = res.data.data.flat();
       return {
         doctors: data,
         totalCount: res.data.metaData?.totalCount ?? data.length,
@@ -264,10 +312,23 @@ export const disapproveDoctor = createAsyncThunk(
   ) => {
     const { doctorId, reason } = payload;
     try {
-      const res = await apiClient.put(`/doctors/${doctorId}/disapprove`, { reason });
+      const res = await apiClient.put(`/doctors/${doctorId}/disapprove`, {  rejectReason: reason });
       return res.data; // updated doctor object expected
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Disapproval failed"));
+    }
+  }
+);
+
+// Fetch rejection reasons
+export const fetchRejectionReasons = createAsyncThunk(
+  "doctors/fetchRejectionReasons",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get('/doctors/rejection-reasons');
+      return res.data.data || res.data; // handle different response structures
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch rejection reasons"));
     }
   }
 );
@@ -293,6 +354,34 @@ export const deleteDoctor = createAsyncThunk(
       return res.data; // { statusCode, data, metaData }
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to delete doctor"));
+    }
+  }
+);
+
+// Activate doctor by ID
+export const activateDoctor = createAsyncThunk(
+  'doctors/activateDoctor',
+  async (id: string | number, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/doctors/${id}/activate`);
+      const updated = res.data?.data ?? res.data;
+      return updated; // should include id & isActive true
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to activate doctor'));
+    }
+  }
+);
+
+// Deactivate doctor by ID
+export const deactivateDoctor = createAsyncThunk(
+  'doctors/deactivateDoctor',
+  async (id: string | number, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/doctors/${id}/deactivate`);
+      const updated = res.data?.data ?? res.data;
+      return updated; // should include id & isActive false
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to deactivate doctor'));
     }
   }
 );
@@ -499,10 +588,10 @@ export const fetchTransactions = createAsyncThunk(
     params: {
       Page?: number;
       PageSize?: number;
-      Status?: string | number; // accept numeric enum or string
+      Status?: string | number;
       HospitalName?: string;
       PatientName?: string;
-      Date?: string; // ISO date (backend seems to accept a single date filter)
+      Date?: string;
       ServiceType?: string;
     } | undefined,
     { rejectWithValue }
@@ -672,7 +761,7 @@ export const updateRefundStatus = createAsyncThunk(
   ) => {
     try {
       const { id, status } = payload;
-      const res = await apiClient.put(`/Refund/${id}/status/${status}`);
+      const res = await apiClient.patch(`/Refund/${id}/status/${status}`);
       return res.data; // assume API returns updated refund or status meta
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, 'Failed to update refund status'));
@@ -699,7 +788,7 @@ export const fetchReferralSummary = createAsyncThunk(
 export const fetchReferralCodes = createAsyncThunk(
   "referrals/fetchCodes",
   async (
-    params: { Page?: number; PageSize?: number; Code?: string; StaffName?: string } | undefined,
+    params: { Page?: number; PageSize?: number; Code?: string; StaffName?: string; Status?: number } | undefined,
     { rejectWithValue }
   ) => {
     try {
@@ -776,6 +865,226 @@ export const generateReferralCodes = createAsyncThunk(
   }
 );
 
+export const activateReferralCode = createAsyncThunk(
+  "referrals/activate",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/ReferralCode/${id}/activate`);
+      return { id, data: res.data };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to activate referral code"));
+    }
+  }
+);
+
+export const deactivateReferralCode = createAsyncThunk(
+  "referrals/deactivate",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/ReferralCode/${id}/deactivate`);
+      return { id, data: res.data };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to deactivate referral code"));
+    }
+  }
+);
+
+// -------------------------------------------------
+// Marketing Campaign Thunks
+// -------------------------------------------------
+
+export const fetchMarketingCampaignSummary = createAsyncThunk(
+  "marketingCampaigns/fetchSummary",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/MarketingCampaignEntry/get-summary");
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch marketing campaign summary"));
+    }
+  }
+);
+
+export const fetchMarketingCampaigns = createAsyncThunk(
+  "marketingCampaigns/fetchAll",
+  async (
+    params: { Page?: number; PageSize?: number; CouponCode?: string; Name?: string; Status?: number } | undefined,
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get("/MarketingCampaignEntry", { params });
+      return { list: res.data.data || [], metaData: res.data.metaData || null };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch marketing campaigns"));
+    }
+  }
+);
+
+export const activateMarketingCampaign = createAsyncThunk(
+  "marketingCampaigns/activate",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/MarketingCampaignEntry/${id}/activate`);
+      return { id, data: res.data };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to activate campaign"));
+    }
+  }
+);
+
+export const deactivateMarketingCampaign = createAsyncThunk(
+  "marketingCampaigns/deactivate",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/MarketingCampaignEntry/${id}/deactivate`);
+      return { id, data: res.data };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to deactivate campaign"));
+    }
+  }
+);
+
+export const fetchMarketingCampaignById = createAsyncThunk(
+  "marketingCampaigns/fetchById",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get(`/MarketingCampaignEntry/${id}`);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch influencer code details"));
+    }
+  }
+);
+
+export const exportMarketingCampaigns = createAsyncThunk(
+  "marketingCampaigns/export",
+  async (
+    params: { format: number; CouponCode?: string; Name?: string; Status?: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get("/MarketingCampaignEntry/export", {
+        params,
+        responseType: "blob",
+      });
+      return { blob: res.data, format: params.format };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to export influencer codes"));
+    }
+  }
+);
+
+export const createMarketingCampaignEntry = createAsyncThunk(
+  "marketingCampaigns/create",
+  async (
+    data: { FirstName: string; LastName: string; UserName: string; Email: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const formData = new FormData();
+      formData.append("FirstName", data.FirstName);
+      formData.append("LastName", data.LastName);
+      formData.append("UserName", data.UserName);
+      formData.append("Email", data.Email);
+      
+      // Let axios set the Content-Type header automatically for FormData
+      // This ensures the boundary is properly set
+      const res = await apiClient.post("/MarketingCampaignEntry", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to create influencer code"));
+    }
+  }
+);
+
+// -------------------------------------------------
+// Ad Campaign (Feature Announcement) Thunks
+// -------------------------------------------------
+
+export const fetchAdCampaigns = createAsyncThunk(
+  "adCampaigns/fetchAll",
+  async (
+    params: { Page?: number; PageSize?: number } | undefined,
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get("/FeatureAnnouncement/paginated", { params });
+      return { list: res.data.data || [], metaData: res.data.metaData || null };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch ad campaigns"));
+    }
+  }
+);
+
+export const createAdCampaign = createAsyncThunk(
+  "adCampaigns/create",
+  async (
+    data: { Title: string; Description: string; StartDate?: string; EndDate?: string; ImageContent?: File },
+    { rejectWithValue }
+  ) => {
+    try {
+      const formData = new FormData();
+      formData.append("Title", data.Title);
+      formData.append("Description", data.Description);
+      if (data.StartDate) formData.append("StartDate", data.StartDate);
+      if (data.EndDate) formData.append("EndDate", data.EndDate);
+      if (data.ImageContent) formData.append("ImageContent", data.ImageContent);
+
+      const res = await apiClient.post("/FeatureAnnouncement", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to create ad campaign"));
+    }
+  }
+);
+
+// -------------------------------------------------
+// Promo Code Thunks
+// -------------------------------------------------
+
+export const fetchPromoCodes = createAsyncThunk(
+  "promoCodes/fetchAll",
+  async (
+    params: { Page?: number; PageSize?: number; Code?: string; Status?: number } | undefined,
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get("/PromoCode", { params });
+      return { list: res.data.data || [], metaData: res.data.metaData || null };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch promo codes"));
+    }
+  }
+);
+
+export const activatePromoCode = createAsyncThunk(
+  "promoCodes/activate",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/PromoCode/${id}/activate`);
+      return { id, data: res.data };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to activate promo code"));
+    }
+  }
+);
+
+export const deactivatePromoCode = createAsyncThunk(
+  "promoCodes/deactivate",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/PromoCode/${id}/deactivate`);
+      return { id, data: res.data };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to deactivate promo code"));
+    }
+  }
+);
+
 // -------------------------------------------------
 // Admin Users (Teammates) Thunks
 // -------------------------------------------------
@@ -831,17 +1140,17 @@ export const toggleAdminUserActive = createAsyncThunk(
 );
 
 // -------------------------------------------------
-// User Reports Thunks
+// User Reports Thunks (Patient & Doctor)
 // -------------------------------------------------
 
-export const fetchUserReports = createAsyncThunk(
-  'userReports/fetchAll',
+export const fetchPatientReports = createAsyncThunk(
+  'userReports/fetchPatients',
   async (
     params: { Page?: number; PageSize?: number } | undefined,
     { rejectWithValue }
   ) => {
     try {
-      const res = await apiClient.get('/Account/get-users-report', { params });
+      const res = await apiClient.get('/Account/patients-report/summary', { params });
       const rawList: unknown = res.data.data || [];
       const list = Array.isArray(rawList) ? rawList.map(item => {
         const d = item as { date?: string; userCount?: number };
@@ -852,20 +1161,42 @@ export const fetchUserReports = createAsyncThunk(
       }) : [];
       return { list, metaData: res.data.metaData || null };
     } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to fetch user reports'));
+      return rejectWithValue(getErrorMessage(error, 'Failed to fetch patient reports'));
     }
   }
 );
 
-export const fetchUserReportDetail = createAsyncThunk(
-  'userReports/fetchDetail',
+export const fetchDoctorReports = createAsyncThunk(
+  'userReports/fetchDoctors',
+  async (
+    params: { Page?: number; PageSize?: number } | undefined,
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get('/Account/doctors-report/summary', { params });
+      const rawList: unknown = res.data.data || [];
+      const list = Array.isArray(rawList) ? rawList.map(item => {
+        const d = item as { date?: string; userCount?: number };
+        return {
+          date: d.date || '',
+          userCount: typeof d.userCount === 'number' ? d.userCount : 0,
+        };
+      }) : [];
+      return { list, metaData: res.data.metaData || null };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to fetch doctor reports'));
+    }
+  }
+);
+
+export const fetchPatientReportDetail = createAsyncThunk(
+  'userReports/fetchPatientDetail',
   async (
     params: { Date: string; Page?: number; PageSize?: number },
     { rejectWithValue }
   ) => {
     try {
-      const { Date, ...rest } = params;
-      const res = await apiClient.get(`/Account/get-users-report-detail/${Date}`, { params: rest });
+      const res = await apiClient.get('/Account/patients-report/detail', { params });
       const rawDetail: unknown = res.data.data || [];
       const detail = Array.isArray(rawDetail) ? rawDetail.map(item => {
         const d = item as { date?: string; email?: string; fullName?: string; phoneNumber?: string };
@@ -876,9 +1207,34 @@ export const fetchUserReportDetail = createAsyncThunk(
             phoneNumber: d.phoneNumber || '',
         };
       }) : [];
-      return { detail, detailMeta: res.data.metaData || null, selectedDate: Date };
+      return { detail, detailMeta: res.data.metaData || null, selectedDate: params.Date };
     } catch (error) {
-      return rejectWithValue(getErrorMessage(error, 'Failed to fetch user report detail'));
+      return rejectWithValue(getErrorMessage(error, 'Failed to fetch patient report detail'));
+    }
+  }
+);
+
+export const fetchDoctorReportDetail = createAsyncThunk(
+  'userReports/fetchDoctorDetail',
+  async (
+    params: { Date: string; Page?: number; PageSize?: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get('/Account/doctors-report/detail', { params });
+      const rawDetail: unknown = res.data.data || [];
+      const detail = Array.isArray(rawDetail) ? rawDetail.map(item => {
+        const d = item as { date?: string; email?: string; fullName?: string; phoneNumber?: string };
+        return {
+          date: d.date || '',
+            email: d.email || '',
+            fullName: d.fullName || '',
+            phoneNumber: d.phoneNumber || '',
+        };
+      }) : [];
+      return { detail, detailMeta: res.data.metaData || null, selectedDate: params.Date };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to fetch doctor report detail'));
     }
   }
 );
@@ -966,6 +1322,96 @@ export const exportAppointmentReports = createAsyncThunk(
       return { blob: res.data, params };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, 'Failed to export appointment reports'));
+    }
+  }
+);
+
+// -------------------------------------------------
+// Emergency (All Doctors Appointments) Reports Thunks
+// Mirrors emergency call report requirements
+// Endpoint: /Appointment/all-doctors-appointments
+// Query: StartDate, EndDate, Speciality, Status, PageSize, Page
+// Response list shape: { patientName, doctorName, date, duration, responseTime, status }
+// -------------------------------------------------
+export const fetchEmergencyReports = createAsyncThunk(
+  'emergencyReports/fetchAll',
+  async (
+    params: {
+      StartDate?: string;
+      EndDate?: string;
+      Speciality?: string;
+      Status?: string;
+      Page?: number;
+      PageSize?: number;
+    } | undefined,
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get('/Appointment/all-doctors-appointments', { params });
+      const raw: unknown = res.data?.data || [];
+      const list = Array.isArray(raw) ? raw.map(item => {
+        const r = item as { patientName?: string; doctorName?: string; date?: string; duration?: string; responseTime?: string; status?: string };
+        return {
+          patientName: r.patientName || '',
+            doctorName: r.doctorName || '',
+            date: r.date || '',
+            duration: r.duration || '',
+            responseTime: r.responseTime || '',
+            status: r.status || '',
+        };
+      }) : [];
+      return { list, metaData: res.data?.metaData || null };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to fetch emergency call reports'));
+    }
+  }
+);
+
+// -------------------------------------------------
+// Application Feedback Thunks
+// -------------------------------------------------
+export const fetchAppFeedbacks = createAsyncThunk(
+  'appFeedback/fetchAll',
+  async (
+    params: { Page?: number; PageSize?: number } | undefined,
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get('/ApplicationFeedback', { params });
+      const raw: unknown = res.data?.data || [];
+      const list = Array.isArray(raw) ? raw.map(item => {
+        const r = item as { id?: number; patientId?: string | null; patientName?: string; comment?: string; rating?: string | number; feedbackCategory?: string; creationDate?: string };
+        return {
+          id: r.id != null ? String(r.id) : '',
+          patientId: r.patientId || '',
+          patientName: r.patientName || '',
+          comment: r.comment || '',
+          rating: typeof r.rating === 'number' ? r.rating : parseFloat(r.rating || '0') || 0,
+          feedbackCategory: r.feedbackCategory || '',
+          creationDate: r.creationDate || '',
+        };
+      }) : [];
+      return { list, metaData: res.data?.metaData || null };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to fetch feedbacks'));
+    }
+  }
+);
+
+export const exportAppFeedbacks = createAsyncThunk(
+  'appFeedback/export',
+  async (
+    params: { format: 0 | 1 },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get('/ApplicationFeedback/export', {
+        params,
+        responseType: 'blob',
+      });
+      return { blob: res.data, params };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to export feedbacks'));
     }
   }
 );

@@ -1,7 +1,7 @@
 import {DashboardLayout} from '@/layout/dashboard-layout';
 import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar';
 import {Button} from '@/components/ui/button';
-import {useEffect, useState} from 'react';
+import {useEffect, useState, useMemo} from 'react';
 import HospitalDetail from '@/features/modules/hospital/hospital-detail';
 import Clinics from '@/features/modules/hospital/clinics';
 import {useParams, useSearchParams, useNavigate} from 'react-router-dom';
@@ -31,6 +31,26 @@ const HospitalDetails = () => {
   const {selectedHospital, loading, error} = useSelector(
     (state: RootState) => state.hospitals,
   );
+
+  // Derive a usable <img src> for hospital logo. Backend returns raw base64 (e.g. starting with '/9j/' for JPEG).
+  const logoSrc = useMemo(() => {
+    const raw = selectedHospital?.hospitalLogo;
+    if (!raw || typeof raw !== 'string') return '/images/user.png';
+    // Already a data URI
+    if (/^data:image\//i.test(raw)) return raw;
+    // Looks like base64 (long, only base64 chars, possibly starting with common JPEG/PNG signatures)
+    const isBase64Like = /^[A-Za-z0-9+/=]+$/.test(raw) && raw.length > 40;
+    if (isBase64Like) {
+      // Heuristic MIME detection
+      let mime = 'image/png';
+      if (raw.startsWith('/9j/')) mime = 'image/jpeg'; // JPEG magic base64
+      else if (raw.startsWith('iVBOR')) mime = 'image/png'; // PNG signature
+      else if (raw.startsWith('R0lGOD')) mime = 'image/gif';
+      return `data:${mime};base64,${raw}`;
+    }
+    // Fallback: treat as direct URL/path
+    return raw || '/images/user.png';
+  }, [selectedHospital?.hospitalLogo]);
 
   useEffect(() => {
     if (id) {
@@ -72,7 +92,7 @@ const HospitalDetails = () => {
                 </Button>
                 <Avatar className="w-12 h-12 rounded-lg">
                   <AvatarImage
-                    src={selectedHospital?.hospitalLogo || '/images/user.png'}
+                    src={logoSrc}
                     alt={selectedHospital?.hospitalName || 'Hospital logo'}
                   />
                   <AvatarFallback className="uppercase bg-primary text-white font-bold">

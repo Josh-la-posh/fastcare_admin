@@ -1,5 +1,5 @@
 import {DashboardLayout} from '@/layout/dashboard-layout';
-import {useState, useMemo} from 'react';
+import {useState, useEffect} from 'react';
 
 import {
   Table,
@@ -27,41 +27,10 @@ import { Button } from '@/components/ui/button';
 import { Star } from 'lucide-react';
 import clsx from 'clsx';
 
-//import {ProviderFilter} from '@/features/modules/providers/filter';
-
-const providers = [
-  {
-    id: '1',
-    patient_id: 'PT001234',
-    name: 'John Doe',
-    category: 'Compliment',
-    comment: 'This is for app usage feedback',
-    date: '2023/01/01',
-     rating: 5,
-    action: '',
-  },
-   {
-    id: '2',
-    patient_id: 'PT001234',
-    name: 'John Doe',
-    category: 'Suggestion',
-    comment: 'This is for app usage feedback',
-    date: '2023/01/01',
-     rating: 4,
-    action: '',
-  },
-   {
-    id: '3',
-    patient_id: 'PT001234',
-    name: 'John Doe',
-    category: 'Compliment',
-    comment: 'This is for app usage feedback',
-    date: '2023/01/01',
-     rating: 3,
-    action: '',
-  },
-
-];
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/services/store';
+import { fetchAppFeedbacks, exportAppFeedbacks } from '@/services/thunks';
+import { setFeedbackPage, setFeedbackPageSize } from '@/services/slice/appFeedbackSlice';
 
 const Feedbacks = () => {
   //   const [searchTerm, setSearchTerm] = useState('');
@@ -69,36 +38,39 @@ const Feedbacks = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
-  const [columnFilters, setColumnFilters] = useState<any[]>([]);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const dispatch = useDispatch<AppDispatch>();
+  const { list, loading, error, metaData, filters, exporting } = useSelector((s: RootState) => s.appFeedback);
+  const page = filters.Page || 1;
+  const pageSize = filters.PageSize || 10;
+
+  useEffect(() => { dispatch(fetchAppFeedbacks({ Page: page, PageSize: pageSize })); }, [dispatch, page, pageSize]);
 
   //   const filteredProviders = hospitals.filter(item =>
   //     item.name.toLowerCase().includes(searchTerm.toLowerCase()),
   //   );
 
-  const totalPages = Math.ceil(providers.length / pageSize);
-  const paginatedProviders = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return providers.slice(start, start + pageSize);
-  }, [providers, page]);
+  const totalPages = metaData?.totalPages || 1;
 
-  const columns: ColumnDef<any>[] = [
+  const columns: ColumnDef<{ creationDate: string; patientName: string; patientId: string; rating: number; feedbackCategory: string; comment: string }>[] = [
     {
-      accessorKey: 'date',
+      accessorKey: 'creationDate',
       header: 'Date',
+      cell: ({ getValue }) => {
+        const raw = getValue<string>();
+        return raw?.includes('T') ? raw.split('T')[0] : raw;
+      }
     },
 
     {
-      accessorKey: 'name',
+      accessorKey: 'patientName', // patient name
       header: 'Patient name',
     },
     {
-      accessorKey: 'patient_id',
+      accessorKey: 'patientId',
       header: 'Patient ID',
     },
     {
-      accessorKey: 'rating',
+  accessorKey: 'rating',
       header: 'Rating',
        cell: ({ row }) => {
                 const rating = row.getValue<number>('rating') || 0;
@@ -118,7 +90,7 @@ const Feedbacks = () => {
             },
     },
     {
-      accessorKey: 'category',
+      accessorKey: 'feedbackCategory',
       header: 'Category',
     },
      {
@@ -128,18 +100,16 @@ const Feedbacks = () => {
   ];
 
   const table = useReactTable({
-    data: paginatedProviders,
+  data: list,
     columns,
     state: {
       sorting,
       columnVisibility,
       rowSelection,
-      columnFilters,
     },
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -168,7 +138,7 @@ const Feedbacks = () => {
         <div className="lg:mx-8 mt-10 bg-white  rounded-md flex flex-col h-[500px] mb-36">
           <div className="flex flex-wrap gap-4 justify-between items-center p-6">
             <div className="flex items-center gap-8">
-              <h1 className="text-xl text-gray-800">{paginatedProviders.length} Feedbacks</h1>
+              <h1 className="text-xl text-gray-800">{metaData?.totalCount || list.length} Feedbacks</h1>
 
               {/* <input
                 type="text"
@@ -179,8 +149,47 @@ const Feedbacks = () => {
               /> */}
             </div>
             <div className="flex gap-4 items-center">
-              <Button variant="ghost" className="py-2.5 w-36 rounded-md">
-                Export
+              <Button
+                variant="ghost"
+                className="py-2.5 w-36 rounded-md"
+                disabled={exporting || !list.length}
+                onClick={async () => {
+                  try {
+                    const res = await dispatch(exportAppFeedbacks({ format: 0 })).unwrap();
+                    const { blob } = res as { blob: Blob };
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'app-feedback.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                  } catch (e) { console.error(e); }
+                }}
+              >
+                {exporting ? 'Exporting...' : 'Export CSV'}
+              </Button>
+              <Button
+                variant="ghost"
+                className="py-2.5 w-36 rounded-md"
+                disabled={exporting || !list.length}
+                onClick={async () => {
+                  try {
+                    const res = await dispatch(exportAppFeedbacks({ format: 1 })).unwrap();
+                    const { blob } = res as { blob: Blob };
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'app-feedback.xlsx';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                  } catch (e) { console.error(e); }
+                }}
+              >
+                {exporting ? 'Exporting...' : 'Export Excel'}
               </Button>
             </div>
           </div>
@@ -204,7 +213,11 @@ const Feedbacks = () => {
                 ))}
               </TableHeader>
               <TableBody>
-                {table.getRowModel().rows.length ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-24 text-center text-sm text-gray-500">Loading feedbacks...</TableCell>
+                  </TableRow>
+                ) : table.getRowModel().rows.length ? (
                   table.getRowModel().rows.map(row => (
                     <TableRow
                       key={row.id}
@@ -227,6 +240,10 @@ const Feedbacks = () => {
                       ))}
                     </TableRow>
                   ))
+                ) : error ? (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-24 text-center text-red-600 text-sm">{error}</TableCell>
+                  </TableRow>
                 ) : (
                   <TableRow>
                     <TableCell
@@ -252,16 +269,12 @@ const Feedbacks = () => {
           {/* Pagination stuck at bottom */}
           <div className="p-4 flex items-center justify-end">
             <Pagination
-              totalEntriesSize={providers.length}
-            
+              totalEntriesSize={metaData?.totalCount || list.length}
               currentPage={page}
               totalPages={totalPages}
-              onPageChange={setPage}
+              onPageChange={(p) => dispatch(setFeedbackPage(p))}
               pageSize={pageSize}
-              onPageSizeChange={size => {
-                setPageSize(size);
-                setPage(1);
-              }}
+              onPageSizeChange={(s) => { dispatch(setFeedbackPageSize(s)); dispatch(setFeedbackPage(1)); }}
             />
           </div>
         </div>

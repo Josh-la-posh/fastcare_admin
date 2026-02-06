@@ -88,8 +88,8 @@ export const DashboardLayout = ({children, searchBar}: Props) => {
           icon: <User2 className='w-5 h-6'/>,
           url: '/doctors',
           children: [
-            {name: 'Verification request', url: '/doctors/request'},
             {name: 'All doctor', url: '/doctors/all-doctors'},
+            {name: 'Verification request', url: '/doctors/request'},
             // {name: 'Doctor detail', url: '/doctors/doctor-details'},
           ],
         },
@@ -99,9 +99,9 @@ export const DashboardLayout = ({children, searchBar}: Props) => {
           icon: <PieChart className='w-5 h-6' />,
           url: '/reports',
           children: [
-            {name: 'Users', url: '/reports/users'},
-            {name: 'Reporting', url: '/reports/reporting'},
-            {name: 'Emergency Call', url: '/reports/emergency-call'},
+            {name: 'Signup Report', url: '/reports/signup'},
+            {name: 'Appointment Report', url: '/reports/appointment'},
+            {name: 'Emergency Call Report', url: '/reports/emergency'},
           ],
         },
 
@@ -132,9 +132,20 @@ export const DashboardLayout = ({children, searchBar}: Props) => {
         },
 
         {
+          name: 'Referral code',
+          icon: <Share2Icon className='w-5 h-6' />,
+          url: '/referral-code',
+          children: [],
+        },
+
+        {
           name: 'Marketing campaign',
           icon: <Share2Icon className='w-5 h-6' />,
           url: '/marketing-campaign',
+          children: [
+            {name: 'Ad Campaigns', url: '/marketing-campaign/ad-campaigns'},
+            {name: 'Promotional Codes', url: '/marketing-campaign/promotional-codes'},
+          ],
         },
 
         {

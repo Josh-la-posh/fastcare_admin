@@ -45,8 +45,7 @@ const Checkers = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
-  const [columnFilters, setColumnFilters] =
-    useState<import('@tanstack/react-table').ColumnFiltersState>([]);
+  const [columnFilters] = useState<import('@tanstack/react-table').ColumnFiltersState>([]);
 
   const [open, setOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Refund | null>(null);
@@ -56,7 +55,7 @@ const Checkers = () => {
 
   // pagination (1-based)
   const [pageNumber, setPageNumber] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
 
   // persist API-level filters so paging reuses them
   const [apiFilters, setApiFilters] = useState<{ Status: number; PatientName?: string; Date?: string }>({
@@ -67,7 +66,6 @@ const Checkers = () => {
   useEffect(() => {
     dispatch(fetchRefunds({ ...apiFilters, Page: pageNumber, PageSize: pageSize }));
   }, [dispatch, apiFilters, pageNumber, pageSize]);
-
   // Show only pending in the table (server already returns Status=1, but it’s safe)
   const data: Refund[] = useMemo(
     () => (refunds || []).filter((r) => (r.status || '').toLowerCase() === 'pending'),
@@ -75,6 +73,7 @@ const Checkers = () => {
   );
 
   const columns: ColumnDef<Refund>[] = [
+    { accessorKey: 'patientName', header: 'Name' },
     {
       accessorKey: 'requestDate',
       header: 'Request Date',
@@ -97,7 +96,7 @@ const Checkers = () => {
     },
     { accessorKey: 'refundReference', header: 'Refund Reference' },
     { accessorKey: 'refundAmount', header: 'Refund Amount' },
-    { accessorKey: 'walletNumber', header: 'Wallet ID' },
+    // { accessorKey: 'walletNumber', header: 'Wallet ID' },
     { accessorKey: 'refundReason', header: 'Refund Reason' },
     {
       accessorKey: 'disputeDate',
@@ -132,13 +131,19 @@ const Checkers = () => {
         const openDetails = () => {
           const mapped = {
             id: refund.id,
+            refundReason: refund.refundReason,
+            refundAmount: refund.refundAmount,
+            requestDate: refund.requestDate,
+            disputeDate: refund.disputeDate,
+            refundReference: refund.refundReference,
             status: refund.status,
-            amount: refund.refundAmount,
-            transaction_id: refund.transactionId,
-            name: refund.patientName,
-            patient_id: refund.patientId || undefined,
-            account: refund.walletNumber || undefined,
-            date: refund.requestDate,
+            transactionId: refund.transactionId,
+            walletNumber: refund.walletNumber,
+            patientName: refund.patientName,
+            patientId: refund.patientId || undefined,
+            approver: refund.approver || undefined,
+            createdBy: refund.createdBy || undefined,
+            document: refund.document || undefined,
           } as unknown as Refund;
           setSelectedTransaction(mapped);
           setOpen(true);
@@ -192,7 +197,7 @@ const Checkers = () => {
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    onColumnFiltersChange: setColumnFilters,
+  onColumnFiltersChange: () => {},
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -252,39 +257,24 @@ const Checkers = () => {
   }, [table, pageNumber]);
 
   const handleApplyFilter = (filters: CheckerFilters) => {
-    // Table (client) filters for instant UI
-    const newFilters: { id: string; value: unknown }[] = [];
-    if (filters.status) newFilters.push({ id: 'status', value: filters.status });
-    if (filters.account) newFilters.push({ id: 'walletNumber', value: filters.account });
-    if (filters.startDate || filters.endDate) {
-      newFilters.push({ id: 'requestDate', value: { start: filters.startDate, end: filters.endDate } });
-    }
-    setColumnFilters(newFilters);
-
-    // API filters to persist through paging
     const api: { Status: number; PatientName?: string; Date?: string } = { Status: 1 };
-    if (filters.account) api.PatientName = filters.account; // adjust if backend expects WalletNumber instead
-    if (filters.startDate) api.Date = filters.startDate; // backend supports single Date
+    if (filters.account) api.PatientName = filters.account.trim();
+    if (filters.startDate) api.Date = filters.startDate;
     setApiFilters(api);
-
     setPageNumber(1);
   };
 
   const handleResetFilter = () => {
-    setColumnFilters([]);
     setApiFilters({ Status: 1 });
     setPageNumber(1);
   };
 
-  const hasData = data.length > 0;
-
   return (
     <DashboardLayout>
-      {!hasData && !loading && !error ? (
+      {/* Content restored below */}
+      {!(data.length > 0) && !loading && !error ? (
         <div className="flex h-[70vh] flex-col items-center justify-center">
-          <p className="text-lg font-semibold text-gray-800">
-            You have no initiated a refund yet
-          </p>
+          <p className="text-lg font-semibold text-gray-800">You have no initiated a refund yet</p>
           <p className="mt-2 mb-6 text-gray-500">All refund appears here</p>
         </div>
       ) : (
@@ -430,7 +420,6 @@ const Checkers = () => {
           </div>
         </div>
       )}
-
       <CheckerDetails open={open} setOpen={setOpen} data={selectedTransaction} />
     </DashboardLayout>
   );

@@ -5,6 +5,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {Label} from '@/components/ui/label';
+import { Filter } from 'lucide-react';
 // removed select components as filters now only use text inputs
 
 import {useState} from 'react';
@@ -31,7 +32,7 @@ export const MarketingFilter = ({onApply, onReset}: MarketingFilterProps) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button className="w-36 py-2.5">Filter</Button>
+        <Button className="w-fit py-2.5"><Filter /></Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent className="p-6 w-[400px]">

@@ -45,7 +45,7 @@ const Providers = () => {
   const [rowSelection, setRowSelection] = useState({});
   const [columnFilters, setColumnFilters] = useState<any[]>([]);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
   const [selectedProvider, setSelectedProvider] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -54,15 +54,15 @@ const Providers = () => {
   }, [dispatch, page, pageSize]);
 
   const columns: ColumnDef<AmbulanceProvider>[] = [
-    {accessorKey: 'registrationNumber', header: 'Registration Number'},
-    {accessorKey: 'address', header: 'Address'},
-    {accessorKey: 'adminName', header: 'Admin Name'},
-    {accessorKey: 'email', header: 'Company Email'},
-    {accessorKey: 'phoneNumber', header: 'Phone Number'},
-    {accessorKey: 'serviceCharge', header: 'Service Charge'},
+    {accessorKey: 'registrationNumber', header: () => <span className="whitespace-nowrap">Registration Number</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('registrationNumber')}</span>},
+    {accessorKey: 'address', header: () => <span className="whitespace-nowrap">Address</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('address')}</span>},
+    {accessorKey: 'adminName', header: () => <span className="whitespace-nowrap">Admin Name</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('adminName')}</span>},
+    {accessorKey: 'email', header: () => <span className="whitespace-nowrap">Company Email</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('email')}</span>},
+    {accessorKey: 'phoneNumber', header: () => <span className="whitespace-nowrap">Phone Number</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('phoneNumber')}</span>},
+    {accessorKey: 'serviceCharge', header: () => <span className="whitespace-nowrap">Service Charge</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('serviceCharge')}</span>},
     {
       id: 'action',
-      header: 'Action',
+      header: () => <span className="whitespace-nowrap">Action</span>,
       enableHiding: false,
       cell: ({row}) => {
         if (!row.original.id && !row.original.adminName) return null;

@@ -21,17 +21,30 @@ import {
 } from '@tanstack/react-table';
 
 import { Pagination } from '@/components/ui/pagination';
-import { Hospital, Monitor } from 'lucide-react';
+// import { Hospital, Monitor } from 'lucide-react';
 
+// Backend response shape example:
+// {
+//   "patientName": "Honeyy Dee",
+//   "reason": "Chest Pain",
+//   "createdDate": "2025-08-13T15:02:40",
+//   "callDuration": "7 minutes",
+//   "amount": 5000.00,
+//   "status": "Missed"
+// }
+// Keep legacy fields optional for backward compatibility.
 export interface Consultation {
-  id: string;
+  id?: string;
   patientName: string;
-  type: string;
-  duration: string;
-  status: string;
   reason: string;
+  createdDate?: string; // new backend date field
+  callDuration?: string; // new backend duration field (e.g. "7 minutes")
   amount: number;
-  date: string;
+  status: string;
+  // legacy / previous fields (optional)
+  type?: string;
+  duration?: string | number;
+  date?: string;
 }
 
 interface AllConsultationProps {
@@ -48,48 +61,26 @@ const AllConsultation = ({ consultations }: AllConsultationProps) => {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
 
-  // ✅ search filter
+  // ✅ search filter list derived before passing to table
   const filteredConsultations = useMemo(
-    () =>
-      consultations?.filter(item =>
-        item.patientName.toLowerCase().includes(searchTerm.toLowerCase())
-      ),
+    () => consultations.filter(c => c.patientName.toLowerCase().includes(searchTerm.toLowerCase())),
     [consultations, searchTerm]
   );
 
   const columns: ColumnDef<Consultation>[] = [
-    { accessorKey: 'id', header: 'S/N' },
+    {
+      id: 'sn',
+      header: 'S/N',
+      cell: ({ row }) => <span>{row.index + 1}</span>,
+    },
     { accessorKey: 'patientName', header: 'Patient Name' },
     {
-      accessorKey: 'duration',
+      id: 'callDuration',
       header: 'Duration',
-      cell: ({ getValue }) => {
-        const raw = getValue() as string;
-        if (!raw) return <span>-</span>;
-        const date = new Date(raw);
-        const hours = date.getUTCHours().toString().padStart(2, '0');
-        const minutes = date.getUTCMinutes().toString().padStart(2, '0');
-        const seconds = date.getUTCSeconds().toString().padStart(2, '0');
-        return <span>{`${hours}:${minutes}:${seconds}`}</span>;
-      },
-    },
-    {
-      accessorKey: 'type',
-      header: 'Appointment Type',
-      cell: ({ getValue }) => {
-        const value = (getValue() as string) || '-';
-        const isVirtual = value.toLowerCase() === 'virtual';
-        return (
-          <div className="flex items-center gap-2 font-medium">
-            <span>{value}</span>
-            {value !== '-' &&
-              (isVirtual ? (
-                <Monitor size={16} className="text-primary" />
-              ) : (
-                <Hospital size={16} className="text-primary" />
-              ))}
-          </div>
-        );
+      cell: ({ row }) => {
+        const raw = row.original.callDuration || row.original.duration;
+        if (!raw || String(raw).trim() === '') return <span className="text-gray-400">--</span>;
+        return <span>{raw}</span>;
       },
     },
     { accessorKey: 'reason', header: 'Reason' },
@@ -101,10 +92,10 @@ const AllConsultation = ({ consultations }: AllConsultationProps) => {
       ),
     },
     {
-      accessorKey: 'date',
+      id: 'dateTime',
       header: 'Date & Time',
-      cell: ({ getValue }) => {
-        const raw = getValue() as string;
+      cell: ({ row }) => {
+        const raw = row.original.createdDate || row.original.date;
         if (!raw) return <span>-</span>;
         const date = new Date(raw);
         return (

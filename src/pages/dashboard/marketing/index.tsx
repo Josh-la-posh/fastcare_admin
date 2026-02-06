@@ -34,6 +34,7 @@ import { fetchReferralSummary, fetchReferralCodes, exportReferralCodes, fetchRef
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { AppDispatch, RootState } from '@/services/store';
 import { Loader } from '@/components/ui/loading';
+import { StatsCards } from '@/components/ui/stats-card';
 
 // Dynamic stats will be derived from referral summary endpoint
 
@@ -60,7 +61,7 @@ const MarketingCampaign = () => {
   const [codeFilter, setCodeFilter] = useState<string | undefined>(undefined);
   const [staffNameFilter, setStaffNameFilter] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
 
   // Fetch summary once
   useEffect(() => { dispatch(fetchReferralSummary()); }, [dispatch]);
@@ -226,25 +227,7 @@ const MarketingCampaign = () => {
   return (
     <DashboardLayout>
       <div className="bg-gray-100 overflow-scroll h-full ">
-        <div className="my-10 mx-8 flex flex-col lg:flex-row justify-between gap-6 items-center">
-          {claimStats.map(stat => (
-            <div
-              key={stat.id}
-              className="flex justify-between items-center rounded-md bg-white p-6 w-full"
-              style={{ border: `2px solid ${stat.borderColor}`, backgroundColor: stat.bgColor }}
-            >
-              <div>
-                <h4 className="text-xl leading-tight mb-2">
-                  {errorSummary ? <span className="text-red-600 text-sm">Err</span> : stat.value}
-                </h4>
-                <p className="text-md text-gray-600">{stat.title}</p>
-              </div>
-              <div>
-                <img src={stat.icon} alt={stat.title} />
-              </div>
-            </div>
-          ))}
-        </div>
+        <StatsCards stats={claimStats} error={!!errorSummary} />
 
         <div className="lg:mx-8 mt-10 bg-white mb-32 rounded-md flex flex-col ">
           <div className="flex flex-wrap gap-4 justify-between items-center p-6">

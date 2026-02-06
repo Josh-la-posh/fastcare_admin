@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import { useState, useMemo } from 'react';
 import {AreaChart, Area, XAxis, Tooltip, ResponsiveContainer} from 'recharts';
 import AllConsultation from './all-consultation';
 import {format, parse} from 'date-fns';
@@ -14,12 +14,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader } from '@/components/ui/loading';
-import { Doctor } from '@/types';
+import { CallsStatistics, DashboardData, Doctor, DoctorRecentCall, PerformanceMetric } from '@/types';
 
 
 type Props = {
   finance: Doctor | null;
-  dashboard: any;
+  dashboard: DashboardData | null;
   loading: boolean;
 };
 
@@ -35,42 +35,71 @@ type Consultation = {
   date: string;
 }
 
-const data = [
-  {date: '2025-09-01', earnings: 4000},
-  {date: '2025-09-03', earnings: 2000},
-  {date: '2025-09-05', earnings: 3000},
-  {date: '2025-09-07', earnings: 1000},
-  {date: '2025-09-10', earnings: 5000},
-  {date: '2025-09-13', earnings: 8000},
-  {date: '2025-09-15', earnings: 2780},
-  {date: '2025-09-20', earnings: 4890},
-];
+// interface CallsStatistics {
+//   totalEarned?: number;
+//   todayEarned?: number;
+//   pendingPayout?: number;
+//   commission?: number;
+//   refunds?: number;
+// }
 
-const stats = [
-  {
-    count: 'NGN 84,067.00',
-    title: 'Pending Payout',
-    icon: payout,
-  },
-  {
-    count: 'NGN 4,067.00',
-    title: 'Commission',
-    icon: commission,
-  },
-  {
-    count: 'NGN 44,067.00',
-    title: 'Refunds',
-    icon: refund,
-  },
-];
+// interface PerformanceMetric {
+//   satisfactionPercentage?: number;
+//   rating?: string;
+//   averageCallDuration?: string;
+//   responseTime?: string;
+// }
+
+// interface RecentCallRaw {
+//   patientName?: string;
+//   type?: string;
+//   callDuration?: string;
+//   status?: string;
+//   reason?: string;
+//   amount?: number | string;
+//   createdDate?: string;
+// }
+
+// interface Dashboard {
+//   callsStatistics?: CallsStatistics;
+//   performanceMetric?: PerformanceMetric;
+//   doctorRecentCalls?: RecentCallRaw[] | null;
+// }
+
+// Build stats panels dynamically from callsStatistics (fallback zeros if missing).
+const buildStatsPanels = (callsStatistics: CallsStatistics | null) => {
+  return [
+    {
+      count: `NGN ${(callsStatistics?.pendingPayout ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      title: 'Pending Payout',
+      icon: payout,
+    },
+    {
+      count: `NGN ${(callsStatistics?.commission ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      title: 'Commission',
+      icon: commission,
+    },
+    {
+      count: `NGN ${(callsStatistics?.refunds ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      title: 'Refunds',
+      icon: refund,
+    },
+  ];
+};
 
 const ranges = ['1M', '3M', '6M', '1Y'];
 
 // ✅ Custom tooltip component
-const CustomTooltip = ({active, payload, label}: any) => {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{ value: number }>;
+  label?: string;
+}
+
+const CustomTooltip = ({active, payload, label}: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     // Parse the date string into a Date object
-    const dateObj = parse(label, 'yyyy-MM-dd', new Date());
+  const dateObj = parse(label || '', 'yyyy-MM-dd', new Date());
     const formattedDate = format(dateObj, "EEEE, MMM d'th', yyyy"); // Tuesday, Sep 15th, 2025
 
     return (
@@ -90,31 +119,54 @@ const CustomTooltip = ({active, payload, label}: any) => {
 
 const Finance = ({  dashboard, loading }: Props) => {
 
-   if (loading) {
-      return (
-        <div className="flex justify-center items-center h-64">
-          <Loader />
-        </div>
-      );
-    }
+    const callsStatistics: CallsStatistics | null = dashboard?.callsStatistics || null;
+    const performanceMetric: PerformanceMetric | null = dashboard?.performanceMetric || null;
+    const doctorRecentCallsRaw: DoctorRecentCall[] | null = dashboard?.doctorRecentCalls || null;
 
-     const { doctorRecentCalls = [] } = dashboard || {};
+    const doctorRecentCalls: DoctorRecentCall[] = useMemo(
+      () => (Array.isArray(doctorRecentCallsRaw) ? doctorRecentCallsRaw : []),
+      [doctorRecentCallsRaw]
+    );
 
-  // ✅ Map API response into table shape
-  const mappedConsultations: Consultation[] = doctorRecentCalls?.map(
-    (item: any, index: number) => ({
-      id: String(index + 1),
-      patientName: item.patientName,
-      type: item.type || '-', // optional, default to "-"
-      duration: item.callDuration,
-      status: item.status,
-      reason: item.reason,
-      amount: item.amount,
-      date: item.createdDate,
-    })
-  );
+    // Aggregate chart data from recent calls by date.
+    const chartData = useMemo(() => {
+      const byDate: Record<string, number> = {};
+      for (const call of doctorRecentCalls) {
+        const dateKey = call.createdDate?.split('T')[0] || 'Unknown';
+        const amountNum = Number(call.amount) || 0;
+        byDate[dateKey] = (byDate[dateKey] || 0) + amountNum;
+      }
+      return Object.entries(byDate)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, earnings]) => ({ date, earnings }));
+    }, [doctorRecentCalls]);
+
+    const statsPanels = useMemo(() => buildStatsPanels(callsStatistics), [callsStatistics]);
+
+    // ✅ Map API response into table shape
+    const mappedConsultations: Consultation[] = useMemo(
+      () => doctorRecentCalls.map((item: DoctorRecentCall, index: number) => ({
+        id: String(index + 1),
+        patientName: item.patientName || '-',
+        type: item.type || '-', // optional, default to "-"
+        duration: item.callDuration || '-',
+        status: item.status || '-',
+        reason: item.reason || '-',
+        amount: Number(item.amount) || 0,
+        date: item.createdDate || '-',
+      })),
+      [doctorRecentCalls]
+    );
 
   const [activeRange, setActiveRange] = useState('1M');
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader />
+      </div>
+    );
+  }
 
   return (
     <div className="mt-10 mx-4">
@@ -162,10 +214,11 @@ const Finance = ({  dashboard, loading }: Props) => {
 
               <div className="flex items-center justify-between  gap-2 mt-4">
                 <span className="text-xl font-semibold text-gray-700">
-                  NGN 34,566.66
+                  NGN {(callsStatistics?.totalEarned ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
                 <span className="text-green-600 font-medium text-sm">
-                  +23% vs last month
+                  Today: NGN {(callsStatistics?.todayEarned ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {performanceMetric?.rating ? ` • Rating: ${performanceMetric.rating}` : ''}
                 </span>
               </div>
             </div>
@@ -175,7 +228,7 @@ const Finance = ({  dashboard, loading }: Props) => {
           <div className=" h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
-                data={data}
+                data={chartData}
                 margin={{top: 16, right: 0, left: 0, bottom: 0}}
               >
                 {/* Gradient definition */}
@@ -214,7 +267,7 @@ const Finance = ({  dashboard, loading }: Props) => {
 
         <div className="w-full lg:w-[40%]">
           <div className="flex flex-col gap-4 w-full">
-            {stats.map((item, index) => (
+            {statsPanels.map((item, index) => (
               <div
                 key={index}
                 className="flex items-center justify-between   gap-5 rounded-md bg-white border p-5 w-full"

@@ -1,5 +1,5 @@
 import {DashboardLayout} from '@/layout/dashboard-layout';
-import {useEffect, useState, useMemo} from 'react';
+import {useEffect, useState} from 'react';
 import {
   Table,
   TableBody,
@@ -19,13 +19,16 @@ import {useNavigate} from 'react-router-dom';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/services/store';
 import {fetchDoctors} from '@/services/thunks';
+import { Button } from '@/components/ui/button';
 import {Doctor} from '@/types';
 import {Loader} from '@/components/ui/loading';
 
 const AllDoctors = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  // activeSearch is the term sent to backend; lets user type freely without triggering fetch each keystroke
+  const [activeSearch, setActiveSearch] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);  
 
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -34,24 +37,10 @@ const AllDoctors = () => {
     useSelector((state: RootState) => state.doctors);
 
   useEffect(() => {
-    // if you want API defaults on first load
-    if (page && pageSize) {
-      dispatch(fetchDoctors({page: page, pageSize: pageSize}));
-    } else {
-      dispatch(fetchDoctors()); // let API decide
-    }
-  }, [dispatch, page, pageSize]);
+    dispatch(fetchDoctors({ page, pageSize, status: 2, search: activeSearch }));
+  }, [dispatch, page, pageSize, activeSearch]);
 
-  const filteredDoctors = useMemo(() => {
-    return doctors.filter(d => {
-      const fullName = `${d.firstName} ${d.lastName}`.toLowerCase();
-      const matchesName = searchTerm
-        ? fullName.includes(searchTerm.toLowerCase())
-        : true;
-
-      return matchesName;
-    });
-  }, [doctors, searchTerm]);
+  // Removed client-side filteredDoctors; using backend search instead
 
   const columns: ColumnDef<Doctor>[] = [
     {
@@ -73,41 +62,26 @@ const AllDoctors = () => {
       header: 'License Number',
     },
     {
-      accessorKey: 'isDoctorAvailable',
+      accessorKey: 'status',
       header: 'Status',
-      cell: ({getValue}) => {
-        const isAvailable = getValue() as boolean;
-
-        const statusText = isAvailable ? 'Available' : 'Offline';
+      cell: ({row}) => {
+        const statusText = row.original.isActive === false ? 'Inactive' 
+          : row.original.status.toLowerCase() === 'available' ? 'Online' 
+          : row.original.status.toLowerCase() === 'offline' ? 'Offline'
+          : row.original.status.toLowerCase() === 'inconsultation' ? 'Active'
+          : 'Inactive';
         const status = statusText.toLowerCase();
 
-        let statusClasses = 'py-1 text-md font-semibold w-fit ';
-        if (status === 'available') statusClasses += 'text-green-700';
+        let statusClasses = 'p-2 text-md font-semibold w-fit ';
+        if (status === 'inactive') statusClasses += 'text-white bg-red-500 ';
+        if (status === 'online') statusClasses += 'bg-green-100 text-green-500';
+        if (status === 'offline') statusClasses += 'bg-red-100 text-red-500';
+        if (status === 'in consultation') statusClasses += 'bg-blue-100 text-blue-500';
         else statusClasses += 'text-red-800';
 
         return <span className={statusClasses}>{statusText}</span>;
       },
     },
-
-    // {
-    //   accessorKey: 'date',
-    //   header: 'Upcoming Appt',
-    //   cell: ({getValue}) => {
-    //     const value = getValue() as string;
-    //     const isPast = value?.toLowerCase().includes('ago');
-    //     return (
-    //       <span
-    //         className={
-    //           isPast
-    //             ? 'text-red-600 font-semibold'
-    //             : 'text-gray-700 font-semibold'
-    //         }
-    //       >
-    //         {value || '-'}
-    //       </span>
-    //     );
-    //   },
-    // },
     {
       id: 'action',
       header: 'Action',
@@ -125,22 +99,10 @@ const AllDoctors = () => {
   ];
 
   const table = useReactTable({
-    data: filteredDoctors,
+    data: doctors,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-
-  // const handleApplyFilter = (filters: any) => {
-  //   setSearchTerm(filters.name || '');
-  //   setFilterStatus(filters.status);
-  //   setPage(1);
-  // };
-
-  // const handleResetFilter = () => {
-  //   setSearchTerm('');
-  //   setFilterStatus(undefined);
-  //   setPage(1);
-  // };
 
   return (
     <DashboardLayout>
@@ -148,22 +110,31 @@ const AllDoctors = () => {
         <div className="lg:mx-8 mt-10 bg-white rounded-md flex flex-col mb-36">
           {/* Header */}
           <div className="flex flex-wrap gap-4 justify-between items-center p-6">
-            <div className="flex items-center gap-8">
-              <h1 className="text-xl text-gray-800">All Doctors</h1>
+            <div className="flex items-center flex-wrap gap-4 lg:gap-8">
+              <h1 className="text-xl text-gray-800 whitespace-nowrap">All Doctors</h1>
               <input
                 type="text"
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="border rounded-lg px-4 py-2 lg:w-96 lg:max-w-2xl focus:outline-none"
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    setPage(1);
+                    setActiveSearch(searchTerm.trim() || undefined);
+                  }
+                }}
+                className="border rounded-lg px-4 py-2 lg:w-72 xl:w-96 focus:outline-none"
               />
+              <Button
+                onClick={() => {
+                  setPage(1);
+                  setActiveSearch(searchTerm.trim() || undefined);
+                }}
+                disabled={loading}
+              >
+                {loading ? 'Searching...' : 'Search'}
+              </Button>
             </div>
-            {/* <div className="flex gap-4 items-center mr-24">
-              <AllDoctorFilter
-                onApply={handleApplyFilter}
-                onReset={handleResetFilter}
-              />
-            </div> */}
           </div>
 
           {/* Table */}

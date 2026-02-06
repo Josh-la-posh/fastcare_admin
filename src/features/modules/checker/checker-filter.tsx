@@ -49,6 +49,7 @@ export const CheckerFilter = ({ onApply, onReset }: any) => {
               className="border border-gray-300 rounded-md py-2 px-3 w-full outline-none"
               value={startDate || ''}
               onChange={e => setStartDate(e.target.value || null)}
+              max={new Date().toISOString().split('T')[0]}
             />
             <p className="text-md font-medium">To</p>
             <input
@@ -56,16 +57,17 @@ export const CheckerFilter = ({ onApply, onReset }: any) => {
               className="border border-gray-300 rounded-md py-2 px-3 w-full outline-none"
               value={endDate || ''}
               onChange={e => setEndDate(e.target.value || null)}
+              max={new Date().toISOString().split('T')[0]}
             />
           </div>
         </div>
 
         {/* Patient */}
         <div className="flex flex-col gap-2 w-full">
-          <Label>Wallet ID</Label>
+          <Label>Patient Name</Label>
           <input
             type="text"
-            placeholder="Enter name"
+            placeholder="Enter Name"
             className="border border-gray-300 rounded-md py-2 px-3 w-full outline-none"
             value={account}
             onChange={e => setAccount(e.target.value)}

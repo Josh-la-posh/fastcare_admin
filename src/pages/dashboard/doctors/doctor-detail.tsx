@@ -11,9 +11,12 @@ import {AppDispatch, RootState} from '@/services/store';
 import {fetchDoctorById, fetchDoctorDashboardById} from '@/services/thunks';
 import {Loader} from '@/components/ui/loading';
 import DelectDoctor from '@/features/modules/doctor/delete';
+import ToggleDoctorStatus from '@/features/modules/doctor/toggle-status';
+import { normalizeImageSrc } from '@/utils/imgFormatter';
 
 const DoctorDetails = () => {
   const [open, setOpen] = useState(false);
+  const [showToggle, setShowToggle] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') || 'information';
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -49,6 +52,8 @@ const DoctorDetails = () => {
   }, [activeTab, setSearchParams]);
 
   const navigate = useNavigate()
+  
+  const photoSrc = selectedDoctor?.photo !== null ? normalizeImageSrc(selectedDoctor?.photo) : normalizeImageSrc(selectedDoctor?.profileImage);
 
   return (
     <DashboardLayout>
@@ -74,7 +79,7 @@ const DoctorDetails = () => {
             <div className="flex items-center gap-4">
               <Avatar className="w-14 h-14 rounded-lg">
                 <AvatarImage
-                  src={selectedDoctor?.profileImage || '/images/user.png'}
+                  src={photoSrc || '/images/user.png'}
                   alt="Doctor"
                 />
                 <AvatarFallback className="uppercase bg-primary text-white font-bold">
@@ -90,25 +95,23 @@ const DoctorDetails = () => {
                   <p className="text-gray-600 text-md">
                     {selectedDoctor?.specialization}
                   </p>
-                  {selectedDoctor?.isDoctorAvailable ? (
-                    <span className="bg-green-100 text-green-500 p-1 text-sm">
-                      Available
-                    </span>
-                  ) : (
-                    <span className="bg-red-100 text-red-500 p-1 text-sm">
-                      Not Available
-                    </span>
-                  )}
+                  <span className={`${selectedDoctor?.isActive === false ? 'bg-red-500 text-white' : selectedDoctor?.status.toLowerCase() === 'available' ? 'bg-green-100  text-green-500' : selectedDoctor?.status.toLowerCase() === 'offline' ? 'bg-red-100  text-red-500' : selectedDoctor?.status.toLowerCase() === 'inconsultation' ? 'bg-blue-100 text-blue-500' : 'bg-red-500 text-white'} py-1 px-3 text-sm`}>
+                    {selectedDoctor?.isActive === false ? 'Inactive' 
+                      : selectedDoctor?.status.toLowerCase() === 'available' ? 'Online' 
+                      : selectedDoctor?.status.toLowerCase() === 'offline' ? 'Offline'
+                      : selectedDoctor?.status.toLowerCase() === 'inconsultation' ? 'In Consultation'
+                      : 'Inactive'}
+                  </span>
                 </div>
               </div>
             </div>
 
             <Button
-              onClick={() => setOpen(true)}
-              variant="destructive"
+              onClick={() => setShowToggle(true)}
+              variant={selectedDoctor?.isActive ? 'destructive' : 'default'}
               className="py-3 rounded-md"
             >
-              Delete account
+              {selectedDoctor?.isActive ? 'Deactivate Doctor' : 'Activate Doctor'}
             </Button>
           </div>
 
@@ -167,6 +170,17 @@ const DoctorDetails = () => {
       )}
 
       <DelectDoctor open={open} setOpen={setOpen} data={selectedDoctor} />
+      
+      {selectedDoctor && (
+        <ToggleDoctorStatus
+          open={showToggle}
+          setOpen={setShowToggle}
+          doctorId={selectedDoctor.id}
+          doctorUserId={id!}
+          isActive={selectedDoctor.isActive}
+          doctorName={`${selectedDoctor.firstName} ${selectedDoctor.lastName}`}
+        />
+      )}
     </DashboardLayout>
   );
 };

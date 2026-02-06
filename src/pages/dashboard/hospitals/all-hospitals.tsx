@@ -20,7 +20,6 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 
@@ -36,6 +35,7 @@ import {Loader} from '@/components/ui/loading';
 
 export const AllHospitals = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeSearch, setActiveSearch] = useState<string | undefined>(undefined);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
@@ -50,29 +50,40 @@ export const AllHospitals = () => {
     date?: string | null;
     id: string | number;
   }
-  // Column filters not used for search (handled manually)
-  const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(5);
+  // Server-side pagination state (1-based page for backend)
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
   // get hospitals from redux
-  const {hospitals, loading, error} = useSelector(
+  const {hospitals, loading, error, totalCount, totalPages, currentPage, pageSize: storePageSize} = useSelector(
     (state: RootState) => state.hospitals,
   );
 
-  // fetch once
+  // Sync local pageSize with store (in case backend overrides)
   useEffect(() => {
-    if (!hospitals.length) {
-      dispatch(fetchHospitals());
+    if (storePageSize && storePageSize !== pageSize) {
+      setPageSize(storePageSize);
     }
-  }, [dispatch, hospitals.length]);
+  }, [storePageSize, pageSize]);
+
+  // Fetch hospitals whenever page or pageSize changes
+  useEffect(() => {
+    dispatch(fetchHospitals({ page, pageSize, search: activeSearch }));
+  }, [dispatch, page, pageSize, activeSearch]);
 
   // map into table data
   const mappedHospitals = useMemo(() => {
-    const base: HospitalRow[] = hospitals.map((item, index) => ({
-      sn: index + 1,
+    // Ensure hospitals is an array before mapping
+    if (!hospitals || !Array.isArray(hospitals)) {
+      return [];
+    }
+    
+    // Server-side search now, so no client filtering
+    return hospitals.map((item, index) => ({
+      sn: index + 1 + (page - 1) * pageSize,
       code: item.hospitalCode || '',
       name: item.hospitalName || '',
       email: item.email || '--',
@@ -86,20 +97,15 @@ export const AllHospitals = () => {
       date: item.date,
       id: item.id,
     }));
-    if (!searchTerm.trim()) return base;
-    const q = searchTerm.trim().toLowerCase();
-    return base.filter(h =>
-      h.name.toLowerCase().includes(q) || h.code.toLowerCase().includes(q),
-    );
-  }, [hospitals, searchTerm]);
+  }, [hospitals, page, pageSize]);
 
   const columns: ColumnDef<HospitalRow>[] = [
-    {accessorKey: 'sn', header: 'S/N'},
-    {accessorKey: 'code', header: 'Hospital Code'},
-    {accessorKey: 'name', header: 'Hospital Name'},
-    {accessorKey: 'email', header: 'Email'},
-    {accessorKey: 'hospitalAddress', header: 'Hospital Address'},
-    {accessorKey: 'clinic_no', header: 'No. Clinics'},
+    {accessorKey: 'sn', header: () => <span className="whitespace-nowrap">S/N</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('sn')}</span>},
+    {accessorKey: 'code', header: () => <span className="whitespace-nowrap">Hospital Code</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('code')}</span>},
+    {accessorKey: 'name', header: () => <span className="whitespace-nowrap">Hospital Name</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('name')}</span>},
+    {accessorKey: 'email', header: () => <span className="whitespace-nowrap">Email</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('email')}</span>},
+    {accessorKey: 'hospitalAddress', header: () => <span className="whitespace-nowrap">Hospital Address</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('hospitalAddress')}</span>},
+    {accessorKey: 'clinic_no', header: () => <span className="whitespace-nowrap">No. Clinics</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('clinic_no')}</span>},
     // {accessorKey: 'ip', header: 'Ip Address'},
     {
       id: 'action',
@@ -118,35 +124,18 @@ export const AllHospitals = () => {
     },
   ];
 
+  // Client-side table (no internal pagination since server-side is used)
   const table = useReactTable({
     data: mappedHospitals,
     columns,
-    state: {
-      sorting,
-      columnVisibility,
-      rowSelection,
-      pagination: {pageIndex, pageSize},
-    },
+    state: { sorting, columnVisibility, rowSelection },
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    onPaginationChange: updater => {
-      if (typeof updater === 'function') {
-        const newState = updater(table.getState().pagination);
-        setPageIndex(newState.pageIndex);
-        setPageSize(newState.pageSize);
-      } else {
-        setPageIndex(updater.pageIndex);
-        setPageSize(updater.pageSize);
-      }
-    },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
   });
-
-  const totalPages = table.getPageCount();
 
   return (
     <DashboardLayout>
@@ -156,14 +145,32 @@ export const AllHospitals = () => {
           <div className="flex flex-wrap gap-4 justify-between items-center p-6">
             <div className="flex items-center gap-8">
               <h1 className="text-lg text-gray-800">All Hospitals</h1>
-              <div className="hidden lg:block lg:w-96 lg:max-w-2xl">
-                <Input
-                  label="Search Hospital Name / Code"
-                  placeholder="Search by name or code"
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  fullWidth
-                />
+              <div className="hidden lg:flex lg:items-center lg:gap-3">
+                <div className="lg:w-96 lg:max-w-2xl">
+                  <Input
+                    label="Search Hospital Name"
+                    placeholder="Search by name"
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        setPage(1);
+                        setActiveSearch(searchTerm.trim() || undefined);
+                      }
+                    }}
+                    fullWidth
+                  />
+                </div>
+                <Button
+                  onClick={() => {
+                    setPage(1);
+                    setActiveSearch(searchTerm.trim() || undefined);
+                  }}
+                  disabled={loading}
+                  className="mt-6"
+                >
+                  {loading ? 'Searching...' : 'Search'}
+                </Button>
               </div>
             </div>
             <div className="flex gap-4 items-center">
@@ -277,15 +284,12 @@ export const AllHospitals = () => {
                 {/* Pagination */}
                 <div className="p-4 flex items-center justify-end">
                   <Pagination
-                    totalEntriesSize={table.getFilteredRowModel().rows.length}
-                    currentPage={pageIndex + 1}
-                    totalPages={totalPages}
+                    totalEntriesSize={totalCount ?? hospitals.length}
+                    currentPage={currentPage ?? page}
+                    totalPages={totalPages ?? 1}
                     pageSize={pageSize}
-                    onPageChange={p => setPageIndex(p - 1)}
-                    onPageSizeChange={size => {
-                      setPageSize(size); // update page size
-                      setPageIndex(0); // reset to first page
-                    }}
+                    onPageChange={(p) => setPage(p)}
+                    onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
                   />
                 </div>
               </>

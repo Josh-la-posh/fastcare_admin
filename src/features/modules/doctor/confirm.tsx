@@ -33,7 +33,7 @@ export default function Confirm({open, setOpen, data}: Props) {
     setLoading(true);
 
     try {
-      await dispatch(approveDoctor(data.userId)).unwrap();
+      await dispatch(approveDoctor(data.id)).unwrap();
 
       setOpenSuccess(true);
       

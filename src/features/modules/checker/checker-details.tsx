@@ -12,22 +12,12 @@ import { AppDispatch } from '@/services/store';
 import { updateRefundStatus, fetchRefunds } from '@/services/thunks';
 import toast from 'react-hot-toast';
 import Success from '../dashboard/success';
-
-interface RefundLite {
-  id?: number | string;
-  status?: string;
-  amount?: string | number;
-  transaction_id?: string;
-  name?: string;
-  patient_id?: string;
-  account?: string;
-  date?: string;
-}
+import { Refund } from '@/types';
 
 type Props = {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  data?: RefundLite | null;
+  data?: Refund | null;
 };
 
 export default function CheckerDetails({open, setOpen, data}: Props) {
@@ -64,12 +54,22 @@ export default function CheckerDetails({open, setOpen, data}: Props) {
       setOpenSuccess(true);
       // refresh pending list (filter outside or refetch all)
       dispatch(fetchRefunds(undefined));
-    } catch {
-      toast.error('Failed to update refund');
+    } catch (err: unknown) {
+      // err here is the value passed to rejectWithValue (string) or a thrown error
+      const hasMessage = (e: unknown): e is { message: string } =>
+        typeof e === 'object' && e !== null && 'message' in e && typeof (e as { message?: unknown }).message === 'string';
+      const message = typeof err === 'string'
+        ? err
+        : hasMessage(err)
+          ? err.message
+          : 'Failed to update refund';
+      toast.error(message);
     } finally {
       setLoadingAction(null);
     }
   };
+
+  console.log('Refund details data:', data);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -94,7 +94,7 @@ export default function CheckerDetails({open, setOpen, data}: Props) {
           {/* Amount in middle */}
           <div className="text-center mb-6">
             <p className="text-gray-500 text-sm">Refund Amount</p>
-            <p className="text-2xl font-bold text-gray-900">{data?.amount}</p>
+            <p className="text-2xl font-bold text-gray-900">{data?.refundAmount}</p>
           </div>
 
           {/* Other details */}
@@ -111,41 +111,98 @@ export default function CheckerDetails({open, setOpen, data}: Props) {
             </div>
             <div className="flex justify-between py-4">
               <span className="text-gray-600">Transaction Id</span>
-              <span className="font-medium">{data?.transaction_id}</span>
+              <span className="font-medium">{data?.transactionId}</span>
             </div>
 
             <div className="flex justify-between py-4">
               <span className="text-gray-600">Patient Name</span>
-              <span className="font-medium">{data?.name}</span>
+              <span className="font-medium">{data?.patientName}</span>
             </div>
             <div className="flex justify-between py-4">
               <span className="text-gray-600">Patient Id</span>
-              <span className="font-medium">{data?.patient_id || 'PT023'}</span>
+              <span className="font-medium">{data?.patientId || 'PT023'}</span>
             </div>
             <div className="flex justify-between py-4">
               <span className="text-gray-600">Amount</span>
-              <span className="font-medium">{data?.amount}</span>
+              <span className="font-medium">{data?.refundAmount}</span>
             </div>
             <div className="flex justify-between py-4">
               <span className="text-gray-600">Wallet account</span>
               <span className="font-medium">
-                {data?.account + ' 2345677899'}
+                {data?.walletNumber + ' 2345677899'}
               </span>
             </div>
 
             <div className="flex justify-between py-4">
               <span className="text-gray-600">Requested by </span>
-              <span className="font-medium">{data?.name}</span>
+              <span className="font-medium">{data?.createdBy}</span>
             </div>
 
             <div className="flex justify-between py-4">
               <span className="text-gray-600">Date</span>
-              <span className="font-medium">{data?.date}</span>
+              <span className="font-medium">{data?.requestDate}</span>
             </div>
             <div className="flex justify-between py-4">
-              <span className="text-gray-600">Extra document</span>
-              <span className=" text-red-500 text-md flex items-center gap-2 text-normal">
-                <FileIcon className="w-4 h-4" /> file.pdf
+              <span className="text-gray-600">Refund Reference</span>
+              <span className="font-medium">{data?.refundReference || '-'}</span>
+            </div>
+            <div className="flex justify-between py-4">
+              <span className="text-gray-600">Refund Reason</span>
+              <span className="font-medium max-w-xs text-right truncate" title={data?.refundReason}>{data?.refundReason || '-'}</span>
+            </div>
+            <div className="flex justify-between py-4">
+              <span className="text-gray-600">Request Date</span>
+              <span className="font-medium">{data?.requestDate || '-'}</span>
+            </div>
+            <div className="flex justify-between py-4">
+              <span className="text-gray-600">Dispute Date</span>
+              <span className="font-medium">{data?.disputeDate || '-'}</span>
+            </div>
+            <div className="flex justify-between py-4">
+              <span className="text-gray-600">Wallet Number</span>
+              <span className="font-medium">{data?.walletNumber || '-'}</span>
+            </div>
+            <div className="flex justify-between py-4">
+              <span className="text-gray-600">Document</span>
+              <span className="font-medium">
+                {data?.document ? (
+                  <div className="flex items-center gap-3">
+                    {data.document.match(/\.(png|jpg|jpeg|gif|webp)$/i) ? (
+                      <a href={data.document} target="_blank" rel="noopener noreferrer" className="group">
+                        <img
+                          src={data.document}
+                          alt="refund-doc"
+                          className="w-12 h-12 object-cover rounded border group-hover:opacity-80"
+                        />
+                      </a>
+                    ) : (
+                      <a
+                        href={data.document}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-blue-600 hover:underline"
+                      >
+                        <FileIcon className="w-4 h-4" /> View document
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const a = document.createElement('a');
+                        a.href = data.document as string;
+                        a.download = 'refund-document';
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                      }}
+                      className="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 border"
+                    >
+                      View
+                    </button>
+                  </div>
+                ) : (
+                  <span className="text-gray-400">No document</span>
+                )}
               </span>
             </div>
           </div>

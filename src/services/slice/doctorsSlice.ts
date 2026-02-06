@@ -4,7 +4,7 @@ import { approveDoctor, disapproveDoctor, deleteDoctor, fetchDoctorById, fetchDo
 
 const initialState: DoctorsState = {
   doctors: [],
-   pendingDoctors: [],
+  pendingDoctors: [],
   totalCount: 0,
   totalPages: 1,
   currentPage: 1,
@@ -14,8 +14,7 @@ const initialState: DoctorsState = {
   loading: false,
   selectedDoctor: null,
   error: null,
-
-   dashboard: null,
+  dashboard: null,
 };
 
 const doctorsSlice = createSlice({

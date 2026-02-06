@@ -206,21 +206,21 @@ export default function InitiateARefund() {
               </div>
             </div>
           </div>
+          {/* Action buttons */}
+          <div className="flex justify-between items-center gap-4 mt-8">
+            <Button
+              variant="link"
+              onClick={() => setOpen(false)}
+              className="py-3 w-48 rounded-md bg-gray-300 border-none"
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit} disabled={!isValid() || creating} className="py-3 w-48 rounded-md disabled:opacity-50">
+              {creating ? 'Processing...' : 'Refund'}
+            </Button>
+          </div>
         </div>
 
-        {/* Action buttons */}
-        <div className="flex justify-between items-center gap-4 mt-8">
-          <Button
-            variant="link"
-            onClick={() => setOpen(false)}
-            className="py-3 w-48 rounded-md bg-gray-300 border-none"
-          >
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={!isValid() || creating} className="py-3 w-48 rounded-md disabled:opacity-50">
-            {creating ? 'Processing...' : 'Refund'}
-          </Button>
-        </div>
         {createError && <p className="text-center text-red-600 text-sm mt-2">{createError}</p>}
       </DialogContent>
 

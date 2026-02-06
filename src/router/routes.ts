@@ -42,6 +42,9 @@ export const ROUTES = {
 
   checkers: '/checkers',
   marketing: '/marketing-campaign',
+  adCampaigns: '/marketing-campaign/ad-campaigns',
+  promotionalCodes: '/marketing-campaign/promotional-codes',
+  referralCode: '/referral-code',
   referral: {
     codes: '/marketing-campaign/referral-codes',
     // detail by id can reuse modal fetch so path optional
@@ -57,10 +60,11 @@ export const ROUTES = {
   },
 
   reports: {
-     users: '/reports/users',
-     userdetails: '/reports/users/user-details/:id',
-     reporting: '/reports/reporting',
-     call: '/reports/emergency-call',
+   root: '/reports',
+   signup: '/reports/signup',
+   appointment: '/reports/appointment',
+   emergency: '/reports/emergency',
+   userdetails: '/reports/users/user-details/:id',
   },
 
   ambulance: {

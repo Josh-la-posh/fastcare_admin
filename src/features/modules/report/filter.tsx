@@ -9,7 +9,12 @@ import {
 } from '@/components/ui/select';
 import {useState} from 'react';
 
-export const EmergencyFilter = ({onApply, onReset}: any) => {
+interface EmergencyFilterProps {
+  onApply: (filters: { startDate?: string | null; endDate?: string | null; status?: string | null; speciality?: string | null }) => void;
+  onReset: () => void;
+}
+
+export const EmergencyFilter = ({onApply, onReset}: EmergencyFilterProps) => {
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -40,28 +45,30 @@ export const EmergencyFilter = ({onApply, onReset}: any) => {
       </div>
 
       {/* Grid Form */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Date range */}
-        <div className="col-span-1">
+        <div className="lg:col-span-2">
           <Label>Date</Label>
           <div className="flex items-center gap-2">
             <input
               type="date"
-              className="border border-gray-300 rounded-md py-2 px-3 w-full lg:w-36 outline-none"
+              className="flex-1 border border-gray-300 rounded-md py-2 px-1 lg:px-3 outline-none"
               value={startDate ?? ''}
               onChange={e => setStartDate(e.target.value || null)}
+              max={new Date().toISOString().split('T')[0]}
             />
             <p className="text-md font-semibold">To</p>
             <input
               type="date"
-              className="border border-gray-300 rounded-md py-2 px-3 w-full lg:w-36 outline-none"
+              className="flex-1 border border-gray-300 rounded-md py-2 px-1 lg:px-3 outline-none"
               value={endDate ?? ''}
               onChange={e => setEndDate(e.target.value || null)}
+              max={new Date().toISOString().split('T')[0]}
             />
           </div>
         </div>
 
-        {/* Status */}
+        {/* Status (Completed | Missed) */}
         <div className="flex flex-col gap-2">
           <Label>Status</Label>
           <Select value={status ?? undefined} onValueChange={setStatus}>
@@ -69,26 +76,13 @@ export const EmergencyFilter = ({onApply, onReset}: any) => {
               <SelectValue placeholder="Select Status" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="completed">Completed</SelectItem>
               <SelectItem value="missed">Missed</SelectItem>
-              <SelectItem value="attended">Attended</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <Label>Doctor Speciality</Label>
-          <Select>
-            <SelectTrigger>
-              <SelectValue placeholder="Select..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="doctor">Doctor</SelectItem>
-            
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="mt-6">
+        <div className="mt-3">
           <Button className="py-2.5 rounded-md w-44" onClick={handleApply}>
             Apply Filter
           </Button>

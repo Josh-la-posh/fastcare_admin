@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchAdCampaigns, createAdCampaign } from '@/services/thunks';
+import { fetchAdCampaigns, createAdCampaign, updateAdCampaign } from '@/services/thunks';
 import { AdCampaignState } from '@/types';
 
 const initialState: AdCampaignState = {
@@ -9,6 +9,8 @@ const initialState: AdCampaignState = {
   error: null,
   creating: false,
   createError: null,
+  updating: false,
+  updateError: null,
 };
 
 const adCampaignSlice = createSlice({
@@ -18,6 +20,7 @@ const adCampaignSlice = createSlice({
     clearAdCampaignError: (state) => {
       state.error = null;
       state.createError = null;
+      state.updateError = null;
     },
   },
   extraReducers: (builder) => {
@@ -47,6 +50,18 @@ const adCampaignSlice = createSlice({
       .addCase(createAdCampaign.rejected, (state, action) => {
         state.creating = false;
         state.createError = action.payload as string;
+      })
+      // Update Ad Campaign
+      .addCase(updateAdCampaign.pending, (state) => {
+        state.updating = true;
+        state.updateError = null;
+      })
+      .addCase(updateAdCampaign.fulfilled, (state) => {
+        state.updating = false;
+      })
+      .addCase(updateAdCampaign.rejected, (state, action) => {
+        state.updating = false;
+        state.updateError = action.payload as string;
       });
   },
 });

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { DashboardLayout } from '@/layout/dashboard-layout';
 import { AppDispatch, RootState } from '@/services/store';
-import { fetchAdCampaigns, createAdCampaign } from '@/services/thunks';
+import { fetchAdCampaigns, createAdCampaign, updateAdCampaign } from '@/services/thunks';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,12 +23,15 @@ import {
 import { Pagination } from '@/components/ui/pagination';
 import { Loader2, MoreVertical } from 'lucide-react';
 import toast from 'react-hot-toast';
+import type { AdCampaignItem } from '@/types';
 
 const AdCampaigns = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { list, metaData, loading, creating } = useSelector((state: RootState) => state.adCampaigns);
+  const { list, metaData, loading, creating, updating } = useSelector((state: RootState) => state.adCampaigns);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<AdCampaignItem | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [title, setTitle] = useState('');
@@ -63,6 +66,17 @@ const AdCampaigns = () => {
     setImagePreview(null);
   };
 
+  const openEditDialog = (campaign: AdCampaignItem) => {
+    setEditingCampaign(campaign);
+    setTitle(campaign.title || '');
+    setDescription(campaign.description || '');
+    setStartDate(campaign.startDate ? campaign.startDate.split('T')[0] : '');
+    setEndDate(campaign.endDate ? campaign.endDate.split('T')[0] : '');
+    setImageFile(null);
+    setImagePreview(campaign.image ? (campaign.image.startsWith('data:') ? campaign.image : `data:image/jpeg;base64,${campaign.image}`) : null);
+    setEditDialogOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -89,6 +103,38 @@ const AdCampaigns = () => {
       dispatch(fetchAdCampaigns({ Page: 1, PageSize: pageSize }));
     } catch (error) {
       toast.error(typeof error === 'string' ? error : 'Failed to create ad campaign');
+    }
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!editingCampaign) return;
+
+    if (!title.trim() || !description.trim()) {
+      toast.error('Title and description are required');
+      return;
+    }
+
+    try {
+      await dispatch(
+        updateAdCampaign({
+          id: editingCampaign.id,
+          Title: title,
+          Description: description,
+          StartDate: startDate || undefined,
+          EndDate: endDate || undefined,
+          ImageContent: imageFile || undefined,
+        })
+      ).unwrap();
+
+      toast.success('Ad campaign updated successfully');
+      setEditDialogOpen(false);
+      setEditingCampaign(null);
+      resetForm();
+      dispatch(fetchAdCampaigns({ Page: page, PageSize: pageSize }));
+    } catch (error) {
+      toast.error(typeof error === 'string' ? error : 'Failed to update ad campaign');
     }
   };
 
@@ -211,7 +257,7 @@ const AdCampaigns = () => {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Edit</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => openEditDialog(campaign)}>Edit</DropdownMenuItem>
                     <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -257,6 +303,99 @@ const AdCampaigns = () => {
           />
         </div>
       )}
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={(open) => {
+        setEditDialogOpen(open);
+        if (!open) {
+          setEditingCampaign(null);
+          resetForm();
+        }
+      }}>
+        <DialogContent className="max-w-md h-[95%] overflow-scroll">
+          <DialogHeader>
+            <DialogTitle>Edit Ad Campaign</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleUpdate} className="space-y-4">
+            <div>
+              <Label htmlFor="edit-title">Title *</Label>
+              <Input
+                id="edit-title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter ad title"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-description">Description *</Label>
+              <Textarea
+                id="edit-description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter ad description"
+                rows={3}
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-startDate">Start Date</Label>
+                <Input
+                  id="edit-startDate"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-endDate">End Date</Label>
+                <Input
+                  id="edit-endDate"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="edit-image">Image</Label>
+              <Input
+                id="edit-image"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+              {imagePreview && (
+                <div className="mt-2">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-full h-32 object-cover rounded-md"
+                  />
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setEditDialogOpen(false);
+                  setEditingCampaign(null);
+                  resetForm();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updating}>
+                {updating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Update
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
         </section>
       </div>
     </DashboardLayout>

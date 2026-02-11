@@ -1216,6 +1216,30 @@ export const createAdCampaign = createAsyncThunk(
   }
 );
 
+export const updateAdCampaign = createAsyncThunk(
+  "adCampaigns/update",
+  async (
+    data: { id: string; Title: string; Description: string; StartDate?: string; EndDate?: string; ImageContent?: File },
+    { rejectWithValue }
+  ) => {
+    try {
+      const formData = new FormData();
+      formData.append("Title", data.Title);
+      formData.append("Description", data.Description);
+      if (data.StartDate) formData.append("StartDate", data.StartDate);
+      if (data.EndDate) formData.append("EndDate", data.EndDate);
+      if (data.ImageContent) formData.append("ImageContent", data.ImageContent);
+
+      const res = await apiClient.put(`/FeatureAnnouncement/${data.id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to update ad campaign"));
+    }
+  }
+);
+
 // -------------------------------------------------
 // Promo Code Thunks
 // -------------------------------------------------

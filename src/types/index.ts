@@ -813,6 +813,8 @@ export interface AdCampaignState {
   error: string | null;
   creating: boolean;
   createError: string | null;
+  updating: boolean;
+  updateError: string | null;
 }
 
 // -----------------------------

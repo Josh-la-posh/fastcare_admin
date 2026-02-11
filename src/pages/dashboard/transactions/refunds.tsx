@@ -105,7 +105,7 @@ const Refunds = () => {
     dispatch(fetchRefunds({
       Page: page,
       PageSize: pageSize,
-      Status: appliedFilters.status as number | undefined,
+      Status: appliedFilters.status ? Number(appliedFilters.status) : undefined,
       PatientName: appliedFilters.patient as string | undefined,
       Date: appliedFilters.startDate as string | undefined,
     }));
@@ -292,7 +292,7 @@ const Refunds = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-44">
                   <DropdownMenuItem className="cursor-pointer" onClick={() => {
-                    dispatch(exportRefunds({ format: 0, status: appliedFilters.status as number | undefined, PatientName: appliedFilters.patient as string | undefined, Date: appliedFilters.startDate as string | undefined }))
+                    dispatch(exportRefunds({ format: 0, status: appliedFilters.status ? Number(appliedFilters.status) : undefined, PatientName: appliedFilters.patient as string | undefined, Date: appliedFilters.startDate as string | undefined }))
                       .then(res => {
                         const action = res as { payload?: { blob: Blob; params: { format: number } } };
                         if (action.payload?.blob) {
@@ -309,7 +309,7 @@ const Refunds = () => {
                       });
                   }}>CSV</DropdownMenuItem>
                   <DropdownMenuItem className="cursor-pointer" onClick={() => {
-                    dispatch(exportRefunds({ format: 1, status: appliedFilters.status as number | undefined, PatientName: appliedFilters.patient as string | undefined, Date: appliedFilters.startDate as string | undefined }))
+                    dispatch(exportRefunds({ format: 1, status: appliedFilters.status ? Number(appliedFilters.status) : undefined, PatientName: appliedFilters.patient as string | undefined, Date: appliedFilters.startDate as string | undefined }))
                       .then(res => {
                         const action = res as { payload?: { blob: Blob; params: { format: number } } };
                         if (action.payload?.blob) {

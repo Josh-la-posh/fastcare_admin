@@ -85,9 +85,9 @@ export const RefundFilter = ({ onApply, onReset }: any) => {
               <SelectValue placeholder="Select Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="failed">Failed</SelectItem>
+              <SelectItem value="1">Success</SelectItem>
+              <SelectItem value="2">Pending</SelectItem>
+              <SelectItem value="3">Failed</SelectItem>
             </SelectContent>
           </Select>
         </div>

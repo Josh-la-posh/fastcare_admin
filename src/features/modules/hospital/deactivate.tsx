@@ -18,10 +18,13 @@ type Props = {
 export default function ToggleHospitalStatus({ open, setOpen, hospitalId, isActive }: Props) {
   const [openSuccess, setOpenSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [wasDeactivation, setWasDeactivation] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
 
   const handleSubmit = async () => {
     setLoading(true);
+    // Capture current action before state changes
+    const deactivating = isActive;
     try {
       if (isActive) {
         await dispatch(deactivateHospital(hospitalId)).unwrap();
@@ -30,6 +33,7 @@ export default function ToggleHospitalStatus({ open, setOpen, hospitalId, isActi
       }
       // refresh selected hospital detail
       dispatch(fetchHospitalById(String(hospitalId)));
+      setWasDeactivation(!!deactivating);
       setOpen(false);
       setOpenSuccess(true);
     } catch (e) {
@@ -40,7 +44,7 @@ export default function ToggleHospitalStatus({ open, setOpen, hospitalId, isActi
   };
 
   const actionWord = isActive ? 'Deactivate' : 'Activate';
-  const successText = isActive ? 'Hospital was deactivated successfully' : 'Hospital was activated successfully';
+  const successText = wasDeactivation ? 'Hospital was deactivated successfully' : 'Hospital was activated successfully';
   const bodyText = isActive
     ? "Deactivating this hospital will prevent further patient interactions until reactivated. Do you want to continue?"
     : "Activating this hospital will allow it to receive patient interactions. Proceed?";

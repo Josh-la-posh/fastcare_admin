@@ -329,7 +329,7 @@ export const DashboardLayout = ({children, searchBar}: Props) => {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 bg-gray-200 overflow-hidden">
+      <main className="flex-1 bg-gray-200 overflow-auto">
         <div className="flex items-center justify-between shadow-lg py-5 px-6 bg-white border-gray-200 ">
           <Link to={'/dashboard/home'} className="block lg:hidden">
             <img

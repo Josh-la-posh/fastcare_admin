@@ -108,9 +108,9 @@ const Reporting = () => {
     if (f.hospital) payload.HospitalId = f.hospital;
     if (f.clinic) payload.ClinicId = f.clinic;
     if (f.duration) {
-      // parse the duration input as minutes
+      // parse the duration input as minutes and wrap in ticks object
       const match = f.duration.match(/\d+/);
-      if (match) payload.MinDuration = parseInt(match[0], 10);
+      if (match) payload.MinDuration = { ticks: parseInt(match[0], 10) };
     }
     // appointment filter currently unused (not in API spec) so ignored
     dispatch(setAppointmentFilters(payload));

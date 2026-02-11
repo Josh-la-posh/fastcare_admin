@@ -87,6 +87,7 @@ export const RefundFilter = ({ onApply, onReset }: any) => {
             <SelectContent>
               <SelectItem value="1">Pending</SelectItem>
               <SelectItem value="2">Approved</SelectItem>
+              <SelectItem value="3">Failed</SelectItem>
             </SelectContent>
           </Select>
         </div>

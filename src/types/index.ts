@@ -730,7 +730,7 @@ export interface AppointmentReportsState {
   filters: {
     StartDate?: string; // ISO date-time
     EndDate?: string;   // ISO date-time
-    MinDuration?: { ticks: number }; // object shape per spec
+    MinDuration?: number; // duration in minutes
     DoctorName?: string;
     HospitalId?: string;
     ClinicId?: string;

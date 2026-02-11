@@ -1446,7 +1446,7 @@ export const fetchAppointmentReports = createAsyncThunk(
     params: {
       StartDate?: string;
       EndDate?: string;
-      MinDuration?: { ticks: number };
+      MinDuration?: number; // duration in minutes
       DoctorName?: string;
       HospitalId?: string;
       ClinicId?: string;
@@ -1481,7 +1481,7 @@ export const exportAppointmentReports = createAsyncThunk(
       format: number; // csv = 0, excel = 1
       StartDate?: string;
       EndDate?: string;
-      MinDuration?: { ticks: number };
+      MinDuration?: number; // duration in minutes
       DoctorName?: string;
       HospitalId?: string;
       ClinicId?: string;

@@ -49,10 +49,13 @@ const AppointmentReport = () => {
                   if (f.doctor) payload.DoctorName = f.doctor;
                   if (f.hospital) payload.HospitalId = f.hospital;
                   if (f.clinic) payload.ClinicId = f.clinic;
-                  if (f.duration) payload.MinDuration = { ticks: 0 };
+                  if (f.duration) {
+                    const match = f.duration.match(/\d+/);
+                    if (match) payload.MinDuration = parseInt(match[0], 10);
+                  }
                   dispatch(setAppointmentFilters(payload));
                 }}
-                onReset={() => dispatch(setAppointmentFilters({ StartDate: undefined, EndDate: undefined, DoctorName: undefined, HospitalId: undefined, ClinicId: undefined, MinDuration: { ticks: 0 } }))}
+                onReset={() => dispatch(setAppointmentFilters({ StartDate: undefined, EndDate: undefined, DoctorName: undefined, HospitalId: undefined, ClinicId: undefined, MinDuration: undefined }))}
               />
             </div>
             <div className="flex-1 overflow-auto">

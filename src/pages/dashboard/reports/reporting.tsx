@@ -108,9 +108,9 @@ const Reporting = () => {
     if (f.hospital) payload.HospitalId = f.hospital;
     if (f.clinic) payload.ClinicId = f.clinic;
     if (f.duration) {
-      // naive parse hours: if includes digit
+      // parse the duration input as minutes
       const match = f.duration.match(/\d+/);
-      if (match) payload.MinDuration = {ticks: 0};
+      if (match) payload.MinDuration = parseInt(match[0], 10);
     }
     // appointment filter currently unused (not in API spec) so ignored
     dispatch(setAppointmentFilters(payload));
@@ -124,7 +124,7 @@ const Reporting = () => {
         DoctorName: undefined,
         HospitalId: undefined,
         ClinicId: undefined,
-        MinDuration: {ticks: 0},
+        MinDuration: undefined,
       }),
     );
   };

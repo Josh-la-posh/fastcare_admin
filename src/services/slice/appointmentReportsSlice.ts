@@ -12,7 +12,7 @@ const initialState: AppointmentReportsState = {
   filters: {
     Page: 1,
     PageSize: 20,
-    MinDuration: { ticks: 0 },
+    MinDuration: undefined,
   },
 };
 
@@ -31,7 +31,7 @@ const appointmentReportsSlice = createSlice({
       state.filters = { ...state.filters, ...action.payload, Page: 1 };
     },
     resetAppointmentFilters(state) {
-      state.filters = { Page: 1, PageSize: state.filters.PageSize || 20, MinDuration: { ticks: 0 } };
+      state.filters = { Page: 1, PageSize: state.filters.PageSize || 20, MinDuration: undefined };
     }
   },
   extraReducers: builder => {

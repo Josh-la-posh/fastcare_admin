@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchAdCampaigns, createAdCampaign, updateAdCampaign } from '@/services/thunks';
+import { fetchAdCampaigns, createAdCampaign, updateAdCampaign, toggleAdCampaignStatus } from '@/services/thunks';
 import { AdCampaignState } from '@/types';
 
 const initialState: AdCampaignState = {
@@ -11,6 +11,8 @@ const initialState: AdCampaignState = {
   createError: null,
   updating: false,
   updateError: null,
+  toggling: false,
+  toggleError: null,
 };
 
 const adCampaignSlice = createSlice({
@@ -62,6 +64,18 @@ const adCampaignSlice = createSlice({
       .addCase(updateAdCampaign.rejected, (state, action) => {
         state.updating = false;
         state.updateError = action.payload as string;
+      })
+      // Toggle Ad Campaign Status
+      .addCase(toggleAdCampaignStatus.pending, (state) => {
+        state.toggling = true;
+        state.toggleError = null;
+      })
+      .addCase(toggleAdCampaignStatus.fulfilled, (state) => {
+        state.toggling = false;
+      })
+      .addCase(toggleAdCampaignStatus.rejected, (state, action) => {
+        state.toggling = false;
+        state.toggleError = action.payload as string;
       });
   },
 });

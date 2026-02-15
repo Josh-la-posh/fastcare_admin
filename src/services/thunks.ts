@@ -1240,6 +1240,20 @@ export const updateAdCampaign = createAsyncThunk(
   }
 );
 
+export const toggleAdCampaignStatus = createAsyncThunk(
+  "adCampaigns/toggleStatus",
+  async (data: { id: string; status: number }, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/FeatureAnnouncement/${data.id}/status`, {
+        status: data.status,
+      });
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to update ad campaign status"));
+    }
+  }
+);
+
 // -------------------------------------------------
 // Promo Code Thunks
 // -------------------------------------------------

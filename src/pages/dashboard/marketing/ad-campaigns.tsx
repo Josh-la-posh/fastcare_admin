@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { DashboardLayout } from '@/layout/dashboard-layout';
 import { AppDispatch, RootState } from '@/services/store';
-import { fetchAdCampaigns, createAdCampaign, updateAdCampaign } from '@/services/thunks';
+import { fetchAdCampaigns, createAdCampaign, updateAdCampaign, toggleAdCampaignStatus } from '@/services/thunks';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,7 +27,7 @@ import type { AdCampaignItem } from '@/types';
 
 const AdCampaigns = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { list, metaData, loading, creating, updating } = useSelector((state: RootState) => state.adCampaigns);
+  const { list, metaData, loading, creating, updating, toggling } = useSelector((state: RootState) => state.adCampaigns);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -258,7 +258,22 @@ const AdCampaigns = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => openEditDialog(campaign)}>Edit</DropdownMenuItem>
-                    <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+                    <DropdownMenuItem 
+                      disabled={toggling}
+                      onClick={async () => {
+                        try {
+                          const newStatus = campaign.status === 'Active' ? 2 : 1;
+                          await dispatch(toggleAdCampaignStatus({ id: campaign.id, status: newStatus })).unwrap();
+                          toast.success(`Ad campaign ${campaign.status === 'Active' ? 'deactivated' : 'activated'} successfully`);
+                          dispatch(fetchAdCampaigns({ Page: page, PageSize: pageSize }));
+                        } catch (error) {
+                          toast.error(typeof error === 'string' ? error : 'Failed to update ad campaign status');
+                        }
+                      }}
+                      className={campaign.status === 'Active' ? 'text-red-600' : 'text-green-600'}
+                    >
+                      {campaign.status === 'Active' ? 'Deactivate' : 'Activate'}
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

@@ -815,6 +815,8 @@ export interface AdCampaignState {
   createError: string | null;
   updating: boolean;
   updateError: string | null;
+  toggling: boolean;
+  toggleError: string | null;
 }
 
 // -----------------------------

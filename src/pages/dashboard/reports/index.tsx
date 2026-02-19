@@ -358,7 +358,7 @@ const UnifiedReports = () => {
                       if (f.clinic) payload.ClinicId = f.clinic;
                       if (f.duration) {
                         const match = f.duration.match(/\d+/);
-                        if (match) payload.MinDuration = { ticks: parseInt(match[0], 10) };
+                        if (match) payload.MinDuration = parseInt(match[0], 10);
                       }
                       dispatch(setAppointmentFilters(payload));
                     }}

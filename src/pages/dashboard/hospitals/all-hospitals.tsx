@@ -1,7 +1,7 @@
 import {DashboardLayout} from '@/layout/dashboard-layout';
 import {useState, useMemo, useEffect} from 'react';
 import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
+// import {Input} from '@/components/ui/input';
 
 import {
   Table,
@@ -34,8 +34,8 @@ import {Download} from 'lucide-react';
 import {Loader} from '@/components/ui/loading';
 
 export const AllHospitals = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeSearch, setActiveSearch] = useState<string | undefined>(undefined);
+  // const [searchTerm, setSearchTerm] = useState('');
+  // const [activeSearch, setActiveSearch] = useState<string | undefined>(undefined);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
@@ -71,8 +71,8 @@ export const AllHospitals = () => {
 
   // Fetch hospitals whenever page or pageSize changes
   useEffect(() => {
-    dispatch(fetchHospitals({ page, pageSize, search: activeSearch }));
-  }, [dispatch, page, pageSize, activeSearch]);
+    dispatch(fetchHospitals({ page, pageSize }));
+  }, [dispatch, page, pageSize]);
 
   // map into table data
   const mappedHospitals = useMemo(() => {
@@ -145,7 +145,7 @@ export const AllHospitals = () => {
           <div className="flex flex-wrap gap-4 justify-between items-center p-6">
             <div className="flex items-center gap-8">
               <h1 className="text-lg text-gray-800">All Hospitals</h1>
-              <div className="hidden lg:flex lg:items-center lg:gap-3">
+              {/* <div className="hidden lg:flex lg:items-center lg:gap-3">
                 <div className="lg:w-96 lg:max-w-2xl">
                   <Input
                     label="Search Hospital Name"
@@ -171,7 +171,7 @@ export const AllHospitals = () => {
                 >
                   {loading ? 'Searching...' : 'Search'}
                 </Button>
-              </div>
+              </div> */}
             </div>
             <div className="flex gap-4 items-center">
               <AddHospital />

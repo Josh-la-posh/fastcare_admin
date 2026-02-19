@@ -89,7 +89,7 @@ export const fetchHospitals = createAsyncThunk(
       if (pageSize) qs.set('PageSize', String(pageSize));
       if (search && search.trim()) qs.set('search', search.trim());
       const query = qs.toString();
-      const url = query ? `/Hospitals/paginated?${query}` : '/Hospitals/paginated';
+      const url = query ? `/Hospitals/get-all-admin?${query}` : '/Hospitals/paginated';
       const res = await apiClient.get(url);
       const data = res.data?.data ?? [];
       return {
@@ -1484,7 +1484,7 @@ export const fetchAppointmentReports = createAsyncThunk(
     params: {
       StartDate?: string;
       EndDate?: string;
-      MinDuration?: { ticks: number }; // ticks contains duration in minutes
+      MinDuration?: number; // duration in minutes
       DoctorName?: string;
       HospitalId?: string;
       ClinicId?: string;
@@ -1519,7 +1519,7 @@ export const exportAppointmentReports = createAsyncThunk(
       format: number; // csv = 0, excel = 1
       StartDate?: string;
       EndDate?: string;
-      MinDuration?: { ticks: number }; // ticks contains duration in minutes
+      MinDuration?: number; // duration in minutes
       DoctorName?: string;
       HospitalId?: string;
       ClinicId?: string;

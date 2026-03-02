@@ -4,7 +4,7 @@ import axios from 'axios';
 const apiClient = axios.create({
  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://stagingapi.healthinabox.ng/api',
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json', 
   },
 });
 

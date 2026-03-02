@@ -89,7 +89,7 @@ export const fetchHospitals = createAsyncThunk(
       if (pageSize) qs.set('PageSize', String(pageSize));
       if (search && search.trim()) qs.set('search', search.trim());
       const query = qs.toString();
-      const url = query ? `/Hospitals/get-all-admin?${query}` : '/Hospitals/paginated';
+      const url = query ? `/Hospitals/get-all-admin?${query}` : '/Hospitals/get-all-admin';
       const res = await apiClient.get(url);
       const data = res.data?.data ?? [];
       return {

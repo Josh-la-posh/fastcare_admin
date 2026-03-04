@@ -4,6 +4,7 @@ import { ROUTES } from './routes';
 import SignIn from '@/pages/auth/signin';
 import ForgetPassword from '@/pages/auth/forget-password';
 import CreatePassword from '@/pages/auth/create-password';
+import ResetPassword from '@/pages/auth/reset-password';
 
 import HospitalDetails from '@/pages/dashboard/hospitals/hospital-details';
 import AllTransactions from '@/pages/dashboard/transactions/all-transactions';
@@ -46,6 +47,7 @@ export const AppRouter = () => {
       <Route path={ROUTES.signin} element={<SignIn />} />
       <Route path={ROUTES.forgot} element={<ForgetPassword />} />
       <Route path={ROUTES.reset} element={<CreatePassword />} />
+      <Route path={ROUTES.resetPassword} element={<ResetPassword />} />
 
       {/* Protected routes */}
       <Route element={<ProtectedRoutes />}>

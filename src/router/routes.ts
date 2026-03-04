@@ -4,6 +4,7 @@ export const ROUTES = {
   signin: '/',
   forgot: '/auth/forgot-password',
   reset: '/auth/create-password',
+  resetPassword: '/reset-password',
 
   // Dashboard
   home: '/home',

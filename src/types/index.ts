@@ -550,7 +550,16 @@ export interface EmergencyReportState {
   loading: boolean;
   error: string | null;
   metaData: MetaData | null;
-  filters: { StartDate?: string; EndDate?: string; Speciality?: string; Status?: string; Page?: number; PageSize?: number };
+  filters: {
+    FromDate?: string;
+    ToDate?: string;
+    Status?: string;
+    HospitalId?: number;
+    DoctorId?: string;
+    MinDuration?: number;
+    Page?: number;
+    PageSize?: number;
+  };
 }
 
 // Application Feedback

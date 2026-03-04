@@ -190,20 +190,22 @@ const EmergencyCall = () => {
     getFilteredRowModel: getFilteredRowModel(),
   });
 
-  const handleApplyFilter = (filters: any) => {
+  const handleApplyFilter = (filters: {
+    fromDate?: string | null;
+    toDate?: string | null;
+    status?: string | null;
+    hospitalId?: string | null;
+    doctorId?: string | null;
+    minDuration?: string | null;
+  }) => {
     const newFilters: any[] = [];
 
-    if (filters.status) {
-      newFilters.push({id: 'status', value: filters.status});
-    }
-     if (filters.speciality) {
-      newFilters.push({id: 'speciality', value: filters.speciality});
-    }
+    if (filters.status) newFilters.push({id: 'status', value: filters.status});
 
-    if (filters.startDate || filters.endDate) {
+    if (filters.fromDate || filters.toDate) {
       newFilters.push({
         id: 'date',
-        value: {start: filters.startDate, end: filters.endDate},
+        value: {start: filters.fromDate, end: filters.toDate},
       });
     }
 

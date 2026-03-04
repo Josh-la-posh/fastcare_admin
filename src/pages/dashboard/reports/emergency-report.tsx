@@ -1,10 +1,17 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/layout/dashboard-layout';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/services/store';
-import { fetchEmergencyReports } from '@/services/thunks';
+import { exportEmergencyReports, fetchEmergencyReports } from '@/services/thunks';
 import { setEmergencyFilters, setEmergencyPage, setEmergencyPageSize } from '@/services/slice/emergencyReportsSlice';
 import { Pagination } from '@/components/ui/pagination';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -15,12 +22,14 @@ import {
 } from '@/components/ui/table';
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { EmergencyFilter } from '@/features/modules/report/filter';
+import { Download } from 'lucide-react';
 
 interface EmergencyRow { patientName: string; doctorName: string; date: string; duration: string; responseTime: string; status: string; }
 
 const EmergencyCallReport = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { list: emergencyList, metaData: emergencyMeta, loading: emergencyLoading, error: emergencyError, filters: emergencyFilters } = useSelector((s: RootState) => s.emergencyReports);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => { dispatch(fetchEmergencyReports({ ...emergencyFilters })); }, [dispatch, emergencyFilters]);
 
@@ -35,24 +44,86 @@ const EmergencyCallReport = () => {
   const emergencyTable = useReactTable({ data: emergencyList as EmergencyRow[], columns: emergencyColumns, getCoreRowModel: getCoreRowModel() });
   const emergencyEmpty = !emergencyLoading && emergencyList.length === 0;
 
+  const handleExport = (format: 'CSV' | 'EXCEL') => {
+    setExporting(true);
+    dispatch(
+      exportEmergencyReports({
+        format,
+        Status: emergencyFilters.Status,
+        FromDate: emergencyFilters.FromDate,
+        ToDate: emergencyFilters.ToDate,
+        HospitalId: emergencyFilters.HospitalId,
+        DoctorId: emergencyFilters.DoctorId,
+        MinDuration: emergencyFilters.MinDuration,
+        Page: emergencyFilters.Page,
+        PageSize: emergencyFilters.PageSize,
+      }),
+    )
+      .unwrap()
+      .then(res => {
+        const blob = res.blob as Blob;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = format === 'EXCEL' ? 'emergency_reports.xlsx' : 'emergency_reports.csv';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      })
+      .finally(() => setExporting(false));
+  };
+
   return (
     <DashboardLayout>
       <div className="bg-gray-100 h-screen pb-20 overflow-auto">
         <div className="mx-4 md:mx-8 mt-10 bg-white rounded-md px-2 py-6 lg:p-6">
-          <h1 className="text-xl font-semibold text-gray-800 mb-4">Emergency Call Report</h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-xl font-semibold text-gray-800">Emergency Call Report</h1>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" disabled={exporting} className="py-2.5 w-44 flex items-center gap-2">
+                  <Download size={18} /> {exporting ? 'Exporting...' : 'Export'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem onClick={() => handleExport('CSV')} className="cursor-pointer">CSV</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('EXCEL')} className="cursor-pointer">Excel</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           
           <div className="flex flex-col h-[750px]">
             <div className="bg-white p-4 rounded-md mb-4">
               <EmergencyFilter
-                onApply={(f: { startDate?: string | null; endDate?: string | null; speciality?: string | null; status?: string | null }) => {
+                onApply={(f) => {
                   const payload: Partial<typeof emergencyFilters> = {};
-                  if (f.startDate) payload.StartDate = f.startDate;
-                  if (f.endDate) payload.EndDate = f.endDate;
-                  if (f.speciality) payload.Speciality = f.speciality;
+                  if (f.fromDate) payload.FromDate = f.fromDate;
+                  if (f.toDate) payload.ToDate = f.toDate;
                   if (f.status) payload.Status = f.status;
+                  if (f.hospitalId) {
+                    const n = parseInt(f.hospitalId, 10);
+                    if (!Number.isNaN(n)) payload.HospitalId = n;
+                  }
+                  if (f.doctorId) payload.DoctorId = f.doctorId;
+                  if (f.minDuration) {
+                    const n = parseInt(f.minDuration, 10);
+                    if (!Number.isNaN(n)) payload.MinDuration = n;
+                  }
                   dispatch(setEmergencyFilters(payload));
                 }}
-                onReset={() => dispatch(setEmergencyFilters({ StartDate: undefined, EndDate: undefined, Speciality: undefined, Status: undefined }))}
+                onReset={() =>
+                  dispatch(
+                    setEmergencyFilters({
+                      FromDate: undefined,
+                      ToDate: undefined,
+                      Status: undefined,
+                      HospitalId: undefined,
+                      DoctorId: undefined,
+                      MinDuration: undefined,
+                    }),
+                  )
+                }
               />
             </div>
             <div className="flex-1 overflow-auto">

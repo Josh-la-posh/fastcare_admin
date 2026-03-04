@@ -237,7 +237,7 @@ export default function AddHospital() {
 
   await dispatch(createHospital(payload)).unwrap();
   // Refetch hospitals list with reset pagination and empty search
-  dispatch(fetchHospitals({ page: 1, pageSize: 10, search: '' }));
+  dispatch(fetchHospitals({ page: 1, pageSize: 10 }));
 
       // Close the add hospital dialog first, then show success
       setOpen(false);

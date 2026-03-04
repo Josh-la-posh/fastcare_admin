@@ -1,7 +1,7 @@
 import {DashboardLayout} from '@/layout/dashboard-layout';
 import {useState, useMemo, useEffect} from 'react';
 import {Button} from '@/components/ui/button';
-// import {Input} from '@/components/ui/input';
+import {Input} from '@/components/ui/input';
 
 import {
   Table,
@@ -30,8 +30,11 @@ import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/services/store';
 import {fetchHospitals, exportHospitals} from '@/services/thunks';
 import {DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem} from '@/components/ui/dropdown-menu';
-import {Download} from 'lucide-react';
+import {Download, Filter} from 'lucide-react';
 import {Loader} from '@/components/ui/loading';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export const AllHospitals = () => {
   // const [searchTerm, setSearchTerm] = useState('');
@@ -54,6 +57,20 @@ export const AllHospitals = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  const [filterOpen, setFilterOpen] = useState(false);
+
+  // applied filters (used for requests)
+  const [hospitalNameFilter, setHospitalNameFilter] = useState('');
+  const [hospitalCodeFilter, setHospitalCodeFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'Active' | 'Inactive'>('all');
+  const [regFeeEnabledFilter, setRegFeeEnabledFilter] = useState<'all' | 'true' | 'false'>('all');
+
+  // draft filters (edited in dialog; do not trigger requests)
+  const [draftHospitalName, setDraftHospitalName] = useState('');
+  const [draftHospitalCode, setDraftHospitalCode] = useState('');
+  const [draftStatus, setDraftStatus] = useState<'all' | 'Active' | 'Inactive'>('all');
+  const [draftRegFeeEnabled, setDraftRegFeeEnabled] = useState<'all' | 'true' | 'false'>('all');
+
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
@@ -69,10 +86,29 @@ export const AllHospitals = () => {
     }
   }, [storePageSize, pageSize]);
 
-  // Fetch hospitals whenever page or pageSize changes
+  // When dialog opens, seed draft filters from applied filters
   useEffect(() => {
-    dispatch(fetchHospitals({ page, pageSize }));
-  }, [dispatch, page, pageSize]);
+    if (!filterOpen) return;
+    setDraftHospitalName(hospitalNameFilter);
+    setDraftHospitalCode(hospitalCodeFilter);
+    setDraftStatus(statusFilter);
+    setDraftRegFeeEnabled(regFeeEnabledFilter);
+  }, [filterOpen, hospitalNameFilter, hospitalCodeFilter, statusFilter, regFeeEnabledFilter]);
+
+  // Fetch hospitals whenever page/pageSize/applied-filters change
+  useEffect(() => {
+    dispatch(
+      fetchHospitals({
+        page,
+        pageSize,
+        hospitalName: hospitalNameFilter.trim() || undefined,
+        hospitalCode: hospitalCodeFilter.trim() || undefined,
+        status: statusFilter === 'all' ? undefined : statusFilter,
+        isRegistrationFeeEnabled:
+          regFeeEnabledFilter === 'all' ? undefined : regFeeEnabledFilter === 'true',
+      })
+    );
+  }, [dispatch, page, pageSize, hospitalNameFilter, hospitalCodeFilter, statusFilter, regFeeEnabledFilter]);
 
   // map into table data
   const mappedHospitals = useMemo(() => {
@@ -145,35 +181,89 @@ export const AllHospitals = () => {
           <div className="flex flex-wrap gap-4 justify-between items-center p-6">
             <div className="flex items-center gap-8">
               <h1 className="text-lg text-gray-800">All Hospitals</h1>
-              {/* <div className="hidden lg:flex lg:items-center lg:gap-3">
-                <div className="lg:w-96 lg:max-w-2xl">
-                  <Input
-                    label="Search Hospital Name"
-                    placeholder="Search by name"
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        setPage(1);
-                        setActiveSearch(searchTerm.trim() || undefined);
-                      }
-                    }}
-                    fullWidth
-                  />
-                </div>
-                <Button
-                  onClick={() => {
-                    setPage(1);
-                    setActiveSearch(searchTerm.trim() || undefined);
-                  }}
-                  disabled={loading}
-                  className="mt-6"
-                >
-                  {loading ? 'Searching...' : 'Search'}
-                </Button>
-              </div> */}
             </div>
             <div className="flex gap-4 items-center">
+              <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" className="py-2.5 w-12 rounded-md flex items-center justify-center" aria-label="Filter">
+                    <Filter size={18} />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Filters</DialogTitle>
+                  </DialogHeader>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <Input
+                      id="hospitalName"
+                      label="Hospital Name"
+                      placeholder="Hospital name"
+                      value={draftHospitalName}
+                      onChange={(e) => setDraftHospitalName(e.target.value)}
+                    />
+                    <Input
+                      id="hospitalCode"
+                      label="Hospital Code"
+                      placeholder="Hospital code"
+                      value={draftHospitalCode}
+                      onChange={(e) => setDraftHospitalCode(e.target.value)}
+                    />
+
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-gray-700">Status</Label>
+                      <Select
+                        value={draftStatus}
+                        onValueChange={(val) => setDraftStatus(val as 'all' | 'Active' | 'Inactive')}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="All Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Status</SelectItem>
+                          <SelectItem value="Active">Active</SelectItem>
+                          <SelectItem value="Inactive">Inactive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-gray-700">Registration Fee</Label>
+                      <Select
+                        value={draftRegFeeEnabled}
+                        onValueChange={(val) => setDraftRegFeeEnabled(val as 'all' | 'true' | 'false')}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="All" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="true">Enabled</SelectItem>
+                          <SelectItem value="false">Disabled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <DialogFooter className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        setHospitalNameFilter(draftHospitalName);
+                        setHospitalCodeFilter(draftHospitalCode);
+                        setStatusFilter(draftStatus);
+                        setRegFeeEnabledFilter(draftRegFeeEnabled);
+                        setPage(1);
+                        setFilterOpen(false);
+                      }}
+                      disabled={loading}
+                    >
+                      {loading ? 'Searching...' : 'Search'}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
               <AddHospital />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

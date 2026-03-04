@@ -98,15 +98,29 @@ export const createHospital = createAsyncThunk(
 export const fetchHospitals = createAsyncThunk(
   "hospitals/fetchAll",
   async (
-    params: { page?: number; pageSize?: number; search?: string } | undefined,
+    params:
+      | {
+          page?: number;
+          pageSize?: number;
+          hospitalName?: string;
+          hospitalCode?: string;
+          status?: 'Active' | 'Inactive';
+          isRegistrationFeeEnabled?: boolean;
+        }
+      | undefined,
     { rejectWithValue }
   ) => {
     try {
-      const { page, pageSize, search } = params || {};
+      const { page, pageSize, hospitalName, hospitalCode, status, isRegistrationFeeEnabled } = params || {};
       const qs = new URLSearchParams();
       if (page) qs.set('Page', String(page));
       if (pageSize) qs.set('PageSize', String(pageSize));
-      if (search && search.trim()) qs.set('search', search.trim());
+      if (hospitalName && hospitalName.trim()) qs.set('HospitalName', hospitalName.trim());
+      if (hospitalCode && hospitalCode.trim()) qs.set('HospitalCode', hospitalCode.trim());
+      if (status) qs.set('Status', status);
+      if (typeof isRegistrationFeeEnabled === 'boolean') {
+        qs.set('IsRegistrationFeeEnabled', String(isRegistrationFeeEnabled));
+      }
       const query = qs.toString();
       const url = query ? `/Hospitals/get-all-admin?${query}` : '/Hospitals/get-all-admin';
       const res = await apiClient.get(url);

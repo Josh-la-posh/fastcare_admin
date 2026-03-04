@@ -1572,42 +1572,116 @@ export const exportAppointmentReports = createAsyncThunk(
 );
 
 // -------------------------------------------------
-// Emergency (All Doctors Appointments) Reports Thunks
-// Mirrors emergency call report requirements
-// Endpoint: /Appointment/all-doctors-appointments
-// Query: StartDate, EndDate, Speciality, Status, PageSize, Page
-// Response list shape: { patientName, doctorName, date, duration, responseTime, status }
+// Emergency Report (Appointment Report filtered to EMERGENCY)
+// Endpoint: /Report/appointmenet-report
+// Query: FromDate, ToDate, Status, HospitalId, DoctorId, AppointmentType, MinDuration, PageSize, Page
+// Download: /Report/export-appointment-report (same query + format)
 // -------------------------------------------------
 export const fetchEmergencyReports = createAsyncThunk(
   'emergencyReports/fetchAll',
   async (
     params: {
-      StartDate?: string;
-      EndDate?: string;
-      Speciality?: string;
       Status?: string;
+      FromDate?: string;
+      ToDate?: string;
+      HospitalId?: number;
+      DoctorId?: string;
+      MinDuration?: number;
       Page?: number;
       PageSize?: number;
     } | undefined,
     { rejectWithValue }
   ) => {
     try {
-      const res = await apiClient.get('/Appointment/all-doctors-appointments', { params });
-      const raw: unknown = res.data?.data || [];
+      const res = await apiClient.get('/Report/appointment-report', {
+        params: {
+          ...(params || {}),
+          AppointmentType: 'EMERGENCY',
+        },
+      });
+
+      if (import.meta.env.DEV && (!params || Object.keys(params).length === 0)) {
+        // eslint-disable-next-line no-console
+        console.log('appointmenet-report (EMERGENCY) response:', res.data);
+      }
+
+      const responseData: unknown = res.data;
+      const raw: unknown = Array.isArray(responseData) ? responseData : (res.data?.data || []);
       const list = Array.isArray(raw) ? raw.map(item => {
-        const r = item as { patientName?: string; doctorName?: string; date?: string; duration?: string; responseTime?: string; status?: string };
+        const r = item as {
+          patientName?: string;
+          doctorName?: string;
+          date?: string;
+          responseTime?: string;
+          status?: string;
+          appointmentDate?: string;
+          appointmentStatus?: string;
+          sessionDuration?: string;
+          creationDate?: string;
+          firstName?: string;
+          lastName?: string;
+          scheduledDoctor?: string;
+          durationMinutes?: string | number | null;
+          durationInMinutes?: string | number | null;
+          durationInMins?: string | number | null;
+          duration?: string | number | null;
+        };
+
+        const firstLast = `${r.firstName || ''} ${r.lastName || ''}`.trim();
+
+        const durationValue =
+          r.duration != null ? String(r.duration) :
+          r.durationMinutes != null ? String(r.durationMinutes) :
+          r.durationInMinutes != null ? String(r.durationInMinutes) :
+          r.durationInMins != null ? String(r.durationInMins) :
+          '';
+
         return {
-          patientName: r.patientName || '',
-            doctorName: r.doctorName || '',
-            date: r.date || '',
-            duration: r.duration || '',
-            responseTime: r.responseTime || '',
-            status: r.status || '',
+          patientName: r.patientName || firstLast,
+          doctorName: r.doctorName || r.scheduledDoctor || '',
+          date: r.date || r.creationDate || r.appointmentDate || '',
+          duration: r.sessionDuration || durationValue,
+          responseTime: r.responseTime || '',
+          status: r.status || r.appointmentStatus || '',
         };
       }) : [];
-      return { list, metaData: res.data?.metaData || null };
+
+      const metaData = Array.isArray(responseData) ? null : (res.data?.metaData || null);
+      return { list, metaData };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, 'Failed to fetch emergency call reports'));
+    }
+  }
+);
+
+export const exportEmergencyReports = createAsyncThunk(
+  'emergencyReports/export',
+  async (
+    params: {
+      format: 'CSV' | 'EXCEL';
+      Status?: string;
+      FromDate?: string;
+      ToDate?: string;
+      HospitalId?: number;
+      DoctorId?: string;
+      AppointmentType?: 'REGULAR' | 'EMERGENCY';
+      MinDuration?: number;
+      Page?: number;
+      PageSize?: number;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get('/Report/export-appointment-report', {
+        params: {
+          ...params,
+          AppointmentType: 'EMERGENCY',
+        },
+        responseType: 'blob',
+      });
+      return { blob: res.data, params };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to export emergency reports'));
     }
   }
 );

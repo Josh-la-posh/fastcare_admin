@@ -227,7 +227,7 @@ export const AllHospitals = () => {
                       </Select>
                     </div>
 
-                    <div className="flex flex-col gap-1">
+                    {/* <div className="flex flex-col gap-1">
                       <Label className="text-gray-700">Registration Fee</Label>
                       <Select
                         value={draftRegFeeEnabled}
@@ -242,7 +242,7 @@ export const AllHospitals = () => {
                           <SelectItem value="false">Disabled</SelectItem>
                         </SelectContent>
                       </Select>
-                    </div>
+                    </div> */}
                   </div>
 
                   <DialogFooter className="flex justify-end gap-2">

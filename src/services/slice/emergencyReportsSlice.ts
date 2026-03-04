@@ -7,7 +7,16 @@ const initialState: EmergencyReportState = {
   loading: false,
   error: null,
   metaData: null,
-  filters: { Page: 1, PageSize: 20 },
+  filters: {
+    FromDate: undefined,
+    ToDate: undefined,
+    Status: undefined,
+    HospitalId: undefined,
+    DoctorId: undefined,
+    MinDuration: undefined,
+    Page: 1,
+    PageSize: 20,
+  },
 };
 
 const emergencyReportsSlice = createSlice({

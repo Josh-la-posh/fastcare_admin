@@ -414,15 +414,34 @@ const UnifiedReports = () => {
               <div className="flex flex-col h-[750px]">
                 <div className="bg-white p-4 rounded-md mb-4">
                   <EmergencyFilter
-                    onApply={(f: { startDate?: string | null; endDate?: string | null; speciality?: string | null; status?: string | null }) => {
+                    onApply={(f) => {
                       const payload: Partial<typeof emergencyFilters> = {};
-                      if (f.startDate) payload.StartDate = f.startDate;
-                      if (f.endDate) payload.EndDate = f.endDate;
-                      if (f.speciality) payload.Speciality = f.speciality;
+                      if (f.fromDate) payload.FromDate = f.fromDate;
+                      if (f.toDate) payload.ToDate = f.toDate;
                       if (f.status) payload.Status = f.status;
+                      if (f.hospitalId) {
+                        const n = parseInt(f.hospitalId, 10);
+                        if (!Number.isNaN(n)) payload.HospitalId = n;
+                      }
+                      if (f.doctorId) payload.DoctorId = f.doctorId;
+                      if (f.minDuration) {
+                        const n = parseInt(f.minDuration, 10);
+                        if (!Number.isNaN(n)) payload.MinDuration = n;
+                      }
                       dispatch(setEmergencyFilters(payload));
                     }}
-                    onReset={() => dispatch(setEmergencyFilters({ StartDate: undefined, EndDate: undefined, Speciality: undefined, Status: undefined }))}
+                    onReset={() =>
+                      dispatch(
+                        setEmergencyFilters({
+                          FromDate: undefined,
+                          ToDate: undefined,
+                          Status: undefined,
+                          HospitalId: undefined,
+                          DoctorId: undefined,
+                          MinDuration: undefined,
+                        }),
+                      )
+                    }
                   />
                 </div>
                 <div className="flex-1 overflow-auto">

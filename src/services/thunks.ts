@@ -61,6 +61,25 @@ export const createPasswordUser = createAsyncThunk(
   }
 );
 
+export const resetPasswordUser = createAsyncThunk(
+  'auth/resetPassword',
+  async (
+    payload: {
+      email: string;
+      code: string;
+      password: string;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.post('/auth/password/reset', payload);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Password reset failed'));
+    }
+  }
+);
+
 
 export const createHospital = createAsyncThunk(
   "hospitals/createHospital",

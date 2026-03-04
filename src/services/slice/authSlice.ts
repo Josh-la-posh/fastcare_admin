@@ -2,7 +2,7 @@ import { createSlice  } from "@reduxjs/toolkit";
 
 import toast from "react-hot-toast";
 
-import { createPasswordUser, loginUser } from "../thunks";
+import { createPasswordUser, loginUser, resetPasswordUser } from "../thunks";
 import { AuthState } from "@/types";
 
 
@@ -56,6 +56,20 @@ const authSlice = createSlice({
         state.token = action.payload.token;
       })
       .addCase(createPasswordUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // Reset Password
+      .addCase(resetPasswordUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resetPasswordUser.fulfilled, (state) => {
+        state.loading = false;
+        toast.success('Password reset successful');
+      })
+      .addCase(resetPasswordUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

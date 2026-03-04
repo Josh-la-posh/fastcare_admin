@@ -52,9 +52,8 @@ const EmergencyCallReport = () => {
         Status: emergencyFilters.Status,
         FromDate: emergencyFilters.FromDate,
         ToDate: emergencyFilters.ToDate,
-        HospitalId: emergencyFilters.HospitalId,
-        DoctorId: emergencyFilters.DoctorId,
-        MinDuration: emergencyFilters.MinDuration,
+        PatientName: emergencyFilters.PatientName,
+        ScheduledDoctor: emergencyFilters.ScheduledDoctor,
         Page: emergencyFilters.Page,
         PageSize: emergencyFilters.PageSize,
       }),
@@ -101,15 +100,8 @@ const EmergencyCallReport = () => {
                   if (f.fromDate) payload.FromDate = f.fromDate;
                   if (f.toDate) payload.ToDate = f.toDate;
                   if (f.status) payload.Status = f.status;
-                  if (f.hospitalId) {
-                    const n = parseInt(f.hospitalId, 10);
-                    if (!Number.isNaN(n)) payload.HospitalId = n;
-                  }
-                  if (f.doctorId) payload.DoctorId = f.doctorId;
-                  if (f.minDuration) {
-                    const n = parseInt(f.minDuration, 10);
-                    if (!Number.isNaN(n)) payload.MinDuration = n;
-                  }
+                  if (f.patientName) payload.PatientName = f.patientName;
+                  if (f.scheduledDoctor) payload.ScheduledDoctor = f.scheduledDoctor;
                   dispatch(setEmergencyFilters(payload));
                 }}
                 onReset={() =>
@@ -118,9 +110,8 @@ const EmergencyCallReport = () => {
                       FromDate: undefined,
                       ToDate: undefined,
                       Status: undefined,
-                      HospitalId: undefined,
-                      DoctorId: undefined,
-                      MinDuration: undefined,
+                      PatientName: undefined,
+                      ScheduledDoctor: undefined,
                     }),
                   )
                 }

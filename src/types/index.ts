@@ -554,9 +554,8 @@ export interface EmergencyReportState {
     FromDate?: string;
     ToDate?: string;
     Status?: string;
-    HospitalId?: number;
-    DoctorId?: string;
-    MinDuration?: number;
+    PatientName?: string;
+    ScheduledDoctor?: string;
     Page?: number;
     PageSize?: number;
   };

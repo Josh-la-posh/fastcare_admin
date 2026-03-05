@@ -6,6 +6,7 @@ import { exportEmergencyReports, fetchEmergencyReports } from '@/services/thunks
 import { setEmergencyFilters, setEmergencyPage, setEmergencyPageSize } from '@/services/slice/emergencyReportsSlice';
 import { Pagination } from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +25,7 @@ import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack
 import { EmergencyFilter } from '@/features/modules/report/filter';
 import { Download } from 'lucide-react';
 
-interface EmergencyRow { patientName: string; doctorName: string; date: string; duration: string; responseTime: string; status: string; }
+interface EmergencyRow { patientName: string; doctorName: string; date: string; duration: string; status: string; }
 
 const EmergencyCallReport = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -37,9 +38,23 @@ const EmergencyCallReport = () => {
   const emergencyColumns: ColumnDef<EmergencyRow>[] = [
     { accessorKey: 'patientName', header: 'Patient Name' },
     { accessorKey: 'date', header: 'Date', cell: ({ getValue }) => { const raw = getValue<string>(); return raw?.includes('T') ? raw.split('T')[0] : raw; } },
+    { accessorKey: 'doctorName', header: 'Scheduled Doctor' },
     { accessorKey: 'duration', header: 'Duration' },
-    { accessorKey: 'responseTime', header: 'Response Time' },
-    { accessorKey: 'status', header: 'Status' },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ getValue }) => {
+        const value = (getValue<string>() || '').trim();
+        const lowered = value.toLowerCase();
+        const variant =
+          lowered === 'missed'
+            ? 'destructive'
+            : lowered === 'completed'
+              ? 'success'
+              : 'secondary';
+        return <Badge variant={variant as 'destructive' | 'success' | 'secondary'}>{value || '-'}</Badge>;
+      },
+    },
   ];
   const emergencyTable = useReactTable({ data: emergencyList as EmergencyRow[], columns: emergencyColumns, getCoreRowModel: getCoreRowModel() });
   const emergencyEmpty = !emergencyLoading && emergencyList.length === 0;
@@ -52,9 +67,8 @@ const EmergencyCallReport = () => {
         Status: emergencyFilters.Status,
         FromDate: emergencyFilters.FromDate,
         ToDate: emergencyFilters.ToDate,
-        HospitalId: emergencyFilters.HospitalId,
-        DoctorId: emergencyFilters.DoctorId,
-        MinDuration: emergencyFilters.MinDuration,
+        PatientName: emergencyFilters.PatientName,
+        ScheduledDoctor: emergencyFilters.ScheduledDoctor,
         Page: emergencyFilters.Page,
         PageSize: emergencyFilters.PageSize,
       }),
@@ -101,15 +115,9 @@ const EmergencyCallReport = () => {
                   if (f.fromDate) payload.FromDate = f.fromDate;
                   if (f.toDate) payload.ToDate = f.toDate;
                   if (f.status) payload.Status = f.status;
-                  if (f.hospitalId) {
-                    const n = parseInt(f.hospitalId, 10);
-                    if (!Number.isNaN(n)) payload.HospitalId = n;
-                  }
-                  if (f.doctorId) payload.DoctorId = f.doctorId;
-                  if (f.minDuration) {
-                    const n = parseInt(f.minDuration, 10);
-                    if (!Number.isNaN(n)) payload.MinDuration = n;
-                  }
+                  if (f.patientName) payload.PatientName = f.patientName;
+                  if (f.scheduledDoctor) payload.ScheduledDoctor = f.scheduledDoctor;
+                  payload.Page = 1;
                   dispatch(setEmergencyFilters(payload));
                 }}
                 onReset={() =>
@@ -118,9 +126,9 @@ const EmergencyCallReport = () => {
                       FromDate: undefined,
                       ToDate: undefined,
                       Status: undefined,
-                      HospitalId: undefined,
-                      DoctorId: undefined,
-                      MinDuration: undefined,
+                      PatientName: undefined,
+                      ScheduledDoctor: undefined,
+                      Page: 1,
                     }),
                   )
                 }

@@ -194,13 +194,16 @@ const EmergencyCall = () => {
     fromDate?: string | null;
     toDate?: string | null;
     status?: string | null;
-    hospitalId?: string | null;
-    doctorId?: string | null;
-    minDuration?: string | null;
+    patientName?: string | null;
+    scheduledDoctor?: string | null;
   }) => {
     const newFilters: any[] = [];
 
     if (filters.status) newFilters.push({id: 'status', value: filters.status});
+
+    if (filters.patientName) newFilters.push({id: 'patientName', value: filters.patientName});
+
+    if (filters.scheduledDoctor) newFilters.push({id: 'scheduledDoctor', value: filters.scheduledDoctor});
 
     if (filters.fromDate || filters.toDate) {
       newFilters.push({

@@ -430,12 +430,13 @@ const UnifiedReports = () => {
                 <div className="bg-white p-4 rounded-md mb-4">
                   <EmergencyFilter
                     onApply={(f) => {
-                      const payload: Partial<typeof emergencyFilters> = {};
-                      if (f.fromDate) payload.FromDate = f.fromDate;
-                      if (f.toDate) payload.ToDate = f.toDate;
-                      if (f.status) payload.Status = f.status;
-                      if (f.patientName) payload.PatientName = f.patientName;
-                      if (f.scheduledDoctor) payload.ScheduledDoctor = f.scheduledDoctor;
+                      const payload: Partial<typeof emergencyFilters> = {
+                        FromDate: f.fromDate || undefined,
+                        ToDate: f.toDate || undefined,
+                        Status: f.status || undefined,
+                        PatientName: f.patientName || undefined,
+                        DoctorName: f.scheduledDoctor || undefined,
+                      };
                       payload.Page = 1;
                       dispatch(setEmergencyFilters(payload));
                     }}
@@ -446,7 +447,7 @@ const UnifiedReports = () => {
                           ToDate: undefined,
                           Status: undefined,
                           PatientName: undefined,
-                          ScheduledDoctor: undefined,
+                          DoctorName: undefined,
                           Page: 1,
                         }),
                       )

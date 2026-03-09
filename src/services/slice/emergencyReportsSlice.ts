@@ -12,7 +12,7 @@ const initialState: EmergencyReportState = {
     ToDate: undefined,
     Status: undefined,
     PatientName: undefined,
-    ScheduledDoctor: undefined,
+    DoctorName: undefined,
     Page: 1,
     PageSize: 20,
   },

@@ -1585,7 +1585,7 @@ export const fetchEmergencyReports = createAsyncThunk(
       FromDate?: string;
       ToDate?: string;
       PatientName?: string;
-      ScheduledDoctor?: string;
+      DoctorName?: string;
       Page?: number;
       PageSize?: number;
     } | undefined,
@@ -1595,7 +1595,6 @@ export const fetchEmergencyReports = createAsyncThunk(
       const res = await apiClient.get('/Report/appointment-report', {
         params: {
           ...(params || {}),
-          DoctorId: params?.ScheduledDoctor,
           AppointmentType: 'EMERGENCY',
         },
       });
@@ -1664,7 +1663,7 @@ export const exportEmergencyReports = createAsyncThunk(
       ToDate?: string;
       AppointmentType?: 'REGULAR' | 'EMERGENCY';
       PatientName?: string;
-      ScheduledDoctor?: string;
+      DoctorName?: string;
       Page?: number;
       PageSize?: number;
     },
@@ -1674,7 +1673,6 @@ export const exportEmergencyReports = createAsyncThunk(
       const res = await apiClient.get('/Report/export-appointment-report', {
         params: {
           ...params,
-          DoctorId: params.ScheduledDoctor,
           AppointmentType: 'EMERGENCY',
         },
         responseType: 'blob',

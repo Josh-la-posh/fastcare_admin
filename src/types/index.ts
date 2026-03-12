@@ -47,31 +47,33 @@ export interface Hospital {
   id: number;
   hospitalName: string;
   hospitalCode: string;
-  userId: string;
-  hospitalNumber: string;
+  userId: string | null;
+  hospitalNumber: string | null;
   virtualConsultationCharge: number;
   registrationFee: number;
+  registrationCharge: number;
   physicalConsultationCharge: number;
   consultationFee: number;
-  status: string;
+  status: string | null;
   isActive: boolean;
   date: string;
   hospitalAddresses: string;
   isPatient: boolean;
-  logoContent: string;
+  logoContent: string | null;
   hospitalLogo: string;
-  logoUrl: string;
+  logoUrl: string | null;
   address: string;
   website: string;
   phoneNumber: string;
   countryCode: string;
   email: string;
-  patientId: string;
+  patientId?: string;
   accountNumber: string;
   invoiceAccountNumber: string;
   bankCode: string;
   invoiceBankCode: string;
   ipAddress?: string;
+  isRegistrationFeeEnabled: boolean;
 }
 
 export interface HospitalState {

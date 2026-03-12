@@ -230,7 +230,7 @@ export default function AddHospital() {
       const physicalCharge = serviceCharges.find(sc => sc.type === 'physical');
       
       const registrationFeeAmount = registrationCharge ? Number(registrationCharge.amount) : 0;
-      payload.append('RegistrationFee', String(registrationFeeAmount));
+      payload.append('RegistrationCharge', String(registrationFeeAmount));
       payload.append('IsRegistrationFeeEnabled', String(registrationFeeAmount > 0));
       payload.append('VirtualConsultationFee', String(virtualCharge ? Number(virtualCharge.amount) : 0));
       payload.append('PhysicalConsultationFee', String(physicalCharge ? Number(physicalCharge.amount) : 0));

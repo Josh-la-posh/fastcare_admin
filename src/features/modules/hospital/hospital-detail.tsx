@@ -74,9 +74,10 @@ const HospitalDetail = ({ data, isEditing, onCancel, onUpdated }: Props) => {
       bankCode: data.bankCode || '',
       invoiceBankCode: data.invoiceBankCode || '',
     });
-    // Initialize registration fee state from data
-    const regFee = data.registrationFee ?? 0;
-    setHasRegistrationFee(regFee > 0);
+    // Initialize registration fee state from data (use registrationCharge + isRegistrationFeeEnabled)
+    const regFeeEnabled = data.isRegistrationFeeEnabled ?? false;
+    const regFee = data.registrationCharge ?? data.registrationFee ?? 0;
+    setHasRegistrationFee(regFeeEnabled);
     setRegistrationFee(regFee > 0 ? regFee.toString() : '');
   }, [data, reset]);
 
@@ -110,7 +111,7 @@ const HospitalDetail = ({ data, isEditing, onCancel, onUpdated }: Props) => {
       });
       // Add registration fee
       const regFeeValue = hasRegistrationFee ? Number(registrationFee || '0') : 0;
-      fd.append('RegistrationFee', String(regFeeValue));
+      fd.append('RegistrationCharge', String(regFeeValue));
       fd.append('IsRegistrationFeeEnabled', String(regFeeValue > 0));
       
       if (logoFile) fd.append('LogoContent', logoFile);
@@ -167,7 +168,7 @@ const HospitalDetail = ({ data, isEditing, onCancel, onUpdated }: Props) => {
             {hasRegistrationFee && (
               <div className="mt-4 w-full">
                 <Input
-                  label="Registration Fee"
+                  label="Registration Charge"
                   type="number"
                   min={0}
                   max={999999}

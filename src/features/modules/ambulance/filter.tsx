@@ -5,27 +5,37 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {Label} from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 import {useState} from 'react';
 
-export const RequestFilter = ({onApply, onReset}: any) => {
-  const [time, setTime] = useState<string | undefined>();
-  const [status, setStatus] = useState<string | undefined>();
+type RequestFilterValues = {
+  requestDate?: string;
+  address?: string;
+  ambulanceLicensePlate?: string;
+};
+
+type Props = {
+  onApply: (filters: RequestFilterValues) => void;
+  onReset: () => void;
+};
+
+export const RequestFilter = ({onApply, onReset}: Props) => {
+  const [requestDate, setRequestDate] = useState<string | undefined>();
+  const [address, setAddress] = useState<string | undefined>();
+  const [ambulanceLicensePlate, setAmbulanceLicensePlate] = useState<string | undefined>();
 
   const handleApply = () => {
-    onApply({time, status,});
+    onApply({
+      requestDate,
+      address: address?.trim() || undefined,
+      ambulanceLicensePlate: ambulanceLicensePlate?.trim() || undefined,
+    });
   };
 
   const handleReset = () => {
-    setTime(undefined);
-    setStatus(undefined);
+    setRequestDate(undefined);
+    setAddress(undefined);
+    setAmbulanceLicensePlate(undefined);
     onReset();
   };
 
@@ -45,36 +55,37 @@ export const RequestFilter = ({onApply, onReset}: any) => {
         </div>
         {/* 2x2 Grid Form */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-
-             {/* Date */}
           <div className="flex flex-col gap-2">
-            <Label>Date</Label>
+            <Label>Request Date</Label>
             <input
               type="date"
               className="border border-gray-300 rounded-md py-2 px-3"
-              value={time || ''}
-              onChange={e => setTime(e.target.value || undefined)}
+              value={requestDate || ''}
+              onChange={e => setRequestDate(e.target.value || undefined)}
             />
           </div>
-          
 
-          
           <div className="flex flex-col gap-2">
-            <Label>Status</Label>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="available">Available</SelectItem>
-                <SelectItem value="en-route">En route</SelectItem>
-                <SelectItem value="busy">Busy</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Address</Label>
+            <input
+              type="text"
+              className="border border-gray-300 rounded-md py-2 px-3"
+              placeholder="Enter pickup address"
+              value={address || ''}
+              onChange={e => setAddress(e.target.value || undefined)}
+            />
           </div>
 
-         
+          <div className="flex flex-col gap-2 sm:col-span-2">
+            <Label>Ambulance License Plate</Label>
+            <input
+              type="text"
+              className="border border-gray-300 rounded-md py-2 px-3"
+              placeholder="Enter license plate"
+              value={ambulanceLicensePlate || ''}
+              onChange={e => setAmbulanceLicensePlate(e.target.value || undefined)}
+            />
+          </div>
         </div>
 
         {/* Buttons */}

@@ -26,9 +26,9 @@ import {
 
 import {Pagination} from '@/components/ui/pagination';
 
-import EditDriver from '@/components/form/ambulance/drivers/edit-driver';
-import DriverDetails from '@/features/modules/ambulance/driver-details';
-import { Trash } from 'lucide-react';
+import EditAmbulance from '@/components/form/ambulance/ambulances/edit-ambulance';
+import AmbulanceDetails from '@/features/modules/ambulance/ambulance-details';
+// import { Trash } from 'lucide-react';
 import AddAmbulance from '@/components/form/ambulance/ambulances/add-ambulance';
 import { fetchAmbulances } from '@/services/thunks';
 import { Loader } from '@/components/ui/loading';
@@ -49,9 +49,6 @@ const AllAmbulances = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { ambulances, loading, error } = useSelector((state: RootState) => state.allAmbulances);
 
-  // const ambulanceProviderId = useSelector((state: RootState) => state.ambulanceProviders.selectedProvider?.id); 
-  const ambulanceProviderId = "c4ac7df8-1873-42db-97ba-8b240abc99df"
-
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
@@ -61,10 +58,10 @@ const AllAmbulances = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
      useEffect(() => {
-        if(!ambulances.length && ambulanceProviderId){
-          dispatch(fetchAmbulances(ambulanceProviderId));
+        if(!ambulances.length){
+          dispatch(fetchAmbulances());
         }
-      }, [dispatch, ambulances.length, ambulanceProviderId]);
+      }, [dispatch, ambulances.length]);
 
   // useEffect(() => {
   //   dispatch(fetchAmbulances());
@@ -107,13 +104,13 @@ const AllAmbulances = () => {
   }, [filteredAmbulances, page, pageSize]);
 
   const columns: ColumnDef<any>[] = [
-    {
-      accessorKey: 'ambulance_id',
-      header: 'Ambulance ID',
-      cell: ({row}) => (
-        <span className="font-medium">#{row.original.ambulance_id}</span>
-      ),
-    },
+    // {
+    //   accessorKey: 'ambulance_id',
+    //   header: 'Ambulance ID',
+    //   cell: ({row}) => (
+    //     <span className="font-medium">#{row.original.ambulance_id}</span>
+    //   ),
+    // },
     {
       accessorKey: 'plate_number',
       header: 'Plate Number',
@@ -174,14 +171,14 @@ const AllAmbulances = () => {
         return (
           <div className="flex items-center gap-4">
             <div>
-              <DriverDetails data={row.original.rawData} />
+              <AmbulanceDetails data={row.original.rawData} />
             </div>
             <div>
-              <EditDriver data={row.original.rawData} />
+              <EditAmbulance data={row.original.rawData} />
             </div>
-            <div>
+            {/* <div>
               <Trash className="text-red-500 w-4 h-4 cursor-pointer" />
-            </div>
+            </div> */}
           </div>
         );
       },
@@ -223,7 +220,7 @@ const AllAmbulances = () => {
         <div className="flex justify-center items-center h-64">
           <div className="text-lg text-red-500">Error: {error}</div>
           <button 
-            onClick={() => ambulanceProviderId && dispatch(fetchAmbulances(ambulanceProviderId))}
+            onClick={() => dispatch(fetchAmbulances())}
             className="ml-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Retry

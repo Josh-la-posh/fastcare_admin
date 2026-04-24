@@ -20,7 +20,6 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Pagination } from '@/components/ui/pagination';
-import { Trash } from 'lucide-react';
 import ResponderDetails from '@/features/modules/ambulance/responder-details';
 import EditResponder from '@/components/form/ambulance/responder/edit-responder';
 import AddResponder from '@/components/form/ambulance/responder/add-responder';
@@ -32,13 +31,7 @@ import { Loader } from '@/components/ui/loading';
 
 const Responders = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { respondents, loading, error } = useSelector((state: RootState) => state.respondents);
-
-
-  useEffect(() => {
-    const ambulanceProviderId = 'c4ac7df8-1873-42db-97ba-8b240abc99df'; 
-    dispatch(fetchRespondents(ambulanceProviderId));
-  }, [dispatch]);
+  const { respondents, loading, error, metaData } = useSelector((state: RootState) => state.respondents);
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -46,7 +39,17 @@ const Responders = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [columnFilters, setColumnFilters] = useState<any[]>([]);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const pageSize = 10;
+
+  useEffect(() => {
+    dispatch(
+      fetchRespondents({
+        Page: page,
+        PageSize: 10,
+        paginated: true,
+      }),
+    );
+  }, [dispatch, page]);
 
   // Transform respondents data to match your table structure
   const tableData = useMemo(() => {
@@ -55,8 +58,8 @@ const Responders = () => {
       res_id: respondent.id, 
       name: respondent.name,
       license: respondent.certificationStatus,
-      prog_license: respondent.professionalLicense,
-      phone: respondent.phoneNumber,
+      professionalLicense: respondent.professionalLicense,
+      phoneNumber: respondent.phoneNumber,
       email: respondent.email,
       address: respondent.address,
       date: '2023-01-01', 
@@ -64,19 +67,10 @@ const Responders = () => {
     }));
   }, [respondents]);
 
-  const totalPages = Math.ceil(tableData.length / pageSize);
-  
-  const paginatedData = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return tableData.slice(start, start + pageSize);
-  }, [tableData, page, pageSize]);
+  const totalPages = metaData?.totalPages || 1;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const columns: ColumnDef<any>[] = [
-    {
-      accessorKey: 'res_id',
-      header: 'Responder ID',
-    },
     {
       accessorKey: 'name',
       header: 'Full Name',
@@ -86,11 +80,11 @@ const Responders = () => {
       header: 'Certification Status',
     },
     {
-      accessorKey: 'prog_license',
+      accessorKey: 'professionalLicense',
       header: 'Professional License',
     },
     {
-      accessorKey: 'phone',
+      accessorKey: 'phoneNumber',
       header: 'Phone Number',
     },
     {
@@ -123,9 +117,6 @@ const Responders = () => {
             <div>
               <EditResponder data={row.original} />
             </div>
-            <div>
-              <Trash className="text-red-500 w-4 h-4 cursor-pointer" />
-            </div>
           </div>
         );
       },
@@ -133,7 +124,7 @@ const Responders = () => {
   ];
 
   const table = useReactTable({
-    data: paginatedData, 
+    data: tableData,
     columns,
     state: {
       sorting,
@@ -251,14 +242,13 @@ const Responders = () => {
           {/* Pagination */}
           <div className="p-4 flex items-center justify-end">
             <Pagination
-              totalEntriesSize={tableData.length}
+              totalEntriesSize={metaData?.totalCount || tableData.length}
 
-              currentPage={page}
+              currentPage={metaData?.currentPage || page}
               totalPages={totalPages}
               onPageChange={setPage}
               pageSize={pageSize}
-              onPageSizeChange={size => {
-                setPageSize(size);
+              onPageSizeChange={() => {
                 setPage(1);
               }}
             />

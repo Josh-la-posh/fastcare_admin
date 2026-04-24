@@ -17,6 +17,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '@/services/store';
 import toast from 'react-hot-toast';
 import { resetPasswordUser } from '@/services/thunks';
+import AuthLayout from '@/layout/auth-layout';
 
 const formSchema = z
   .object({
@@ -72,15 +73,13 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="bg-[#F2F2F2] min-h-screen flex flex-col items-center justify-center">
-      <div className="flex justify-center w-full mb-8">
-        <img src="/images/fulllogo.png" className="w-44" />
-      </div>
-
-      <div className="bg-white rounded-lg w-[90%] max-w-lg px-14 flex flex-col items-center shadow-sm py-8">
-        <h2 className="text-2xl font-medium text-primary text-center mb-8">
-          RESET PASSWORD
-        </h2>
+    <AuthLayout>
+      {/* White card */}
+      <div className="px-14 flex flex-col">
+        {/* {user ? <p>Welcome {user.name}</p> : <p>Please log in</p>} */}
+        <div className="my-6">
+          <h2 className="text-xl font-medium text-primary">RESET PASSWORD</h2>
+        </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="w-full flex flex-col gap-5">
@@ -179,11 +178,10 @@ const ResetPassword = () => {
 
         <div className="text-center text-sm mt-3">
           <span className="font-medium cursor-pointer text-xs" onClick={() => navigate('/')}
-            >Back to sign in</span
-          >
+            >Back to sign in</span>
         </div>
-      </div>
-    </div>
+        </div>
+    </AuthLayout>
   );
 };
 

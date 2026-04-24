@@ -33,14 +33,9 @@ import {Loader} from '@/components/ui/loading';
 
 const ResponderNote = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const {respondents, loading, error} = useSelector(
+  const {respondents, loading, error, metaData} = useSelector(
     (state: RootState) => state.respondents,
   );
-
-  useEffect(() => {
-    const ambulanceProviderId = 'c4ac7df8-1873-42db-97ba-8b240abc99df';
-    dispatch(fetchRespondents(ambulanceProviderId));
-  }, [dispatch]);
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -48,7 +43,17 @@ const ResponderNote = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [columnFilters, setColumnFilters] = useState<any[]>([]);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const pageSize = 10;
+
+  useEffect(() => {
+    dispatch(
+      fetchRespondents({
+        Page: page,
+        PageSize: 10,
+        paginated: true,
+      }),
+    );
+  }, [dispatch, page]);
 
 
   const tableData = useMemo(() => {
@@ -66,12 +71,7 @@ const ResponderNote = () => {
     }));
   }, [respondents]);
 
-  const totalPages = Math.ceil(tableData.length / pageSize);
-
-  const paginatedData = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return tableData.slice(start, start + pageSize);
-  }, [tableData, page, pageSize]);
+  const totalPages = metaData?.totalPages || 1;
 
   const columns: ColumnDef<any>[] = [
     {
@@ -82,10 +82,10 @@ const ResponderNote = () => {
       accessorKey: 'name',
       header: 'Patient Name',
     },
-    {
-      accessorKey: 'amb_id',
-      header: 'Ambulance ID',
-    },
+    // {
+    //   accessorKey: 'amb_id',
+    //   header: 'Ambulance ID',
+    // },
     {
       accessorKey: 'res_name',
       header: 'Responder Name',
@@ -118,7 +118,7 @@ const ResponderNote = () => {
   ];
 
   const table = useReactTable({
-    data: paginatedData, 
+    data: tableData,
     columns,
     state: {
       sorting,
@@ -170,9 +170,7 @@ const ResponderNote = () => {
             <div className="text-lg text-red-500">Error: {error}</div>
             <Button
               onClick={() => {
-                const ambulanceProviderId =
-                  'c4ac7df8-1873-42db-97ba-8b240abc99df';
-                dispatch(fetchRespondents(ambulanceProviderId));
+                dispatch(fetchRespondents({Page: page, PageSize: 10, paginated: true}));
               }}
               className="mt-4"
             >
@@ -278,14 +276,13 @@ const ResponderNote = () => {
           {/* Pagination */}
           <div className="p-4 flex items-center justify-end">
             <Pagination
-              totalEntriesSize={tableData.length}
+              totalEntriesSize={metaData?.totalCount || tableData.length}
             
-              currentPage={page}
+              currentPage={metaData?.currentPage || page}
               totalPages={totalPages}
               onPageChange={setPage}
               pageSize={pageSize}
-              onPageSizeChange={size => {
-                setPageSize(size);
+              onPageSizeChange={() => {
                 setPage(1);
               }}
             />

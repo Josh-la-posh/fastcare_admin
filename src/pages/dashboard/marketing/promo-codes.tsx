@@ -28,21 +28,15 @@ const PromoCodesPage = () => {
     dispatch(fetchPromoCodes({
       Page: page,
       PageSize: pageSize,
-      Code: codeFilter || undefined,
-      Status: statusFilter ? Number(statusFilter) : undefined,
     }));
-  }, [dispatch, page, pageSize, codeFilter, statusFilter]);
+  }, [dispatch, page, pageSize]);
 
   // Get status label
-  const getStatusLabel = (status: number) => {
-    switch (status) {
-      case 0:
-        return { label: 'Inactive', className: 'text-gray-500 bg-gray-100' };
-      case 1:
-        return { label: 'Active', className: 'text-green-600 bg-green-50' };
-      default:
-        return { label: 'Unknown', className: 'text-gray-500 bg-gray-100' };
+  const getStatusLabel = (status: string) => {
+    if ((status || '').toLowerCase() === 'active') {
+      return { label: 'Active', className: 'text-green-600 bg-green-50' };
     }
+    return { label: status || 'Inactive', className: 'text-gray-500 bg-gray-100' };
   };
 
   // Activate a promo code
@@ -101,8 +95,8 @@ const PromoCodesPage = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="1">Active</SelectItem>
-                  <SelectItem value="0">Inactive</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
               {(codeFilter || statusFilter) && (
@@ -133,23 +127,37 @@ const PromoCodesPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {list.length === 0 ? (
+                {list.filter(item => {
+                  const q = codeFilter.trim().toLowerCase();
+                  const s = statusFilter.trim().toLowerCase();
+                  const matchQuery = !q || item.code.toLowerCase().includes(q) || item.title.toLowerCase().includes(q);
+                  const matchStatus = !s || s === 'all' || (item.status || '').toLowerCase() === s;
+                  return matchQuery && matchStatus;
+                }).length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-10 text-gray-500">
                       No promo codes found
                     </TableCell>
                   </TableRow>
                 ) : (
-                  list.map(item => {
+                  list
+                    .filter(item => {
+                      const q = codeFilter.trim().toLowerCase();
+                      const s = statusFilter.trim().toLowerCase();
+                      const matchQuery = !q || item.code.toLowerCase().includes(q) || item.title.toLowerCase().includes(q);
+                      const matchStatus = !s || s === 'all' || (item.status || '').toLowerCase() === s;
+                      return matchQuery && matchStatus;
+                    })
+                    .map(item => {
                     const statusInfo = getStatusLabel(item.status);
                     return (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">{item.code}</TableCell>
-                        <TableCell className="max-w-xs truncate">{item.description || '-'}</TableCell>
-                        <TableCell>{item.discountPercentage}%</TableCell>
-                        <TableCell>{item.usageCount} / {item.maxUsage}</TableCell>
-                        <TableCell>{formatDate(item.startDate)}</TableCell>
-                        <TableCell>{formatDate(item.endDate)}</TableCell>
+                        <TableCell className="max-w-xs truncate">{item.title || '-'}</TableCell>
+                        <TableCell>-</TableCell>
+                        <TableCell>{item.totalUsersRegistered}</TableCell>
+                        <TableCell>{formatDate(item.dateCreated)}</TableCell>
+                        <TableCell>-</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.className}`}>
                             {statusInfo.label}
@@ -163,7 +171,7 @@ const PromoCodesPage = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              {item.status === 0 ? (
+                              {(item.status || '').toLowerCase() !== 'active' ? (
                                 <DropdownMenuItem onClick={() => handleActivate(item.id)}>
                                   Activate
                                 </DropdownMenuItem>

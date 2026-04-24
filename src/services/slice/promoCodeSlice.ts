@@ -1,11 +1,23 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchPromoCodes, activatePromoCode, deactivatePromoCode } from '@/services/thunks';
+import {
+  fetchPromoCodes,
+  activatePromoCode,
+  deactivatePromoCode,
+  fetchPromoCodeById,
+  fetchPromoCodeSummary,
+  createPromoCode,
+} from '@/services/thunks';
 import { PromoCodeState } from '@/types';
 
 const initialState: PromoCodeState = {
   list: [],
+  selected: null,
+  summary: null,
   metaData: null,
   loading: false,
+  loadingDetail: false,
+  loadingSummary: false,
+  creating: false,
   error: null,
   activating: false,
   deactivating: false,
@@ -35,6 +47,38 @@ const promoCodeSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+      .addCase(fetchPromoCodeById.pending, (state) => {
+        state.loadingDetail = true;
+      })
+      .addCase(fetchPromoCodeById.fulfilled, (state, action) => {
+        state.loadingDetail = false;
+        state.selected = action.payload;
+      })
+      .addCase(fetchPromoCodeById.rejected, (state, action) => {
+        state.loadingDetail = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchPromoCodeSummary.pending, (state) => {
+        state.loadingSummary = true;
+      })
+      .addCase(fetchPromoCodeSummary.fulfilled, (state, action) => {
+        state.loadingSummary = false;
+        state.summary = action.payload;
+      })
+      .addCase(fetchPromoCodeSummary.rejected, (state, action) => {
+        state.loadingSummary = false;
+        state.error = action.payload as string;
+      })
+      .addCase(createPromoCode.pending, (state) => {
+        state.creating = true;
+      })
+      .addCase(createPromoCode.fulfilled, (state) => {
+        state.creating = false;
+      })
+      .addCase(createPromoCode.rejected, (state, action) => {
+        state.creating = false;
+        state.error = action.payload as string;
+      })
       // Activate Promo Code
       .addCase(activatePromoCode.pending, (state) => {
         state.activating = true;
@@ -43,8 +87,9 @@ const promoCodeSlice = createSlice({
         state.activating = false;
         const idx = state.list.findIndex((item) => item.id === action.payload.id);
         if (idx !== -1) {
-          state.list[idx].status = 1;
+          state.list[idx].status = 'Active';
         }
+        if (state.selected?.id === action.payload.id) state.selected.status = 'Active';
       })
       .addCase(activatePromoCode.rejected, (state) => {
         state.activating = false;
@@ -57,8 +102,9 @@ const promoCodeSlice = createSlice({
         state.deactivating = false;
         const idx = state.list.findIndex((item) => item.id === action.payload.id);
         if (idx !== -1) {
-          state.list[idx].status = 0;
+          state.list[idx].status = 'Inactive';
         }
+        if (state.selected?.id === action.payload.id) state.selected.status = 'Inactive';
       })
       .addCase(deactivatePromoCode.rejected, (state) => {
         state.deactivating = false;

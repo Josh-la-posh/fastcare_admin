@@ -7,6 +7,7 @@ import { fetchRespondersNote, fetchRespondentsById } from "../thunks";
 
 const initialState: RespondentsState = {
   respondents: [],
+  metaData: null,
   selectedRespondents: null,
   loading: false,
   error: null,

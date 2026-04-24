@@ -266,6 +266,7 @@ export interface AmbulanceRequest {
 
 export interface AmbulanceRequestState {
   requests: AmbulanceRequest[];
+  metaData: MetaData | null;
   currentRequest: AmbulanceRequest | null;
   loading: boolean;
   error: string | null;
@@ -286,6 +287,7 @@ export interface Driver {
 
 export interface DriverState {
   drivers: Driver[];
+  metaData: MetaData | null;
   loading: boolean;
   error: string | null;
   currentDriver: Driver | null;
@@ -305,6 +307,7 @@ export interface Respondent {
 
 export interface RespondentsState {
   respondents: Respondent[];
+  metaData: MetaData | null;
   selectedRespondents: Respondent | null;
   loading: boolean;
   error: string | null;
@@ -312,14 +315,17 @@ export interface RespondentsState {
 
 // Amenity Types
 export interface Amenity {
-  equipmentName: string;
+  id: string;
+  name: string;
+  equipmentName?: string;
   description: string;
-  ambulanceProviderId: string;
+  ambulanceProviderId?: string;
 }
 
 export interface AmenitiesState {
   amenities: Amenity[];
   selectedAmenity: Amenity | null;
+  metaData: MetaData | null;
   loading: boolean;
   error: string | null;
   createLoading: boolean;
@@ -836,20 +842,44 @@ export interface AdCampaignState {
 export interface PromoCodeItem {
   id: string;
   code: string;
-  description: string;
-  discountPercentage: number;
-  maxUsage: number;
-  usageCount: number;
-  startDate: string | null;
-  endDate: string | null;
-  status: number;
+  title: string;
+  totalUsersRegistered: number;
+  status: string;
   dateCreated: string;
+}
+
+export interface PromoCodeDetail {
+  id: string;
+  code: string;
+  dateCreated: string;
+  title: string;
+  status: string;
+  lastModifiedDate: string | null;
+  lastModifiedBy: string | null;
+  promoCodeUsers: Array<{
+    id?: string;
+    name?: string;
+    email?: string;
+    phoneNumber?: string;
+    registrationDate?: string;
+  }>;
+}
+
+export interface PromoCodeSummary {
+  code: string;
+  totalPromoCodeUsed: number;
+  title: string;
 }
 
 export interface PromoCodeState {
   list: PromoCodeItem[];
+  selected: PromoCodeDetail | null;
+  summary: PromoCodeSummary | null;
   metaData: MetaData | null;
   loading: boolean;
+  loadingDetail: boolean;
+  loadingSummary: boolean;
+  creating: boolean;
   error: string | null;
   activating: boolean;
   deactivating: boolean;

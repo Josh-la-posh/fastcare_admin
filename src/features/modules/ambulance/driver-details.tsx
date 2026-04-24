@@ -6,7 +6,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {Button} from '@/components/ui/button';
 import {useState} from 'react';
 
 
@@ -45,7 +44,7 @@ export default function DriverDetails({data}: Props) {
           {/* Doctor Details Section */}
           {data ? (
             <div className="">
-              <div className="flex items-center justify-between">
+              {/* <div className="flex items-center justify-between">
                 <div className="flex items-center gap-6">
                   <h1 className="text-primary  text-lg">
                     Driver ID: {' '}
@@ -58,7 +57,7 @@ export default function DriverDetails({data}: Props) {
                     Edit
                   </Button>
                 </div>
-              </div>
+              </div> */}
               <div className="mt-6">
                 <h1 className="text-primary border-b text-lg py-2">
                   Driver information
@@ -72,12 +71,12 @@ export default function DriverDetails({data}: Props) {
                   </div>
                   <div className="grid grid-cols-2 ">
                     <span className=" text-gray-600">License Number: </span>
-                    <span className="text-gray-900">{data?.license_no}</span>
+                    <span className="text-gray-900">{data?.licenseNumber}</span>
                   </div>
                   <div className="grid grid-cols-2 ">
-                    <span className=" text-gray-600">License Status: </span>
-                    <span className="bg-green-100 text-green-500 p-2 rounded-lg w-24">
-                      {data?.license}
+                    <span className=" text-gray-600">Certificate Status: </span>
+                    <span className="bg-green-100 text-green-500 p-2 rounded-lg w-fit">
+                      {data?.certificationStatus}
                     </span>
                   </div>
                   <div className="grid grid-cols-2 ">
@@ -86,7 +85,7 @@ export default function DriverDetails({data}: Props) {
                   </div>
                   <div className="grid grid-cols-2 ">
                     <span className=" text-gray-600">Phone Number: </span>
-                    <span className="text-gray-900">{data?.phone}</span>
+                    <span className="text-gray-900">{data?.phoneNumber}</span>
                   </div>
                   <div className="grid grid-cols-2 ">
                     <span className=" text-gray-600">Email: </span>

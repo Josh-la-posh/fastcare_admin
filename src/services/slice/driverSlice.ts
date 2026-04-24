@@ -6,6 +6,7 @@ import { addDriver, fetchDrivers } from "../thunks";
 
 const initialState: DriverState = {
   drivers: [],
+  metaData: null,
   loading: false,
   error: null,
   currentDriver: null,
@@ -20,6 +21,7 @@ const driverSlice = createSlice({
     },
     clearDrivers: (state) => {
       state.drivers = [];
+      state.metaData = null;
       state.currentDriver = null;
       state.error = null;
     },
@@ -51,7 +53,8 @@ const driverSlice = createSlice({
       })
       .addCase(fetchDrivers.fulfilled, (state, action) => {
         state.loading = false;
-        state.drivers = action.payload;
+        state.drivers = action.payload.drivers;
+        state.metaData = action.payload.metaData;
         state.error = null;
       })
       .addCase(fetchDrivers.rejected, (state, action) => {

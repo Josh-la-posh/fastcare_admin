@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Checkbox } from '@/components/ui/checkbox';
+import AuthLayout from '@/layout/auth-layout';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Email address is required.' }),
@@ -42,17 +43,16 @@ const ForgetPaswword = () => {
   }
 
   return (
-    <div className="bg-[#F2F2F2] min-h-screen flex flex-col items-center justify-center">
-      {/* Logo outside the card */}
-      <div className="flex justify-center w-full">
-        <img src="/images/fulllogo.png" className="w-44" />
-      </div>
-
+    <AuthLayout>
       {/* White card */}
-      <div className="bg-white rounded-lg w-[90%] max-w-lg px-14 flex flex-col items-center shadow-sm">
-        <h2 className="text-2xl font-medium text-primary text-center mb-12">
-          LOGIN
-        </h2>
+      <div className="px-14 flex flex-col">
+        {/* {user ? <p>Welcome {user.name}</p> : <p>Please log in</p>} */}
+        <div className="mb-6">
+          <h2 className="text-xl font-medium">Log in</h2>
+          <p className="text-md text-gray-600 mt-2">
+            Enter your details to proceed.
+          </p>
+        </div>
 
         <Form {...form}>
           <form
@@ -153,7 +153,7 @@ const ForgetPaswword = () => {
           </p>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 };
 

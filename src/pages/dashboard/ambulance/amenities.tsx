@@ -1,5 +1,5 @@
 import {DashboardLayout} from '@/layout/dashboard-layout';
-import {useState, useMemo, useEffect} from 'react';
+import {useState, useEffect} from 'react';
 
 import {
   Table,
@@ -25,7 +25,6 @@ import {
 import {Pagination} from '@/components/ui/pagination';
 import CreateAmenities from '@/components/form/ambulance/amenities/create-amenities';
 import EditAmenities from '@/components/form/ambulance/amenities/edit-amenities';
-import { Trash } from 'lucide-react';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/services/store';
 import { fetchAmenities } from '@/services/thunks';
@@ -41,19 +40,25 @@ const Amenities = () => {
   const [pageSize, setPageSize] = useState(10);
   
   const dispatch = useDispatch<AppDispatch>();
-  const { amenities, loading, error } = useSelector((state: RootState) => state.amenities);
-  const ambulanceProviderId = useSelector((state: RootState) => state.ambulanceProviders.selectedProvider?.id); 
+  const { amenities, loading, error, metaData } = useSelector((state: RootState) => state.amenities);
+  const ambulanceProviderId = useSelector((state: RootState) => state.ambulanceProviders.selectedProvider?.id);
+  const userRole = useSelector((state: RootState) => state.auth.user?.userRole);
+  const isAmbulanceProviderAdmin = userRole === 'AmbulanceProviderAdmin';
 
   useEffect(() => {
-    if(!amenities.length && ambulanceProviderId){
-      dispatch(fetchAmenities(ambulanceProviderId));
+    if (isAmbulanceProviderAdmin || ambulanceProviderId) {
+      dispatch(fetchAmenities({
+        ambulanceProviderId,
+        Page: page,
+        PageSize: pageSize,
+      }));
     }
-  }, [dispatch, amenities.length, ambulanceProviderId]);
+  }, [dispatch, ambulanceProviderId, isAmbulanceProviderAdmin, page, pageSize]);
 
   // Define columns and table data regardless of loading state
   const columns: ColumnDef<any>[] = [
     {
-      accessorKey: 'equipmentName', 
+      accessorKey: 'name', 
       header: 'Equipment Name', 
     },
     {
@@ -65,7 +70,8 @@ const Amenities = () => {
       header: 'Action',
       enableHiding: false,
       cell: ({row}) => {
-        const isEmptyRow = !row.original.equipmentName && !row.original.description;
+        const amenityName = row.original.name ?? row.original.equipmentName;
+        const isEmptyRow = !amenityName && !row.original.description;
         if (isEmptyRow) {
           return null; 
         }
@@ -74,24 +80,17 @@ const Amenities = () => {
             <div>
               <EditAmenities data={row.original} />
             </div>
-            <div>
-              <Trash className="text-red-500 w-4 h-4 cursor-pointer" />
-            </div>
           </div>
         );
       },
     },
   ];
 
-  const totalPages = Math.ceil(amenities.length / pageSize);
-  const paginatedProviders = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return amenities.slice(start, start + pageSize);
-  }, [amenities, page, pageSize]);
+  const totalPages = metaData?.totalPages || 1;
 
   // Call useReactTable unconditionally - use empty data when not available
   const table = useReactTable({
-    data: paginatedProviders || [],
+    data: amenities || [],
     columns,
     state: {
       sorting,
@@ -132,7 +131,7 @@ const Amenities = () => {
   }
 
   // Show no provider selected state
-  if (!ambulanceProviderId) {
+  if (!ambulanceProviderId && !isAmbulanceProviderAdmin) {
     return (
       <DashboardLayout>
         <div className="flex justify-center items-center h-64">
@@ -221,9 +220,9 @@ const Amenities = () => {
 
           <div className="p-4 flex items-center justify-end">
             <Pagination
-              totalEntriesSize={amenities.length}
+              totalEntriesSize={metaData?.totalCount || amenities.length}
           
-              currentPage={page}
+              currentPage={metaData?.currentPage || page}
               totalPages={totalPages}
               onPageChange={setPage}
               pageSize={pageSize}

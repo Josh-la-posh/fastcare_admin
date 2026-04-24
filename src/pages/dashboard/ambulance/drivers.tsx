@@ -26,7 +26,6 @@ import {Pagination} from '@/components/ui/pagination';
 import AddDriver from '@/components/form/ambulance/drivers/add-drivers';
 import EditDriver from '@/components/form/ambulance/drivers/edit-driver';
 import DriverDetails from '@/features/modules/ambulance/driver-details';
-import { Trash } from 'lucide-react';
 import { AppDispatch, RootState } from '@/services/store';
 import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
@@ -39,15 +38,17 @@ const Drivers = () => {
   const [rowSelection, setRowSelection] = useState({});
   const [columnFilters, setColumnFilters] = useState<any[]>([]);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const pageSize = 10;
 
   const dispatch = useDispatch<AppDispatch>();
-  const { drivers, loading, error } = useSelector((state: RootState) => state.drivers);
-  const ambulanceProviderId = "c4ac7df8-1873-42db-97ba-8b240abc99df";
-
+  const { drivers, loading, error, metaData } = useSelector((state: RootState) => state.drivers);
   useEffect(() => {
-    dispatch(fetchDrivers(ambulanceProviderId));
-  }, [dispatch, ambulanceProviderId]);
+    dispatch(fetchDrivers({
+      Page: page,
+      PageSize: 10,
+      paginated: true,
+    }));
+  }, [dispatch, page]);
 
   // Safe data transformation - handle undefined/empty drivers
   const transformedDrivers = useMemo(() => {
@@ -67,24 +68,22 @@ const Drivers = () => {
     }));
   }, [drivers]);
 
-  const totalPages = Math.ceil(transformedDrivers.length / pageSize);
+  const hasServerPagination = Boolean(metaData);
+  const totalPages = metaData?.totalPages || Math.ceil(transformedDrivers.length / pageSize) || 1;
   const paginatedDrivers = useMemo(() => {
+    if (hasServerPagination) return transformedDrivers;
     const start = (page - 1) * pageSize;
     return transformedDrivers.slice(start, start + pageSize);
-  }, [transformedDrivers, page, pageSize]);
+  }, [hasServerPagination, transformedDrivers, page, pageSize]);
 
   const columns: ColumnDef<any>[] = [
-    {
-      accessorKey: 'driver_id',
-      header: 'Driver ID',
-    },
     {
       accessorKey: 'name',
       header: 'Full Name',
     },
     {
       accessorKey: 'license',
-      header: 'License Status',
+      header: 'Certificate Status',
     },
     {
       accessorKey: 'license_no',
@@ -122,9 +121,6 @@ const Drivers = () => {
             </div>
             <div>
               <EditDriver data={row.original.rawData} />
-            </div>
-            <div>
-              <Trash className="text-red-500 w-4 h-4 cursor-pointer" />
             </div>
           </div>
         );
@@ -251,14 +247,13 @@ const Drivers = () => {
           {/* Pagination stuck at bottom */}
           <div className="p-4 flex items-center justify-end">
             <Pagination
-              totalEntriesSize={drivers.length}
+              totalEntriesSize={metaData?.totalCount || transformedDrivers.length}
            
-              currentPage={page}
+              currentPage={metaData?.currentPage || page}
               totalPages={totalPages}
               onPageChange={setPage}
               pageSize={pageSize}
-              onPageSizeChange={size => {
-                setPageSize(size);
+              onPageSizeChange={() => {
                 setPage(1);
               }}
             />

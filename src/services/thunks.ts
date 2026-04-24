@@ -580,9 +580,31 @@ export const deactivateAmbulanceProvider = createAsyncThunk(
 
 export const fetchAmbulances = createAsyncThunk(
   "ambulances/fetchAll",
-  async (ambulanceProviderId: string, { rejectWithValue }) => {
+  async (
+    params:
+      | {
+          ambulanceProviderId?: string;
+          paginated?: boolean;
+          Page?: number;
+          PageSize?: number;
+        }
+      | undefined,
+    { rejectWithValue }
+  ) => {
     try {
-      const res = await apiClient.get(`/Ambulances/provider/${ambulanceProviderId}`);
+      const { ambulanceProviderId, paginated, Page, PageSize } = params || {};
+      const shouldUsePaginated = paginated ?? !ambulanceProviderId;
+      const url = shouldUsePaginated
+        ? "/ambulances/paginated"
+        : ambulanceProviderId
+          ? `/ambulances/${ambulanceProviderId}`
+          : "/ambulances";
+      const res = await apiClient.get(url, {
+        params: {
+          ...(Page ? { Page } : {}),
+          ...(PageSize ? { PageSize } : {}),
+        },
+      });
       return res.data?.data ?? res.data ?? [];
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to fetch ambulances"));
@@ -596,12 +618,76 @@ export const fetchAmbulances = createAsyncThunk(
 
 export const fetchDrivers = createAsyncThunk(
   "drivers/fetchAll",
-  async (ambulanceProviderId: string, { rejectWithValue }) => {
+  async (
+    params:
+      | {
+          Page?: number;
+          PageSize?: number;
+          paginated?: boolean;
+        }
+      | undefined,
+    { rejectWithValue }
+  ) => {
     try {
-      const res = await apiClient.get(`/Drivers/provider/${ambulanceProviderId}`);
-      return res.data?.data ?? res.data ?? [];
+      const { Page, PageSize, paginated } = params || {};
+      const shouldUsePaginated = Boolean(paginated || Page || PageSize);
+
+      if (shouldUsePaginated) {
+        const res = await apiClient.get(`/ambulanceDrivers/paginated`, {
+          params: {
+            ...(Page ? { Page } : {}),
+            ...(PageSize ? { PageSize } : {}),
+          },
+        });
+        return {
+          drivers: res.data?.data ?? [],
+          metaData: res.data?.metaData ?? null,
+        };
+      }
+
+      const res = await apiClient.get(`/ambulanceDrivers`);
+      const rawDrivers = res.data?.data ?? res.data ?? [];
+      return {
+        drivers: Array.isArray(rawDrivers) ? rawDrivers : [],
+        metaData: null,
+      };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to fetch drivers"));
+    }
+  }
+);
+
+export const fetchAmbulanceSummary = createAsyncThunk(
+  "ambulances/fetchSummary",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/ambulances/summary");
+      return res.data?.data ?? res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch ambulance summary"));
+    }
+  }
+);
+
+export const createAmbulance = createAsyncThunk(
+  "ambulances/create",
+  async (
+    payload: {
+      pricePerKm: number;
+      baseRateFee: number;
+      plateNumber: string;
+      location: { latitude: number; longitude: number };
+      address: string;
+      type: string;
+      amenitiesIds: string[];
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.post("/ambulances", payload);
+      return res.data?.data ?? res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to create ambulance"));
     }
   }
 );
@@ -610,17 +696,41 @@ export const addDriver = createAsyncThunk(
   "drivers/add",
   async (payload: {
     name: string;
+    certificationStatus: string;
     email: string;
     phoneNumber: string;
     address: string;
     licenseNumber: string;
-    ambulanceProviderId: string;
   }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post("/Drivers", payload);
+      const res = await apiClient.post("/ambulanceDrivers", payload);
       return res.data?.data ?? res.data;
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to add driver"));
+    }
+  }
+);
+
+export const updateDriver = createAsyncThunk(
+  "drivers/update",
+  async (
+    payload: {
+      id: string;
+      name: string;
+      certificationStatus: string;
+      licenseNumber: string;
+      phoneNumber: string;
+      email: string;
+      address: string;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const { id, ...body } = payload;
+      const res = await apiClient.put(`/ambulanceDrivers/${id}`, body);
+      return res.data?.data ?? res.data ?? payload;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to update driver"));
     }
   }
 );
@@ -631,10 +741,39 @@ export const addDriver = createAsyncThunk(
 
 export const fetchRespondents = createAsyncThunk(
   "respondents/fetchAll",
-  async (ambulanceProviderId: string, { rejectWithValue }) => {
+  async (
+    params:
+      | {
+          Page?: number;
+          PageSize?: number;
+          paginated?: boolean;
+        }
+      | undefined,
+    { rejectWithValue }
+  ) => {
     try {
-      const res = await apiClient.get(`/Respondents/provider/${ambulanceProviderId}`);
-      return res.data?.data ?? res.data ?? [];
+      const { Page, PageSize, paginated } = params || {};
+      const shouldUsePaginated = Boolean(paginated || Page || PageSize);
+
+      if (shouldUsePaginated) {
+        const res = await apiClient.get(`/ambulanceRespondents/paginated`, {
+          params: {
+            ...(Page ? { Page } : {}),
+            ...(PageSize ? { PageSize } : {}),
+          },
+        });
+        return {
+          respondents: res.data?.data ?? [],
+          metaData: res.data?.metaData ?? null,
+        };
+      }
+
+      const res = await apiClient.get(`/ambulanceRespondents`);
+      const list = res.data?.data ?? res.data ?? [];
+      return {
+        respondents: Array.isArray(list) ? list : [],
+        metaData: null,
+      };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to fetch respondents"));
     }
@@ -645,10 +784,56 @@ export const fetchRespondentsById = createAsyncThunk(
   "respondents/fetchById",
   async (id: string, { rejectWithValue }) => {
     try {
-      const res = await apiClient.get(`/Respondents/${id}`);
+      const res = await apiClient.get(`/ambulanceRespondents/${id}`);
       return res.data?.data ?? res.data;
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to fetch respondent"));
+    }
+  }
+);
+
+export const createRespondent = createAsyncThunk(
+  "respondents/create",
+  async (
+    payload: {
+      name: string;
+      certificationStatus: string;
+      professionalLicense: string;
+      phoneNumber: string;
+      email: string;
+      address: string;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.post("/ambulanceRespondents", payload);
+      return res.data?.data ?? res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to create respondent"));
+    }
+  }
+);
+
+export const updateRespondent = createAsyncThunk(
+  "respondents/update",
+  async (
+    payload: {
+      id: string;
+      name: string;
+      certificationStatus: string;
+      professionalLicense: string;
+      phoneNumber: string;
+      email: string;
+      address: string;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const { id, ...body } = payload;
+      const res = await apiClient.put(`/ambulanceRespondents/${id}`, body);
+      return res.data?.data ?? res.data ?? payload;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to update respondent"));
     }
   }
 );
@@ -675,15 +860,66 @@ export const fetchRespondersNote = createAsyncThunk(
 
 export const fetchAmbulanceRequests = createAsyncThunk(
   "ambulanceRequests/fetchAll",
-  async (providerId: string | undefined, { rejectWithValue }) => {
+  async (
+    params:
+      | {
+          Page?: number;
+          PageSize?: number;
+          RequestDate?: string;
+          Address?: string;
+          AmbulanceLicencePlate?: string;
+        }
+      | undefined,
+    { rejectWithValue }
+  ) => {
     try {
-      const url = providerId 
-        ? `/AmbulanceRequests/provider/${providerId}`
-        : "/AmbulanceRequests";
-      const res = await apiClient.get(url);
-      return res.data?.data ?? res.data ?? [];
+      const res = await apiClient.get("/ambulanceRequests/paginated", {
+        params: {
+          ...(params?.Page ? { Page: params.Page } : {}),
+          ...(params?.PageSize ? { PageSize: params.PageSize } : {}),
+          ...(params?.RequestDate ? { RequestDate: params.RequestDate } : {}),
+          ...(params?.Address ? { Address: params.Address } : {}),
+          ...(params?.AmbulanceLicencePlate ? { AmbulanceLicencePlate: params.AmbulanceLicencePlate } : {}),
+        },
+      });
+      return {
+        requests: res.data?.data ?? [],
+        metaData: res.data?.metaData ?? null,
+      };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to fetch ambulance requests"));
+    }
+  }
+);
+
+export const createAmbulanceRequest = createAsyncThunk(
+  "ambulanceRequests/create",
+  async (
+    payload: {
+      ambulanceProviderId: string;
+      ambulanceId: string;
+      pickupLocation: {
+        latitude: number;
+        longitude: number;
+      };
+      pickupAddress: string;
+      destinationLocation: {
+        latitude: number;
+        longitude: number;
+      };
+      destinationAddress: string;
+      emergencyType: string;
+      numberOfDays: number;
+      startDate: string;
+      endDate: string;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.post("/ambulanceRequests", payload);
+      return res.data?.data ?? res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to create ambulance request"));
     }
   }
 );
@@ -694,10 +930,27 @@ export const fetchAmbulanceRequests = createAsyncThunk(
 
 export const fetchAmenities = createAsyncThunk(
   "amenities/fetchAll",
-  async (ambulanceProviderId: string, { rejectWithValue }) => {
+  async (
+    params: { ambulanceProviderId?: string; Page?: number; PageSize?: number } | undefined,
+    { rejectWithValue }
+  ) => {
     try {
-      const res = await apiClient.get(`/Amenities/provider/${ambulanceProviderId}`);
-      return res.data?.data ?? res.data ?? [];
+      const { ambulanceProviderId, Page, PageSize } = params || {};
+      const url = ambulanceProviderId
+        ? `/amenities/provider/${ambulanceProviderId}`
+        : "/amenities";
+      const res = await apiClient.get(url, {
+        params: {
+          ...(Page ? { Page } : {}),
+          ...(PageSize ? { PageSize } : {}),
+        },
+      });
+      const raw = res.data;
+      const list = Array.isArray(raw) ? raw : raw?.data ?? raw ?? [];
+      return {
+        amenities: Array.isArray(list) ? list : [],
+        metaData: Array.isArray(raw) ? null : raw?.metaData ?? null,
+      };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to fetch amenities"));
     }
@@ -719,12 +972,15 @@ export const fetchAmenityById = createAsyncThunk(
 export const createAmenity = createAsyncThunk(
   "amenities/create",
   async (payload: {
-    equipmentName: string;
+    name: string;
     description: string;
-    ambulanceProviderId: string;
   }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.post("/Amenities", payload);
+      const requestBody = {
+        name: payload.name,
+        description: payload.description,
+      };
+      const res = await apiClient.post("/amenity", requestBody);
       return res.data?.data ?? res.data;
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to create amenity"));
@@ -735,12 +991,15 @@ export const createAmenity = createAsyncThunk(
 export const updateAmenity = createAsyncThunk(
   "amenities/update",
   async (payload: {
-    equipmentName: string;
+    id: string;
+    name: string;
     description: string;
-    ambulanceProviderId: string;
   }, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put(`/Amenities/${payload.equipmentName}`, payload);
+      const res = await apiClient.put(`/Amenities/${payload.id}`, {
+        name: payload.name,
+        description: payload.description,
+      });
       return res.data?.data ?? res.data ?? payload;
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to update amenity"));
@@ -1294,14 +1553,54 @@ export const toggleAdCampaignStatus = createAsyncThunk(
 export const fetchPromoCodes = createAsyncThunk(
   "promoCodes/fetchAll",
   async (
-    params: { Page?: number; PageSize?: number; Code?: string; Status?: number } | undefined,
+    params: { Page?: number; PageSize?: number } | undefined,
     { rejectWithValue }
   ) => {
     try {
-      const res = await apiClient.get("/PromoCode", { params });
+      const res = await apiClient.get("/promoCode", { params });
       return { list: res.data.data || [], metaData: res.data.metaData || null };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to fetch promo codes"));
+    }
+  }
+);
+
+export const fetchPromoCodeById = createAsyncThunk(
+  "promoCodes/fetchById",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get(`/promoCode/${id}`);
+      return res.data?.data ?? res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch promo code detail"));
+    }
+  }
+);
+
+export const fetchPromoCodeSummary = createAsyncThunk(
+  "promoCodes/fetchSummary",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get("/PromoCode/get-summary");
+      return res.data?.data ?? res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch promo code summary"));
+    }
+  }
+);
+
+export const createPromoCode = createAsyncThunk(
+  "promoCodes/create",
+  async (payload: { Title: string }, { rejectWithValue }) => {
+    try {
+      const formData = new FormData();
+      formData.append("Title", payload.Title);
+      const res = await apiClient.post("/promoCode", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return res.data?.data ?? res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to create promo code"));
     }
   }
 );
@@ -1310,7 +1609,7 @@ export const activatePromoCode = createAsyncThunk(
   "promoCodes/activate",
   async (id: string, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put(`/PromoCode/${id}/activate`);
+      const res = await apiClient.put(`/promoCode/${id}/activate`);
       return { id, data: res.data };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to activate promo code"));
@@ -1322,7 +1621,7 @@ export const deactivatePromoCode = createAsyncThunk(
   "promoCodes/deactivate",
   async (id: string, { rejectWithValue }) => {
     try {
-      const res = await apiClient.put(`/PromoCode/${id}/deactivate`);
+      const res = await apiClient.put(`/promoCode/${id}/deactivate`);
       return { id, data: res.data };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to deactivate promo code"));

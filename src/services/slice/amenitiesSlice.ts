@@ -7,6 +7,7 @@ import { createAmenity, fetchAmenities, fetchAmenityById, updateAmenity } from "
 const initialState: AmenitiesState = {
   amenities: [],
   selectedAmenity: null,
+  metaData: null,
   loading: false,
   error: null,
   createLoading: false,
@@ -37,7 +38,8 @@ const amenitiesSlice = createSlice({
       })
       .addCase(fetchAmenities.fulfilled, (state, action) => {
         state.loading = false;
-        state.amenities = action.payload;
+        state.amenities = action.payload.amenities;
+        state.metaData = action.payload.metaData;
       })
       .addCase(fetchAmenities.rejected, (state, action) => {
         state.loading = false;
@@ -83,14 +85,23 @@ const amenitiesSlice = createSlice({
       })
       .addCase(updateAmenity.fulfilled, (state, action) => {
         state.updateLoading = false;
+        const updated = action.payload;
         // Optimistically update local state
         state.amenities = state.amenities.map((amenity) =>
-          amenity.equipmentName === action.payload.equipmentName ? action.payload : amenity
+          amenity.id === updated.id ||
+          amenity.name === updated.name ||
+          amenity.equipmentName === updated.equipmentName
+            ? updated
+            : amenity
         );
         
         // Update selected amenity if it's the one being updated
-        if (state.selectedAmenity?.equipmentName === action.payload.equipmentName) {
-          state.selectedAmenity = action.payload;
+        if (
+          state.selectedAmenity?.id === updated.id ||
+          state.selectedAmenity?.name === updated.name ||
+          state.selectedAmenity?.equipmentName === updated.equipmentName
+        ) {
+          state.selectedAmenity = updated;
         }
         
         toast.success("Amenity updated successfully 🎉");

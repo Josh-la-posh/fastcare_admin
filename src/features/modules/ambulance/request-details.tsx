@@ -1,4 +1,4 @@
-import {X} from 'lucide-react';
+import {EyeIcon, X} from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -21,16 +21,38 @@ type Props = {
   data?: any;
 };
 
+const formatDate = (dateString?: string | null) => {
+  if (!dateString) return 'N/A';
+  return dateString.replace(';', ',');
+};
+
 export default function RequestDetails({data}: Props) {
   const [open, setOpen] = useState(false);
+  const requestId = data?.id ? data.id.slice(-8).toUpperCase() : 'N/A';
+  const emergencyType = data?.emergencyType || 'N/A';
+  const pickupAddress =
+    data?.pickupAddress ||
+    (data?.pickupLocation
+      ? `${data.pickupLocation.latitude}, ${data.pickupLocation.longitude}`
+      : 'N/A');
+  const destinationAddress =
+    data?.destinationAddress ||
+    (data?.destinationLocation
+      ? `${data.destinationLocation.latitude}, ${data.destinationLocation.longitude}`
+      : 'N/A');
+  const requestTime = formatDate(data?.creationDate || data?.requestDate || null);
 
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <div className="flex text-center justify-center cursor-pointer font-semibold items-center gap-2 bg-[#E4F1FC] p-2 rounded-md text-[#135E9B]">
-            {data?.action}
-          </div>
+          <button
+            type="button"
+            className="flex items-center gap-2 text-[#135E9B] hover:underline"
+          >
+            <EyeIcon className="w-4 h-4 cursor-pointer" />
+            <span>View</span>
+          </button>
         </DialogTrigger>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader className="flex w-full items-center justify-between">
@@ -56,12 +78,12 @@ export default function RequestDetails({data}: Props) {
                 <div className="flex items-center gap-6">
                   <h1 className="text-primary  text-lg">
                     Request ID{' '}
-                    <span className="text-gray-600 "> {data?.request_id}</span>{' '}
+                    <span className="text-gray-600 ">#{requestId}</span>{' '}
                   </h1>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Button className="py-2.5 w-36 rounded-md">
+                  <Button type="button" className="py-2.5 w-36 rounded-md">
                     Accept & Dispatch
                   </Button>
                 </div>
@@ -75,38 +97,30 @@ export default function RequestDetails({data}: Props) {
                 <div className="space-y-3 ">
                   <div className="grid grid-cols-2  ">
                     <span className=" text-gray-600">Client Name: </span>
-                    <span className="text-gray-900">Ada John</span>
-                  </div>
-                  <div className="grid grid-cols-2 ">
-                    <span className=" text-gray-600">Age: </span>
-                    <span className="text-gray-900">28</span>
-                  </div>
-                  <div className="grid grid-cols-2 ">
-                    <span className=" text-gray-600">Sex: </span>
-                    <span className="text-gray-900">Male</span>
+                    <span className="text-gray-900">{data?.patientName || 'N/A'}</span>
                   </div>
                   <div className="grid grid-cols-2 ">
                     <span className=" text-gray-600">Request Type: </span>
-                    <span className="text-gray-900">{data?.type}</span>
+                    <span className="text-gray-900">{emergencyType}</span>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <div className="grid grid-cols-2  ">
-                    <span className=" text-gray-600">Amenities: </span>
-                    <span className="text-gray-900">Oxygen, Personnel</span>
+                    <span className=" text-gray-600">Ambulance Number: </span>
+                    <span className="text-gray-900">{data?.ambulanceNumber || 'N/A'}</span>
                   </div>
                   <div className="grid grid-cols-2 ">
                     <span className=" text-gray-600">Pickup Location: </span>
-                    <span className="text-gray-900">Ikeja, Lagos</span>
+                    <span className="text-gray-900">{pickupAddress}</span>
+                  </div>
+                  <div className="grid grid-cols-2 ">
+                    <span className=" text-gray-600">Destination: </span>
+                    <span className="text-gray-900">{destinationAddress}</span>
                   </div>
                   <div className="grid grid-cols-2 ">
                     <span className=" text-gray-600">Timestamp: </span>
-                    <span className="text-gray-900">{data?.time}</span>
-                  </div>
-                  <div className="grid grid-cols-2 ">
-                    <span className=" text-gray-600">Distance: </span>
-                    <span className="text-gray-900">~12km</span>
+                    <span className="text-gray-900">{requestTime}</span>
                   </div>
                 </div>
               </div>

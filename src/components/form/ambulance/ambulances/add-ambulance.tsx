@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import {Button} from '@/components/ui/button';
 import {Checkbox} from '@/components/ui/checkbox';
+import {PhoneInput} from '@/components/ui/phone-input';
 import {useEffect, useMemo, useState} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import toast from 'react-hot-toast';
@@ -45,6 +46,8 @@ export default function AddAmbulance() {
   const [serialNumber, setSerialNumber] = useState('');
   const [pricePerKm, setPricePerKm] = useState('');
   const [baseRateFee, setBaseRateFee] = useState('');
+  const [countryCode, setCountryCode] = useState('+234');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [resolvingLocation, setResolvingLocation] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -58,6 +61,8 @@ export default function AddAmbulance() {
     setSerialNumber('');
     setPricePerKm('');
     setBaseRateFee('');
+    setCountryCode('+234');
+    setPhoneNumber('');
   };
 
   useEffect(() => {
@@ -133,6 +138,10 @@ export default function AddAmbulance() {
       toast.error('Address is required');
       return;
     }
+    if (!phoneNumber.trim()) {
+      toast.error('Phone number is required');
+      return;
+    }
     if (!selectedAmenityIds.length) {
       toast.error('Please select at least one amenity');
       return;
@@ -152,6 +161,8 @@ export default function AddAmbulance() {
         location: geocoded,
         pricePerKm: type === 'Emergency' ? Number(pricePerKm) || 0 : 0,
         baseRateFee: type === 'Emergency' ? 0 : Number(baseRateFee) || 0,
+        countryCode,
+        phoneNumber: phoneNumber.trim(),
         amenitiesIds: selectedAmenityIds,
       }),
     );
@@ -223,6 +234,18 @@ export default function AddAmbulance() {
                 readOnly
                 placeholder={resolvingLocation ? 'Resolving from address...' : 'Will be auto-filled from address'}
                 className="w-full border-gray-300 border rounded-lg px-3 py-3 mt-1 outline-none bg-gray-50"
+              />
+            </div>
+
+            <div>
+              <PhoneInput
+                value={{countryCode, phoneNumber}}
+                onChange={val => {
+                  setCountryCode(val.countryCode);
+                  setPhoneNumber(val.phoneNumber);
+                }}
+                required
+                error={phoneNumber && phoneNumber.length < 7 ? 'Invalid phone number' : undefined}
               />
             </div>
           </div>

@@ -679,6 +679,8 @@ export const createAmbulance = createAsyncThunk(
       location: { latitude: number; longitude: number };
       address: string;
       type: string;
+      countryCode: string;
+      phoneNumber: string;
       amenitiesIds: string[];
     },
     { rejectWithValue }
@@ -698,6 +700,7 @@ export const addDriver = createAsyncThunk(
     name: string;
     certificationStatus: string;
     email: string;
+    countryCode: string;
     phoneNumber: string;
     address: string;
     licenseNumber: string;
@@ -799,6 +802,7 @@ export const createRespondent = createAsyncThunk(
       name: string;
       certificationStatus: string;
       professionalLicense: string;
+      countryCode: string;
       phoneNumber: string;
       email: string;
       address: string;

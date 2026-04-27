@@ -126,7 +126,7 @@ export const DashboardLayout = ({children, searchBar}: Props) => {
             {name: 'Ambulance requests', url: '/ambulance/requests'},
             {name: 'Drivers', url: '/ambulance/drivers'},
             {name: 'Responders', url: '/ambulance/responders'},
-            {name: 'Responders Note', url: '/ambulance/note'},
+            // {name: 'Responders Note', url: '/ambulance/note'},
             {name: 'Dispatch history', url: '/ambulance/dispatch-history'},
           ],
         },

@@ -7,6 +7,7 @@ import { fetchRespondents, fetchRespondentsById } from "../thunks";
 
 const initialState: RespondentsState = {
   respondents: [],
+  metaData: null,
   selectedRespondents: null,
   loading: false,
   error: null,
@@ -30,9 +31,10 @@ const respondentsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchRespondents.fulfilled, (state, action: PayloadAction<Respondent[]>) => {
+      .addCase(fetchRespondents.fulfilled, (state, action) => {
         state.loading = false;
-        state.respondents = action.payload;
+        state.respondents = action.payload.respondents;
+        state.metaData = action.payload.metaData;
       })
       .addCase(fetchRespondents.rejected, (state, action) => {
         state.loading = false;

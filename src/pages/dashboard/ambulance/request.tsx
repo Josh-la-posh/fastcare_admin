@@ -1,7 +1,5 @@
 import {DashboardLayout} from '@/layout/dashboard-layout';
 import {useState, useMemo, useEffect} from 'react';
-import {Button} from '@/components/ui/button';
-import {ArrowDownLeft} from 'lucide-react';
 import claim from '/svg/totalamb.svg';
 import approved from '/svg/avbamb.svg';
 import disputed from '/svg/unamb.svg';
@@ -28,12 +26,11 @@ import {
 } from '@tanstack/react-table';
 
 import {Pagination} from '@/components/ui/pagination';
-
-import { RequestFilter } from '@/features/modules/ambulance/filter';
 import RequestDetails from '@/features/modules/ambulance/request-details';
+import {RequestFilter} from '@/features/modules/ambulance/filter';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/services/store';
-import { fetchAmbulanceRequests } from '@/services/thunks';
+import { fetchAmbulanceRequests, fetchAmbulanceSummary } from '@/services/thunks';
 import { Loader } from '@/components/ui/loading';
 
 // Helper function to format date
@@ -92,33 +89,50 @@ const claimStats = [
 const Request = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const dispatch = useDispatch<AppDispatch>();
-  const { requests, loading, error } = useSelector((state: RootState) => state.ambulanceRequests);
+  const { requests, loading, error, metaData } = useSelector((state: RootState) => state.ambulanceRequests);
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
   const [columnFilters, setColumnFilters] = useState<any[]>([]);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const pageSize = 10;
+  const [requestDateFilter, setRequestDateFilter] = useState<string>('');
+  const [addressFilter, setAddressFilter] = useState<string>('');
+  const [ambulanceLicensePlateFilter, setAmbulanceLicensePlateFilter] = useState<string>('');
+  const [summary, setSummary] = useState({
+    totalAmbulances: 0,
+    availableAmbulances: 0,
+    busyAmbulances: 0,
+    unAvailableAmbulances: 0,
+  });
 
-  //  useEffect(() => {
-  //   console.log('Redux requests state:', requests);
-  //   console.log('Loading:', loading);
-  //   console.log('Error:', error);
-  // }, [requests, loading, error]);
-// ambulanceProviders.selectedProvider?.id
-  const providerId = useSelector((state: RootState) => state.auth.user?.id); 
+  useEffect(() => {
+    dispatch(
+      fetchAmbulanceRequests({
+        Page: page,
+        PageSize: 10,
+        RequestDate: requestDateFilter || undefined,
+        Address: addressFilter || undefined,
+        AmbulanceLicencePlate: ambulanceLicensePlateFilter || undefined,
+      }),
+    );
+  }, [dispatch, page, requestDateFilter, addressFilter, ambulanceLicensePlateFilter]);
 
-    useEffect(() => {
- 
-      if(!requests.length && providerId){
-        dispatch(fetchAmbulanceRequests(providerId));
+  useEffect(() => {
+    const loadSummary = async () => {
+      const result = await dispatch(fetchAmbulanceSummary());
+      if (fetchAmbulanceSummary.fulfilled.match(result)) {
+        setSummary({
+          totalAmbulances: result.payload?.totalAmbulances ?? 0,
+          availableAmbulances: result.payload?.availableAmbulances ?? 0,
+          busyAmbulances: result.payload?.busyAmbulances ?? 0,
+          unAvailableAmbulances: result.payload?.unAvailableAmbulances ?? 0,
+        });
       }
-    }, [dispatch, requests.length, providerId]);
-
-  // useEffect(() => {
-  //   dispatch(fetchAmbulanceRequests());
-  // }, [dispatch]);
+    };
+    void loadSummary();
+  }, [dispatch]);
 
   // Transform API data to match table structure
   const transformedRequests = useMemo(() => {
@@ -143,11 +157,8 @@ const Request = () => {
       item.request_id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalPages = Math.ceil(filteredClaims.length / pageSize);
-  const paginatedRequests = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredClaims.slice(start, start + pageSize);
-  }, [filteredClaims, page, pageSize]);
+  const totalPages = metaData?.totalPages || 1;
+  const paginatedRequests = filteredClaims;
 
   const columns: ColumnDef<any>[] = [
     {
@@ -180,11 +191,11 @@ const Request = () => {
       ),
     },
     {
-      accessorKey: 'request_id',
-      header: 'Request ID',
+      accessorKey: 'client_name',
+      header: 'Client Name',
       cell: ({row}) => (
         <span className={row.original.isNew ? 'font-semibold text-gray-900' : ''}>
-          #{row.original.request_id}
+          {row.original.name}
         </span>
       ),
     },
@@ -236,43 +247,37 @@ const Request = () => {
 
   // Function to apply filters from FilterDialog
   const handleApplyFilter = (filters: any) => {
-    const newFilters: any[] = [];
-
-    if (filters.status) {
-      newFilters.push({id: 'status', value: filters.status});
-    }
-    if (filters.time) {
-      newFilters.push({id: 'time', value: filters.time});
-    }
-    if (filters.type) {
-      newFilters.push({id: 'type', value: filters.type});
-    }
-
-    setColumnFilters(newFilters);
+    setRequestDateFilter(filters.requestDate || '');
+    setAddressFilter(filters.address || '');
+    setAmbulanceLicensePlateFilter(filters.ambulanceLicensePlate || '');
+    setPage(1);
   };
 
   // Function to reset filters
   const handleResetFilter = () => {
-    setColumnFilters([]);
+    setRequestDateFilter('');
+    setAddressFilter('');
+    setAmbulanceLicensePlateFilter('');
+    setPage(1);
   };
 
-  // Update stats based on actual data
+  // Update stats from /ambulances/summary
   const updatedClaimStats = useMemo(() => {
-    const total = requests.length;
-    const available = requests.filter(req => req.ambulanceType === 'Available').length;
-    const enRoute = requests.filter(req => req.ambulanceType === 'Emergency').length;
-    const unavailable = requests.filter(req => !req.ambulanceType || req.ambulanceType === 'Unavailable').length;
-
     return claimStats.map(stat => {
       switch (stat.id) {
-        case 1: return {...stat, value: total};
-        case 2: return {...stat, value: available};
-        case 3: return {...stat, value: enRoute};
-        case 4: return {...stat, value: unavailable};
-        default: return stat;
+        case 1:
+          return {...stat, value: summary.totalAmbulances};
+        case 2:
+          return {...stat, value: summary.availableAmbulances};
+        case 3:
+          return {...stat, value: summary.busyAmbulances};
+        case 4:
+          return {...stat, value: summary.unAvailableAmbulances};
+        default:
+          return stat;
       }
     });
-  }, [requests]);
+  }, [summary]);
 
   if (loading) {
     return (
@@ -330,7 +335,148 @@ const Request = () => {
                 className="border rounded-lg hidden lg:block px-4 py-2 lg:w-96 lg:max-w-2xl focus:outline-none"
               />
             </div>
-            <div className="flex gap-4 items-center">
+            <div className="flex items-center gap-3">
+              <RequestFilter onApply={handleApplyFilter} onReset={handleResetFilter} />
+            </div>
+            {/* <div className="flex gap-4 items-center">
+              <Button className="py-2.5 w-44" onClick={() => setOpenRequestDialog(true)}>
+                Request Ambulance
+              </Button>
+              <Dialog open={openRequestDialog} onOpenChange={setOpenRequestDialog}>
+                <DialogContent className="max-w-3xl">
+                  <DialogHeader>
+                    <DialogTitle>Request Ambulance</DialogTitle>
+                  </DialogHeader>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="text-sm text-gray-700">Ambulance</label>
+                      <input
+                        value={ambulanceQuery}
+                        onChange={e => setAmbulanceQuery(e.target.value)}
+                        placeholder="Search by plate number or id"
+                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
+                      />
+                      <select
+                        value={selectedAmbulanceId}
+                        onChange={e => setSelectedAmbulanceId(e.target.value)}
+                        className="w-full border rounded-lg px-3 py-2 mt-2 outline-none bg-white"
+                      >
+                        <option value="">Select ambulance</option>
+                        {filteredAmbulances.map(item => (
+                          <option key={item.id} value={item.id}>
+                            {item.plateNumber} ({item.id.slice(-8).toUpperCase()})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-gray-700">Pickup Address</label>
+                      <input
+                        value={pickupAddress}
+                        onChange={e => setPickupAddress(e.target.value)}
+                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">Destination Address</label>
+                      <input
+                        value={destinationAddress}
+                        onChange={e => setDestinationAddress(e.target.value)}
+                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-gray-700">Pickup Latitude</label>
+                      <input
+                        value={pickupLatitude}
+                        onChange={e => setPickupLatitude(e.target.value)}
+                        placeholder="Auto from address if left empty"
+                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">Pickup Longitude</label>
+                      <input
+                        value={pickupLongitude}
+                        onChange={e => setPickupLongitude(e.target.value)}
+                        placeholder="Auto from address if left empty"
+                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-gray-700">Destination Latitude</label>
+                      <input
+                        value={destinationLatitude}
+                        onChange={e => setDestinationLatitude(e.target.value)}
+                        placeholder="Auto from address if left empty"
+                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">Destination Longitude</label>
+                      <input
+                        value={destinationLongitude}
+                        onChange={e => setDestinationLongitude(e.target.value)}
+                        placeholder="Auto from address if left empty"
+                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-gray-700">Emergency Type</label>
+                      <Select value={emergencyType} onValueChange={setEmergencyType}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select emergency type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Standby">Standby</SelectItem>
+                          <SelectItem value="Emergency">Emergency</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-gray-700">Number of Days</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={numberOfDays}
+                        onChange={e => setNumberOfDays(e.target.value)}
+                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-gray-700">Start Date</label>
+                      <input
+                        type="datetime-local"
+                        value={startDate}
+                        onChange={e => setStartDate(e.target.value)}
+                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-700">End Date</label>
+                      <input
+                        type="datetime-local"
+                        value={endDate}
+                        onChange={e => setEndDate(e.target.value)}
+                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end mt-4">
+                    <Button onClick={handleCreateRequest} disabled={submittingRequest || resolvingLocations}>
+                      {resolvingLocations ? 'Resolving locations...' : submittingRequest ? 'Submitting...' : 'Submit Request'}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
               <RequestFilter
                 onApply={handleApplyFilter}
                 onReset={handleResetFilter}
@@ -339,7 +485,7 @@ const Request = () => {
                 <ArrowDownLeft size={30} />
                 Export
               </Button>
-            </div>
+            </div> */}
           </div>
 
           <div className="flex-1 overflow-auto px-6 lg:px-0 mt-4">
@@ -406,14 +552,13 @@ const Request = () => {
           {/* Pagination */}
           <div className="p-4 flex items-center justify-end">
             <Pagination
-              totalEntriesSize={filteredClaims.length}
+              totalEntriesSize={metaData?.totalCount || filteredClaims.length}
              
-              currentPage={page}
+              currentPage={metaData?.currentPage || page}
               totalPages={totalPages}
               onPageChange={setPage}
               pageSize={pageSize}
-              onPageSizeChange={size => {
-                setPageSize(size);
+              onPageSizeChange={() => {
                 setPage(1);
               }}
             />

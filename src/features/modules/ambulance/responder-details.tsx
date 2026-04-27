@@ -6,7 +6,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {Button} from '@/components/ui/button';
 import {useState} from 'react';
 
 
@@ -45,19 +44,13 @@ export default function ResponderDetails({data}: Props) {
           {/* Doctor Details Section */}
           {data ? (
             <div className="">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-6">
-                  <h1 className="text-primary  text-lg">
-                    Respondent ID: {' '}
-                    <span className="text-gray-600 "> {data?.res_id}</span>{' '}
-                  </h1>
-                </div>
+              <div className="flex items-center justify-end">
 
-                <div className="flex items-center gap-3">
+                {/* <div className="flex items-center gap-3">
                   <Button variant="ghost" className="py-2.5 w-36 rounded-md">
                     Edit
                   </Button>
-                </div>
+                </div> */}
               </div>
               <div className="mt-6">
                 <h1 className="text-primary border-b text-lg py-2">
@@ -83,11 +76,11 @@ export default function ResponderDetails({data}: Props) {
                   </div>
                    <div className="grid grid-cols-2 ">
                     <span className=" text-gray-600">Professional License: </span>
-                    <span className="text-gray-900">{data?.prog_license}</span>
+                    <span className="text-gray-900">{data?.professionalLicense}</span>
                   </div>
                   <div className="grid grid-cols-2 ">
                     <span className=" text-gray-600">Phone Number: </span>
-                    <span className="text-gray-900">{data?.phone}</span>
+                    <span className="text-gray-900">{data?.phoneNumber}</span>
                   </div>
                   <div className="grid grid-cols-2 ">
                     <span className=" text-gray-600">Email: </span>

@@ -18,7 +18,12 @@ import {
   createMarketingCampaignEntry,
   activateMarketingCampaign, 
   deactivateMarketingCampaign,
-  fetchPromoCodes
+  fetchPromoCodes,
+  fetchPromoCodeById,
+  fetchPromoCodeSummary,
+  createPromoCode,
+  activatePromoCode,
+  deactivatePromoCode,
 } from '@/services/thunks';
 import { StatsCards } from '@/components/ui/stats-card';
 import { Download, X, CheckCircle2 } from 'lucide-react';
@@ -50,7 +55,14 @@ const PromotionalCodesPage = () => {
   const {
     list: promoList,
     metaData: promoMetaData,
-    loading: promoLoading
+    selected: selectedPromo,
+    summary: promoSummary,
+    loading: promoLoading,
+    loadingDetail: promoLoadingDetail,
+    loadingSummary: promoLoadingSummary,
+    creating: promoCreating,
+    activating: promoActivating,
+    deactivating: promoDeactivating,
   } = useSelector((s: RootState) => s.promoCodes);
 
   // Tab state
@@ -66,12 +78,13 @@ const PromotionalCodesPage = () => {
   // Detail modal state
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [promoDetailOpen, setPromoDetailOpen] = useState(false);
+  const [selectedPromoId, setSelectedPromoId] = useState<string | null>(null);
 
   // Promo filters / pagination
   const [promoPage, setPromoPage] = useState(1);
   const [promoPageSize, setPromoPageSize] = useState(10);
   const [promoCodeFilter, setPromoCodeFilter] = useState('');
-  const [promoStatusFilter] = useState<string>('');
 
   // Generate Code Dialog State
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
@@ -81,12 +94,14 @@ const PromotionalCodesPage = () => {
   const [userName, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
+  const [promoTitle, setPromoTitle] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   // Fetch summary once
   useEffect(() => {
     dispatch(fetchMarketingCampaignSummary());
+    dispatch(fetchPromoCodeSummary());
   }, [dispatch]);
 
   // Fetch detail when modal opened and id set
@@ -95,6 +110,12 @@ const PromotionalCodesPage = () => {
       dispatch(fetchMarketingCampaignById(selectedId));
     }
   }, [detailOpen, selectedId, dispatch]);
+
+  useEffect(() => {
+    if (promoDetailOpen && selectedPromoId) {
+      dispatch(fetchPromoCodeById(selectedPromoId));
+    }
+  }, [promoDetailOpen, selectedPromoId, dispatch]);
 
   // Fetch influencer codes when filters/page change
   useEffect(() => {
@@ -115,11 +136,9 @@ const PromotionalCodesPage = () => {
       dispatch(fetchPromoCodes({
         Page: promoPage,
         PageSize: promoPageSize,
-        Code: promoCodeFilter || undefined,
-        Status: promoStatusFilter ? Number(promoStatusFilter) : undefined,
       }));
     }
-  }, [dispatch, activeTab, promoPage, promoPageSize, promoCodeFilter, promoStatusFilter]);
+  }, [dispatch, activeTab, promoPage, promoPageSize]);
 
   // Stats cards
   const stats = [
@@ -149,6 +168,33 @@ const PromotionalCodesPage = () => {
     },
   ];
 
+  const promoStats = [
+    {
+      id: 1,
+      title: 'Total Promo Used',
+      value: promoLoadingSummary ? '...' : (promoSummary?.totalPromoCodeUsed ?? 0),
+      borderColor: '#2f80ed',
+      bgColor: 'rgba(80, 159, 239, 0.2)',
+      icon: claim,
+    },
+    {
+      id: 2,
+      title: 'Most Used Promo Code',
+      value: promoLoadingSummary ? '...' : (promoSummary?.code || '-'),
+      borderColor: '#0e9f2e',
+      bgColor: 'rgba(14, 159, 46, 0.05)',
+      icon: approved,
+    },
+    {
+      id: 3,
+      title: 'Promo Title',
+      value: promoLoadingSummary ? '...' : (promoSummary?.title || '-'),
+      borderColor: '#CFC923',
+      bgColor: 'rgba(207, 201, 35, 0.05)',
+      icon: disputed,
+    },
+  ];
+
   // Get status label for influencer (string status)
   const getInfluencerStatusLabel = (status: string) => {
     const s = (status || '').toLowerCase();
@@ -161,13 +207,13 @@ const PromotionalCodesPage = () => {
     }
   };
 
-  // Get status label for promo (number status)
-  const getPromoStatusLabel = (status: number) => {
-    if (status === 1) {
+  // Get status label for promo (string status)
+  const getPromoStatusLabel = (status: string) => {
+    const normalized = (status || '').toLowerCase();
+    if (normalized === 'active') {
       return { label: 'Active', className: 'text-green-700 bg-green-100' };
-    } else {
-      return { label: 'Deactivated', className: 'text-gray-600 bg-gray-100' };
     }
+    return { label: status || 'Inactive', className: 'text-gray-600 bg-gray-100' };
   };
 
   // Influencer handlers
@@ -210,28 +256,43 @@ const PromotionalCodesPage = () => {
   };
 
   // Promo handlers
-//   const handleActivatePromo = async (id: string) => {
-//     try {
-//       await dispatch(activatePromoCode(id)).unwrap();
-//       toast.success('Promo code activated successfully');
-//     } catch (error) {
-//       toast.error(typeof error === 'string' ? error : 'Failed to activate promo code');
-//     }
-//   };
+  const handleActivatePromo = async (id: string) => {
+    try {
+      await dispatch(activatePromoCode(id)).unwrap();
+      toast.success('Promo code activated successfully');
+      if (selectedPromoId === id) {
+        dispatch(fetchPromoCodeById(id));
+      }
+      dispatch(fetchPromoCodes({Page: promoPage, PageSize: promoPageSize}));
+      dispatch(fetchPromoCodeSummary());
+    } catch (error) {
+      toast.error(typeof error === 'string' ? error : 'Failed to activate promo code');
+    }
+  };
 
-//   const handleDeactivatePromo = async (id: string) => {
-//     try {
-//       await dispatch(deactivatePromoCode(id)).unwrap();
-//       toast.success('Promo code deactivated successfully');
-//     } catch (error) {
-//       toast.error(typeof error === 'string' ? error : 'Failed to deactivate promo code');
-//     }
-//   };
+  const handleDeactivatePromo = async (id: string) => {
+    try {
+      await dispatch(deactivatePromoCode(id)).unwrap();
+      toast.success('Promo code deactivated successfully');
+      if (selectedPromoId === id) {
+        dispatch(fetchPromoCodeById(id));
+      }
+      dispatch(fetchPromoCodes({Page: promoPage, PageSize: promoPageSize}));
+      dispatch(fetchPromoCodeSummary());
+    } catch (error) {
+      toast.error(typeof error === 'string' ? error : 'Failed to deactivate promo code');
+    }
+  };
 
   // Open detail modal
   const handleViewDetails = (id: string) => {
     setSelectedId(id);
     setDetailOpen(true);
+  };
+
+  const handleViewPromoDetails = (id: string) => {
+    setSelectedPromoId(id);
+    setPromoDetailOpen(true);
   };
 
   // Export influencer codes
@@ -266,6 +327,7 @@ const PromotionalCodesPage = () => {
     setUserName('');
     setEmail('');
     setGeneratedCode('');
+    setPromoTitle('');
     setShowSuccess(false);
   };
 
@@ -313,16 +375,44 @@ const PromotionalCodesPage = () => {
     }
   };
 
-  // Handle create promo code (placeholder for future implementation)
+  // Handle create promo code
   const handleCreatePromoCode = async () => {
-    // TODO: Implement promo code creation when API is available
-    toast.error('Promo code creation is not yet available');
+    if (!promoTitle.trim()) {
+      toast.error('Please enter promo title');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const result = await dispatch(createPromoCode({Title: promoTitle.trim()})).unwrap();
+      setGeneratedCode(result?.code || '');
+      setShowSuccess(true);
+      setActiveTab('promo');
+      setPromoPage(1);
+      setTimeout(() => {
+        dispatch(fetchPromoCodes({Page: 1, PageSize: promoPageSize}));
+        dispatch(fetchPromoCodeSummary());
+      }, 1500);
+    } catch (error) {
+      toast.error(typeof error === 'string' ? error : 'Failed to create promo code');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Check if influencer form is valid for submission
   const isInfluencerFormValid = () => {
     return firstName.trim() && lastName.trim() && userName.trim() && email.trim();
   };
+
+  const filteredPromoList = promoList.filter(item => {
+    const query = promoCodeFilter.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      item.code.toLowerCase().includes(query) ||
+      item.title.toLowerCase().includes(query)
+    );
+  });
 
   return (
     <DashboardLayout>
@@ -334,7 +424,7 @@ const PromotionalCodesPage = () => {
         </div>
 
         {/* Stats Section */}
-        <StatsCards stats={stats} error={false} />
+        <StatsCards stats={activeTab === 'promo' ? promoStats : stats} error={false} />
 
         {/* Table Section with Tabs */}
         <div className="lg:mx-8 mt-6 bg-white mb-32 rounded-md flex flex-col">
@@ -509,29 +599,29 @@ const PromotionalCodesPage = () => {
                   <TableHeader>
                     <TableRow className="bg-gray-50">
                       <TableHead className="whitespace-nowrap">Date</TableHead>
-                      <TableHead className="whitespace-nowrap">Referral Code</TableHead>
-                      <TableHead className="whitespace-nowrap">Name</TableHead>
-                      <TableHead className="whitespace-nowrap">Email</TableHead>
+                      <TableHead className="whitespace-nowrap">Promo Code</TableHead>
+                      <TableHead className="whitespace-nowrap">Title</TableHead>
+                      
                       <TableHead className="whitespace-nowrap">Reg. Users</TableHead>
                       <TableHead className="whitespace-nowrap">Status</TableHead>
-                      <TableHead className="whitespace-nowrap w-24"></TableHead>
+                      <TableHead className="whitespace-nowrap w-48">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {promoLoading ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-10">
+                        <TableCell colSpan={6} className="text-center py-10">
                           <Loader height="h-12" />
                         </TableCell>
                       </TableRow>
-                    ) : promoList.length === 0 ? (
+                    ) : filteredPromoList.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-10 text-sm text-gray-500">
+                        <TableCell colSpan={6} className="text-center py-10 text-sm text-gray-500">
                           No promo codes found
                         </TableCell>
                       </TableRow>
                     ) : (
-                      promoList.map(item => {
+                      filteredPromoList.map(item => {
                         const statusInfo = getPromoStatusLabel(item.status);
                         return (
                           <TableRow key={item.id} className="hover:bg-gray-50">
@@ -539,17 +629,36 @@ const PromotionalCodesPage = () => {
                               {item.dateCreated ? new Date(item.dateCreated).toLocaleDateString('en-GB') : '-'}
                             </TableCell>
                             <TableCell className="font-medium whitespace-nowrap">{item.code}</TableCell>
-                            <TableCell className="whitespace-nowrap">{item.description || '-'}</TableCell>
-                            <TableCell className="whitespace-nowrap">-</TableCell>
-                            <TableCell className="whitespace-nowrap">{item.usageCount}</TableCell>
+                            <TableCell className="whitespace-nowrap">{item.title || '-'}</TableCell>
+                            
+                            <TableCell className="whitespace-nowrap">{item.totalUsersRegistered}</TableCell>
                             <TableCell className="whitespace-nowrap">
                               <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusInfo.className}`}>
                                 ● {statusInfo.label}
                               </span>
                             </TableCell>
-                            <TableCell className="whitespace-nowrap">
+                            <TableCell className="whitespace-nowrap flex items-center gap-2">
+                              {/* {(item.status || '').toLowerCase() === 'active' ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={promoDeactivating}
+                                  onClick={() => handleDeactivatePromo(item.id)}
+                                >
+                                  Deactivate
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={promoActivating}
+                                  onClick={() => handleActivatePromo(item.id)}
+                                >
+                                  Activate
+                                </Button>
+                              )} */}
                               <button
-                                onClick={() => {}}
+                                onClick={() => handleViewPromoDetails(item.id)}
                                 className="text-primary text-sm hover:underline"
                               >
                                 View Details
@@ -642,8 +751,8 @@ const PromotionalCodesPage = () => {
                 <Table className="min-w-[500px]">
                   <TableHeader>
                     <TableRow className="bg-gray-50">
-                      <TableHead className="whitespace-nowrap">Name</TableHead>
-                      <TableHead className="whitespace-nowrap">Email</TableHead>
+                      <TableHead className="whitespace-nowrap">Title</TableHead>
+                      
                       <TableHead className="whitespace-nowrap">Phone</TableHead>
                       <TableHead className="whitespace-nowrap">Date Registered</TableHead>
                     </TableRow>
@@ -664,6 +773,63 @@ const PromotionalCodesPage = () => {
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-gray-500">No data</div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Promo Detail Modal */}
+      <Dialog open={promoDetailOpen} onOpenChange={(o) => { if (!o) { setPromoDetailOpen(false); } }}>
+        <DialogContent className="z-[100] max-h-[80vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Promo Code Detail</DialogTitle>
+          </DialogHeader>
+          {promoLoadingDetail ? (
+            <div className="py-10 flex justify-center"><Loader height="h-20" /></div>
+          ) : selectedPromo ? (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500 text-sm">Status:</span>
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-sm text-xs font-medium ${
+                    (selectedPromo.status || '').toLowerCase() === 'active'
+                      ? 'text-green-700 bg-green-100'
+                      : 'text-gray-600 bg-gray-100'
+                  }`}>
+                    • {selectedPromo.status || 'Unknown'}
+                  </span>
+                </div>
+                {(selectedPromo.status || '').toLowerCase() === 'active' ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={promoDeactivating}
+                    onClick={() => handleDeactivatePromo(selectedPromo.id)}
+                  >
+                    Deactivate
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={promoActivating}
+                    onClick={() => handleActivatePromo(selectedPromo.id)}
+                  >
+                    Activate
+                  </Button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div><span className="text-gray-500">Code:</span> <span className="font-medium ml-1">{selectedPromo.code}</span></div>
+                <div><span className="text-gray-500">Date Created:</span> <span className="font-medium ml-1">{selectedPromo.dateCreated ? new Date(selectedPromo.dateCreated).toLocaleDateString('en-GB') : '-'}</span></div>
+                <div><span className="text-gray-500">Title:</span> <span className="font-medium ml-1">{selectedPromo.title || '-'}</span></div>
+                <div><span className="text-gray-500">Last Modified Date:</span> <span className="font-medium ml-1">{selectedPromo.lastModifiedDate ? new Date(selectedPromo.lastModifiedDate).toLocaleDateString('en-GB') : '-'}</span></div>
+                <div><span className="text-gray-500">Last Modified By:</span> <span className="font-medium ml-1">{selectedPromo.lastModifiedBy || '-'}</span></div>
+                <div><span className="text-gray-500">Total Users:</span> <span className="font-medium ml-1">{selectedPromo.promoCodeUsers?.length || 0}</span></div>
               </div>
             </div>
           ) : (
@@ -776,18 +942,23 @@ const PromotionalCodesPage = () => {
                   </>
                 )}
 
-                {/* Promo Code Form (placeholder) */}
+                {/* Promo Code Form */}
                 {codeType === 'promo' && (
                   <>
-                    <div className="py-4 text-center text-gray-500 text-sm">
-                      Promo code creation coming soon
+                    <div className="space-y-2">
+                      <Label className="text-sm text-gray-600">Promo title</Label>
+                      <Input
+                        placeholder="Enter promo title"
+                        value={promoTitle}
+                        onChange={(e) => setPromoTitle(e.target.value)}
+                      />
                     </div>
                     <Button
                       className="w-full mt-4"
-                      disabled
+                      disabled={!promoTitle.trim() || isSubmitting || promoCreating}
                       onClick={handleCreatePromoCode}
                     >
-                      Generate Code
+                      {isSubmitting || promoCreating ? 'Generating...' : 'Generate Code'}
                     </Button>
                   </>
                 )}
@@ -806,3 +977,4 @@ const PromotionalCodesPage = () => {
 };
 
 export default PromotionalCodesPage;
+

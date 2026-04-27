@@ -88,10 +88,10 @@ const DispatchHistory = () => {
   }, [notes, page]);
 
   const columns: ColumnDef<any>[] = [
-    {
-      accessorKey: 'amb_id',
-      header: 'Ambulance ID',
-    },
+    // {
+    //   accessorKey: 'amb_id',
+    //   header: 'Ambulance ID',
+    // },
     {
       accessorKey: 'assigned_by',
       header: 'Assigned By',

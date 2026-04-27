@@ -5,6 +5,7 @@ import {fetchAmbulanceRequests} from '../thunks';
 
 const initialState: AmbulanceRequestState = {
   requests: [],
+  metaData: null,
   currentRequest: null,
   loading: false,
   error: null,
@@ -31,6 +32,7 @@ const ambulanceRequestSlice = createSlice({
     },
     clearRequests: state => {
       state.requests = [];
+      state.metaData = null;
       state.currentRequest = null;
       state.selectedRequestId = null;
       state.error = null;
@@ -67,7 +69,8 @@ const ambulanceRequestSlice = createSlice({
       })
       .addCase(fetchAmbulanceRequests.fulfilled, (state, action) => {
         state.loading = false;
-        state.requests = action.payload;
+        state.requests = action.payload.requests;
+        state.metaData = action.payload.metaData;
       })
       .addCase(fetchAmbulanceRequests.rejected, (state, action) => {
         state.loading = false;

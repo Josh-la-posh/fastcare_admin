@@ -984,7 +984,7 @@ export const createAmenity = createAsyncThunk(
         name: payload.name,
         description: payload.description,
       };
-      const res = await apiClient.post("/amenity", requestBody);
+      const res = await apiClient.post("/amenities", requestBody);
       return res.data?.data ?? res.data;
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to create amenity"));

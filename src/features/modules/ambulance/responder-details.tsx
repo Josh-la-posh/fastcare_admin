@@ -65,7 +65,7 @@ export default function ResponderDetails({data}: Props) {
                   </div>
                  
                   <div className="grid grid-cols-2 ">
-                    <span className=" text-gray-600">Certification Status: </span>
+                    <span className=" text-gray-600">License Status: </span>
                     <span className="bg-green-100 text-green-500 p-2 rounded-lg w-24">
                       {data?.license}
                     </span>

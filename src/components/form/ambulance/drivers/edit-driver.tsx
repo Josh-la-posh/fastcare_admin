@@ -54,7 +54,7 @@ export default function EditDriver({data}: Props) {
   const handleSubmit = async () => {
     if (!data?.id) return toast.error('Driver id is missing');
     if (!name.trim()) return toast.error('Name is required');
-    if (!certificationStatus) return toast.error('Certification status is required');
+    if (!certificationStatus) return toast.error('License status is required');
     if (!licenseNumber.trim()) return toast.error('License number is required');
     if (!phoneNumber.trim()) return toast.error('Phone number is required');
     if (!email.trim()) return toast.error('Email is required');
@@ -127,7 +127,7 @@ export default function EditDriver({data}: Props) {
             </div>
 
             <div>
-              <label className="text-gray-800">Certification Status</label>
+              <label className="text-gray-800">License Status</label>
               <Select value={certificationStatus} onValueChange={setCertificationStatus}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select option." />

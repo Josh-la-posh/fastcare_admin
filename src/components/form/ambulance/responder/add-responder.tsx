@@ -66,7 +66,7 @@ export default function AddResponder() {
   };
 
   const validateCertificationStatus = (value: string) => {
-    if (!value) return 'Certification status is required';
+    if (!value) return 'License status is required';
     return '';
   };
 

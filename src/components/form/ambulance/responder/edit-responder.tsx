@@ -56,7 +56,7 @@ export default function EditResponder({data}: Props) {
     if (!data?.id) return toast.error('Responder id is missing');
     if (!name.trim()) return toast.error('Name is required');
     if (!professionalLicense.trim()) return toast.error('Professional license is required');
-    if (!certificationStatus) return toast.error('Certification status is required');
+    if (!certificationStatus) return toast.error('License status is required');
     if (!phoneNumber.trim()) return toast.error('Phone number is required');
     if (!email.trim()) return toast.error('Email is required');
     if (!address.trim()) return toast.error('Address is required');

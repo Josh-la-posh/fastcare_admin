@@ -892,6 +892,55 @@ export const fetchAmbulanceRequests = createAsyncThunk(
   }
 );
 
+export const fetchAmbulanceBookings = createAsyncThunk(
+  "ambulanceBookings/fetchAll",
+  async (
+    params:
+      | {
+          Page?: number;
+          PageSize?: number;
+          date?: string;
+        }
+      | undefined,
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get("/ambulanceBookings/paginated", {
+        params: {
+          ...(params?.Page ? { Page: params.Page } : {}),
+          ...(params?.PageSize ? { PageSize: params.PageSize } : {}),
+          ...(params?.date ? { date: params.date } : {}),
+        },
+      });
+      return {
+        requests: res.data?.data ?? [],
+        metaData: res.data?.metaData ?? null,
+      };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to fetch ambulance bookings"));
+    }
+  }
+);
+
+export const assignAmbulanceBooking = createAsyncThunk(
+  "ambulanceBookings/assign",
+  async (
+    payload: {
+      ambulanceBookingId: string;
+      driverId: string;
+      respondentId: string;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.post("/ambulanceBookings/assign", payload);
+      return res.data?.data ?? res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to assign ambulance booking"));
+    }
+  }
+);
+
 export const createAmbulanceRequest = createAsyncThunk(
   "ambulanceRequests/create",
   async (

@@ -1,7 +1,7 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {AmbulanceRequestState, AmbulanceRequest} from '@/types';
 import toast from 'react-hot-toast';
-import {fetchAmbulanceRequests} from '../thunks';
+import {fetchAmbulanceBookings, fetchAmbulanceRequests} from '../thunks';
 
 const initialState: AmbulanceRequestState = {
   requests: [],
@@ -76,6 +76,21 @@ const ambulanceRequestSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
         toast.error('Failed to fetch ambulance requests');
+      })
+      // Fetch all ambulance bookings
+      .addCase(fetchAmbulanceBookings.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAmbulanceBookings.fulfilled, (state, action) => {
+        state.loading = false;
+        state.requests = action.payload.requests;
+        state.metaData = action.payload.metaData;
+      })
+      .addCase(fetchAmbulanceBookings.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+        toast.error('Failed to fetch ambulance bookings');
       });
   },
 });

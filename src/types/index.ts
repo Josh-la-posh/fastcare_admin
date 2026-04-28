@@ -248,20 +248,28 @@ export interface AllAmbulancesState {
 // Ambulance Request Types
 export interface AmbulanceRequest {
   id: string;
+  ambulanceProviderId?: string;
+  assignedByUser?: string | null;
   patientName: string;
   ambulanceId: string;
   ambulanceNumber: string | null;
+  ambulanceType?: string;
   pickupAddress: string | null;
   pickupLocation: { latitude: number; longitude: number } | null;
+  destinationAddress?: string | null;
   dropoffAddress: string | null;
+  destinationLocation?: { latitude: number; longitude: number } | null;
   dropoffLocation: { latitude: number; longitude: number } | null;
   status: string;
   requestDate: string;
   completedDate: string | null;
   fare: number | null;
+  amountPaid?: number;
+  distance?: number;
+  amenities?: string | null;
+  dateAssigned?: string | null;
   emergencyType?: string;
   creationDate?: string;
-  ambulanceType?: string;
 }
 
 export interface AmbulanceRequestState {

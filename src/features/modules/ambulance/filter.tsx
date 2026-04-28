@@ -10,8 +10,6 @@ import {useState} from 'react';
 
 type RequestFilterValues = {
   requestDate?: string;
-  address?: string;
-  ambulanceLicensePlate?: string;
 };
 
 type Props = {
@@ -21,21 +19,15 @@ type Props = {
 
 export const RequestFilter = ({onApply, onReset}: Props) => {
   const [requestDate, setRequestDate] = useState<string | undefined>();
-  const [address, setAddress] = useState<string | undefined>();
-  const [ambulanceLicensePlate, setAmbulanceLicensePlate] = useState<string | undefined>();
 
   const handleApply = () => {
     onApply({
       requestDate,
-      address: address?.trim() || undefined,
-      ambulanceLicensePlate: ambulanceLicensePlate?.trim() || undefined,
     });
   };
 
   const handleReset = () => {
     setRequestDate(undefined);
-    setAddress(undefined);
-    setAmbulanceLicensePlate(undefined);
     onReset();
   };
 
@@ -53,37 +45,14 @@ export const RequestFilter = ({onApply, onReset}: Props) => {
             Reset filter
           </span>
         </div>
-        {/* 2x2 Grid Form */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           <div className="flex flex-col gap-2">
-            <Label>Request Date</Label>
+            <Label>Booking Date</Label>
             <input
               type="date"
               className="border border-gray-300 rounded-md py-2 px-3"
               value={requestDate || ''}
               onChange={e => setRequestDate(e.target.value || undefined)}
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label>Address</Label>
-            <input
-              type="text"
-              className="border border-gray-300 rounded-md py-2 px-3"
-              placeholder="Enter pickup address"
-              value={address || ''}
-              onChange={e => setAddress(e.target.value || undefined)}
-            />
-          </div>
-
-          <div className="flex flex-col gap-2 sm:col-span-2">
-            <Label>Ambulance License Plate</Label>
-            <input
-              type="text"
-              className="border border-gray-300 rounded-md py-2 px-3"
-              placeholder="Enter license plate"
-              value={ambulanceLicensePlate || ''}
-              onChange={e => setAmbulanceLicensePlate(e.target.value || undefined)}
             />
           </div>
         </div>

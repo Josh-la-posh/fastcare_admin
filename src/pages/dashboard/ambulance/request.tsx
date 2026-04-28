@@ -26,6 +26,7 @@ import {
 } from '@tanstack/react-table';
 
 import {Pagination} from '@/components/ui/pagination';
+import RequestDetails from '@/features/modules/ambulance/request-details';
 import {RequestFilter} from '@/features/modules/ambulance/filter';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/services/store';
@@ -209,6 +210,11 @@ const Request = () => {
         </span>
       ),
     },
+    {
+      id: 'action',
+      header: 'Action',
+      cell: ({row}) => <RequestDetails data={row.original.rawData} />,
+    },
   ];
 
   const table = useReactTable({
@@ -313,157 +319,9 @@ const Request = () => {
             <div className="flex items-center gap-4">
               <h1 className="text-lg text-gray-800">All Ambulance Requests</h1>
             </div>
-          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
               <RequestFilter onApply={handleApplyFilter} onReset={handleResetFilter} />
             </div>
-            {/* <div className="flex gap-4 items-center">
-              <Button className="py-2.5 w-44" onClick={() => setOpenRequestDialog(true)}>
-                Request Ambulance
-              </Button>
-              <Dialog open={openRequestDialog} onOpenChange={setOpenRequestDialog}>
-                <DialogContent className="max-w-3xl">
-                  <DialogHeader>
-                    <DialogTitle>Request Ambulance</DialogTitle>
-                  </DialogHeader>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="md:col-span-2">
-                      <label className="text-sm text-gray-700">Ambulance</label>
-                      <input
-                        value={ambulanceQuery}
-                        onChange={e => setAmbulanceQuery(e.target.value)}
-                        placeholder="Search by plate number or id"
-                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
-                      />
-                      <select
-                        value={selectedAmbulanceId}
-                        onChange={e => setSelectedAmbulanceId(e.target.value)}
-                        className="w-full border rounded-lg px-3 py-2 mt-2 outline-none bg-white"
-                      >
-                        <option value="">Select ambulance</option>
-                        {filteredAmbulances.map(item => (
-                          <option key={item.id} value={item.id}>
-                            {item.plateNumber} ({item.id.slice(-8).toUpperCase()})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="text-sm text-gray-700">Pickup Address</label>
-                      <input
-                        value={pickupAddress}
-                        onChange={e => setPickupAddress(e.target.value)}
-                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm text-gray-700">Destination Address</label>
-                      <input
-                        value={destinationAddress}
-                        onChange={e => setDestinationAddress(e.target.value)}
-                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-sm text-gray-700">Pickup Latitude</label>
-                      <input
-                        value={pickupLatitude}
-                        onChange={e => setPickupLatitude(e.target.value)}
-                        placeholder="Auto from address if left empty"
-                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm text-gray-700">Pickup Longitude</label>
-                      <input
-                        value={pickupLongitude}
-                        onChange={e => setPickupLongitude(e.target.value)}
-                        placeholder="Auto from address if left empty"
-                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-sm text-gray-700">Destination Latitude</label>
-                      <input
-                        value={destinationLatitude}
-                        onChange={e => setDestinationLatitude(e.target.value)}
-                        placeholder="Auto from address if left empty"
-                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm text-gray-700">Destination Longitude</label>
-                      <input
-                        value={destinationLongitude}
-                        onChange={e => setDestinationLongitude(e.target.value)}
-                        placeholder="Auto from address if left empty"
-                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-sm text-gray-700">Emergency Type</label>
-                      <Select value={emergencyType} onValueChange={setEmergencyType}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select emergency type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Standby">Standby</SelectItem>
-                          <SelectItem value="Emergency">Emergency</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <label className="text-sm text-gray-700">Number of Days</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={numberOfDays}
-                        onChange={e => setNumberOfDays(e.target.value)}
-                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-sm text-gray-700">Start Date</label>
-                      <input
-                        type="datetime-local"
-                        value={startDate}
-                        onChange={e => setStartDate(e.target.value)}
-                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm text-gray-700">End Date</label>
-                      <input
-                        type="datetime-local"
-                        value={endDate}
-                        onChange={e => setEndDate(e.target.value)}
-                        className="w-full border rounded-lg px-3 py-2 mt-1 outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end mt-4">
-                    <Button onClick={handleCreateRequest} disabled={submittingRequest || resolvingLocations}>
-                      {resolvingLocations ? 'Resolving locations...' : submittingRequest ? 'Submitting...' : 'Submit Request'}
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-              <RequestFilter
-                onApply={handleApplyFilter}
-                onReset={handleResetFilter}
-              />
-              <Button variant="ghost" className="py-2.5 w-44">
-                <ArrowDownLeft size={30} />
-                Export
-              </Button>
-            </div> */}
           </div>
 
           <div className="flex-1 overflow-auto px-6 lg:px-0 mt-4">

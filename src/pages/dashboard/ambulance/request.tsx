@@ -195,7 +195,7 @@ const Request = () => {
       header: 'Client Name',
       cell: ({row}) => (
         <span className={row.original.isNew ? 'font-semibold text-gray-900' : ''}>
-          {row.original.name}
+          {row.original?.rawData?.clientName}
         </span>
       ),
     },
@@ -279,7 +279,7 @@ const Request = () => {
     });
   }, [summary]);
 
-  if (loading) {
+  if (loading && requests.length === 0) {
     return (
       <DashboardLayout>
         <div className="flex justify-center items-center h-64">
@@ -289,7 +289,7 @@ const Request = () => {
     );
   }
 
-  if (error) {
+  if (error && requests.length === 0) {
     return (
       <DashboardLayout>
         <div className="flex justify-center items-center h-64">
@@ -335,7 +335,7 @@ const Request = () => {
                 className="border rounded-lg hidden lg:block px-4 py-2 lg:w-96 lg:max-w-2xl focus:outline-none"
               />
             </div>
-            <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
               <RequestFilter onApply={handleApplyFilter} onReset={handleResetFilter} />
             </div>
             {/* <div className="flex gap-4 items-center">
@@ -489,6 +489,14 @@ const Request = () => {
           </div>
 
           <div className="flex-1 overflow-auto px-6 lg:px-0 mt-4">
+            {error && requests.length > 0 && (
+              <div className="px-6 py-2 text-sm text-red-500">
+                Failed to refresh requests. Showing last loaded data.
+              </div>
+            )}
+            {loading && (
+              <div className="px-6 py-2 text-sm text-gray-500">Refreshing requests...</div>
+            )}
             <Table className="min-w-[600px]">
               <TableHeader>
                 {table.getHeaderGroups().map(headerGroup => (

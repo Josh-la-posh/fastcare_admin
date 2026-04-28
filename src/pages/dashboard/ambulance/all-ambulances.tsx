@@ -42,7 +42,12 @@ const formatLocation = (location: { latitude: number; longitude: number } | null
 // Helper function to format price
 const formatPrice = (price: number | null) => {
   if (price === null || price === undefined) return 'N/A';
-  return `$${price.toFixed(2)}`;
+  return new Intl.NumberFormat('en-NG', {
+    style: 'currency',
+    currency: 'NGN',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(price);
 };
 
 const AllAmbulances = () => {

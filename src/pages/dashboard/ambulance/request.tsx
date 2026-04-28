@@ -26,7 +26,6 @@ import {
 } from '@tanstack/react-table';
 
 import {Pagination} from '@/components/ui/pagination';
-import RequestDetails from '@/features/modules/ambulance/request-details';
 import {RequestFilter} from '@/features/modules/ambulance/filter';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/services/store';
@@ -87,7 +86,6 @@ const claimStats = [
 ];
 
 const Request = () => {
-  const [searchTerm, setSearchTerm] = useState('');
   const dispatch = useDispatch<AppDispatch>();
   const { requests, loading, error, metaData } = useSelector((state: RootState) => state.ambulanceRequests);
 
@@ -149,13 +147,7 @@ const Request = () => {
     }));
   }, [requests]);
 
-  const filteredClaims = transformedRequests.filter(
-    item =>
-      item.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.no.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.request_id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredClaims = transformedRequests;
 
   const totalPages = metaData?.totalPages || 1;
   const paginatedRequests = filteredClaims;
@@ -215,13 +207,6 @@ const Request = () => {
         <span className={row.original.isNew ? 'font-semibold text-gray-900' : ''}>
           {row.original.type}
         </span>
-      ),
-    },
-    {
-      id: 'action',
-      header: 'Action',
-      cell: ({row}) => (
-        <RequestDetails data={row.original.rawData} />
       ),
     },
   ];
@@ -327,13 +312,6 @@ const Request = () => {
           <div className="flex flex-wrap gap-4 justify-between items-center p-6">
             <div className="flex items-center gap-4">
               <h1 className="text-lg text-gray-800">All Ambulance Requests</h1>
-              <input
-                type="text"
-                placeholder="Search location, ambulance number, or type"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="border rounded-lg hidden lg:block px-4 py-2 lg:w-96 lg:max-w-2xl focus:outline-none"
-              />
             </div>
           <div className="flex items-center gap-3">
               <RequestFilter onApply={handleApplyFilter} onReset={handleResetFilter} />
@@ -544,11 +522,6 @@ const Request = () => {
                     >
                       <div className="flex flex-col items-center justify-center">
                         <span className="font-medium">No ambulance requests found</span>
-                        {searchTerm && (
-                          <span className="text-sm text-gray-500 mt-1">
-                            Try adjusting your search terms
-                          </span>
-                        )}
                       </div>
                     </TableCell>
                   </TableRow>

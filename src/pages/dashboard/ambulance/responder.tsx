@@ -77,7 +77,7 @@ const Responders = () => {
     },
     {
       accessorKey: 'license',
-      header: 'Certification Status',
+      header: 'License Status',
     },
     {
       accessorKey: 'professionalLicense',

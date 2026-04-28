@@ -58,7 +58,7 @@ export default function AddDriver() {
   };
 
   const validateCertificationStatus = (value: string) => {
-    if (!value) return 'Certification status is required';
+    if (!value) return 'License status is required';
     return '';
   };
 
@@ -205,7 +205,7 @@ export default function AddDriver() {
             </div>
 
             <div>
-              <label className="text-gray-800">Certification Status</label>
+              <label className="text-gray-800">License Status</label>
               <Select
                 value={certificationStatus}
                 onValueChange={val => {

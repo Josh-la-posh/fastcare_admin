@@ -7,7 +7,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {Button} from '@/components/ui/button';
-import {useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {
   Select,
   SelectContent,
@@ -16,6 +16,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {Label} from '@/components/ui/label';
+import {useDispatch, useSelector} from 'react-redux';
+import {AppDispatch, RootState} from '@/services/store';
+import {fetchDrivers, fetchRespondents} from '@/services/thunks';
 
 type Props = {
   data?: any;
@@ -27,8 +30,16 @@ const formatDate = (dateString?: string | null) => {
 };
 
 export default function RequestDetails({data}: Props) {
+  const dispatch = useDispatch<AppDispatch>();
+  const {drivers} = useSelector((state: RootState) => state.drivers);
+  const {respondents} = useSelector((state: RootState) => state.respondents);
+
   const [open, setOpen] = useState(false);
-  const requestId = data?.id ? data.id.slice(-8).toUpperCase() : 'N/A';
+  const [selectedDriverId, setSelectedDriverId] = useState('');
+  const [selectedResponderId, setSelectedResponderId] = useState('');
+  const [isLoadingAssignees, setIsLoadingAssignees] = useState(false);
+  const [hasLoadedAssignees, setHasLoadedAssignees] = useState(false);
+
   const emergencyType = data?.emergencyType || 'N/A';
   const pickupAddress =
     data?.pickupAddress ||
@@ -41,6 +52,42 @@ export default function RequestDetails({data}: Props) {
       ? `${data.destinationLocation.latitude}, ${data.destinationLocation.longitude}`
       : 'N/A');
   const requestTime = formatDate(data?.creationDate || data?.requestDate || null);
+
+  useEffect(() => {
+    const loadAssignees = async () => {
+      if (!open || hasLoadedAssignees) return;
+      setIsLoadingAssignees(true);
+      try {
+        await Promise.all([
+          dispatch(fetchDrivers()).unwrap(),
+          dispatch(fetchRespondents()).unwrap(),
+        ]);
+        setHasLoadedAssignees(true);
+      } finally {
+        setIsLoadingAssignees(false);
+      }
+    };
+
+    void loadAssignees();
+  }, [dispatch, hasLoadedAssignees, open]);
+
+  const driverOptions = useMemo(
+    () =>
+      drivers.map(driver => ({
+        id: driver.id,
+        label: `${driver.name}${driver.licenseNumber ? ` (${driver.licenseNumber})` : ''}`,
+      })),
+    [drivers],
+  );
+
+  const responderOptions = useMemo(
+    () =>
+      respondents.map(responder => ({
+        id: responder.id,
+        label: `${responder.name}${responder.professionalLicense ? ` (${responder.professionalLicense})` : ''}`,
+      })),
+    [respondents],
+  );
 
   return (
     <>
@@ -74,13 +121,7 @@ export default function RequestDetails({data}: Props) {
           {/* Doctor Details Section */}
           {data ? (
             <div className="">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-6">
-                  <h1 className="text-primary  text-lg">
-                    Request ID{' '}
-                    <span className="text-gray-600 ">#{requestId}</span>{' '}
-                  </h1>
-                </div>
+              <div className="flex items-center justify-end">
 
                 <div className="flex items-center gap-3">
                   <Button type="button" className="py-2.5 w-36 rounded-md">
@@ -97,7 +138,7 @@ export default function RequestDetails({data}: Props) {
                 <div className="space-y-3 ">
                   <div className="grid grid-cols-2  ">
                     <span className=" text-gray-600">Client Name: </span>
-                    <span className="text-gray-900">{data?.patientName || 'N/A'}</span>
+                    <span className="text-gray-900">{data?.clientName || 'N/A'}</span>
                   </div>
                   <div className="grid grid-cols-2 ">
                     <span className=" text-gray-600">Request Type: </span>
@@ -133,26 +174,56 @@ export default function RequestDetails({data}: Props) {
                 <div className="mt-6 flex items-center gap-4 ">
                   <div className="flex flex-col gap-2 w-full">
                     <Label>Driver</Label>
-                    <Select>
+                    <Select value={selectedDriverId} onValueChange={setSelectedDriverId}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select available driver..." />
+                        <SelectValue
+                          placeholder={
+                            isLoadingAssignees
+                              ? 'Loading drivers...'
+                              : 'Select available driver...'
+                          }
+                        />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="driver">Driver</SelectItem>
-                        
+                        {driverOptions.length ? (
+                          driverOptions.map(driver => (
+                            <SelectItem key={driver.id} value={driver.id}>
+                              {driver.label}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-driver" disabled>
+                            No drivers available
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="flex flex-col gap-2 w-full">
                     <Label>Responder</Label>
-                    <Select>
+                    <Select value={selectedResponderId} onValueChange={setSelectedResponderId}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select available responder..." />
+                        <SelectValue
+                          placeholder={
+                            isLoadingAssignees
+                              ? 'Loading responders...'
+                              : 'Select available responder...'
+                          }
+                        />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Responder</SelectItem>
-                       
+                        {responderOptions.length ? (
+                          responderOptions.map(responder => (
+                            <SelectItem key={responder.id} value={responder.id}>
+                              {responder.label}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-responder" disabled>
+                            No responders available
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>

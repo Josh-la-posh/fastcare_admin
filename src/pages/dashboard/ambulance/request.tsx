@@ -30,7 +30,7 @@ import RequestDetails from '@/features/modules/ambulance/request-details';
 import {RequestFilter} from '@/features/modules/ambulance/filter';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/services/store';
-import { fetchAmbulanceRequests, fetchAmbulanceSummary } from '@/services/thunks';
+import { fetchAmbulanceBookings, fetchAmbulanceSummary } from '@/services/thunks';
 import { Loader } from '@/components/ui/loading';
 
 // Helper function to format date
@@ -41,8 +41,8 @@ const formatDate = (dateString: string | null) => {
 
 // Helper function to get pickup address
 const getPickupAddress = (request: any) => {
-  return request.pickupAddress || 
-         `${request.pickupLocation?.latitude?.toFixed(4)}, ${request.pickupLocation?.longitude?.toFixed(4)}` || 
+  return request.pickupAddress ||
+         `${request.pickupLocation?.latitude?.toFixed(4)}, ${request.pickupLocation?.longitude?.toFixed(4)}` ||
          'Location not specified';
 };
 
@@ -97,8 +97,6 @@ const Request = () => {
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const [requestDateFilter, setRequestDateFilter] = useState<string>('');
-  const [addressFilter, setAddressFilter] = useState<string>('');
-  const [ambulanceLicensePlateFilter, setAmbulanceLicensePlateFilter] = useState<string>('');
   const [summary, setSummary] = useState({
     totalAmbulances: 0,
     availableAmbulances: 0,
@@ -108,15 +106,13 @@ const Request = () => {
 
   useEffect(() => {
     dispatch(
-      fetchAmbulanceRequests({
+      fetchAmbulanceBookings({
         Page: page,
-        PageSize: 10,
-        RequestDate: requestDateFilter || undefined,
-        Address: addressFilter || undefined,
-        AmbulanceLicencePlate: ambulanceLicensePlateFilter || undefined,
+        PageSize: pageSize,
+        date: requestDateFilter || undefined,
       }),
     );
-  }, [dispatch, page, requestDateFilter, addressFilter, ambulanceLicensePlateFilter]);
+  }, [dispatch, page, pageSize, requestDateFilter]);
 
   useEffect(() => {
     const loadSummary = async () => {
@@ -139,9 +135,11 @@ const Request = () => {
       id: request.id,
       location: getPickupAddress(request),
       request_id: request.id.slice(-8).toUpperCase(), 
-      type: request.emergencyType || 'General',
+      type: request.ambulanceType || 'General',
       no: getAmbulanceDisplay(request),
-      time: formatDate(request.creationDate ?? null),
+      time: formatDate(request.dateAssigned ?? null),
+      amountPaid: request.amountPaid ?? 0,
+      distance: request.distance ?? 0,
       action: 'View details',
       isNew: false, 
       rawData: request, // Keep original data for details
@@ -176,7 +174,7 @@ const Request = () => {
     },
     {
       accessorKey: 'time',
-      header: 'Request Time',
+      header: 'Date Assigned',
       cell: ({row}) => (
         <span className={row.original.isNew ? 'font-semibold text-gray-900' : ''}>
           {row.original.time}
@@ -185,10 +183,12 @@ const Request = () => {
     },
     {
       accessorKey: 'client_name',
-      header: 'Client Name',
+      header: 'Amount Paid',
       cell: ({row}) => (
         <span className={row.original.isNew ? 'font-semibold text-gray-900' : ''}>
-          {row.original?.rawData?.clientName}
+          {typeof row.original.amountPaid === 'number'
+            ? `₦${row.original.amountPaid.toLocaleString()}`
+            : 'N/A'}
         </span>
       ),
     },
@@ -203,7 +203,7 @@ const Request = () => {
     },
     {
       accessorKey: 'type',
-      header: 'Emergency Type',
+      header: 'Ambulance Type',
       cell: ({row}) => (
         <span className={row.original.isNew ? 'font-semibold text-gray-900' : ''}>
           {row.original.type}
@@ -211,9 +211,33 @@ const Request = () => {
       ),
     },
     {
+      accessorKey: 'distance',
+      header: 'Distance (km)',
+      cell: ({row}) => (
+        <span className={row.original.isNew ? 'font-semibold text-gray-900' : ''}>
+          {typeof row.original.distance === 'number'
+            ? row.original.distance.toFixed(2)
+            : 'N/A'}
+        </span>
+      ),
+    },
+    {
       id: 'action',
       header: 'Action',
-      cell: ({row}) => <RequestDetails data={row.original.rawData} />,
+      cell: ({row}) => (
+        <RequestDetails
+          data={row.original.rawData}
+          onAssigned={() => {
+            dispatch(
+              fetchAmbulanceBookings({
+                Page: page,
+                PageSize: pageSize,
+                date: requestDateFilter || undefined,
+              }),
+            );
+          }}
+        />
+      ),
     },
   ];
 
@@ -239,16 +263,12 @@ const Request = () => {
   // Function to apply filters from FilterDialog
   const handleApplyFilter = (filters: any) => {
     setRequestDateFilter(filters.requestDate || '');
-    setAddressFilter(filters.address || '');
-    setAmbulanceLicensePlateFilter(filters.ambulanceLicensePlate || '');
     setPage(1);
   };
 
   // Function to reset filters
   const handleResetFilter = () => {
     setRequestDateFilter('');
-    setAddressFilter('');
-    setAmbulanceLicensePlateFilter('');
     setPage(1);
   };
 
@@ -317,7 +337,7 @@ const Request = () => {
         <div className="lg:mx-8 mt-10 bg-white mb-32 rounded-md flex flex-col">
           <div className="flex flex-wrap gap-4 justify-between items-center p-6">
             <div className="flex items-center gap-4">
-              <h1 className="text-lg text-gray-800">All Ambulance Requests</h1>
+              <h1 className="text-lg text-gray-800">All Ambulance Bookings</h1>
             </div>
             <div className="flex items-center gap-3">
               <RequestFilter onApply={handleApplyFilter} onReset={handleResetFilter} />
@@ -379,7 +399,7 @@ const Request = () => {
                       className="h-24 text-center"
                     >
                       <div className="flex flex-col items-center justify-center">
-                        <span className="font-medium">No ambulance requests found</span>
+                        <span className="font-medium">No ambulance bookings found</span>
                       </div>
                     </TableCell>
                   </TableRow>

@@ -18,10 +18,12 @@ import {
 import {Label} from '@/components/ui/label';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/services/store';
-import {fetchDrivers, fetchRespondents} from '@/services/thunks';
+import {assignAmbulanceBooking, fetchDrivers, fetchRespondents} from '@/services/thunks';
+import toast from 'react-hot-toast';
 
 type Props = {
   data?: any;
+  onAssigned?: () => void;
 };
 
 const formatDate = (dateString?: string | null) => {
@@ -29,7 +31,7 @@ const formatDate = (dateString?: string | null) => {
   return dateString.replace(';', ',');
 };
 
-export default function RequestDetails({data}: Props) {
+export default function RequestDetails({data, onAssigned}: Props) {
   const dispatch = useDispatch<AppDispatch>();
   const {drivers} = useSelector((state: RootState) => state.drivers);
   const {respondents} = useSelector((state: RootState) => state.respondents);
@@ -38,9 +40,10 @@ export default function RequestDetails({data}: Props) {
   const [selectedDriverId, setSelectedDriverId] = useState('');
   const [selectedResponderId, setSelectedResponderId] = useState('');
   const [isLoadingAssignees, setIsLoadingAssignees] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
   const [hasLoadedAssignees, setHasLoadedAssignees] = useState(false);
 
-  const emergencyType = data?.emergencyType || 'N/A';
+  const bookingType = data?.ambulanceType || data?.emergencyType || 'N/A';
   const pickupAddress =
     data?.pickupAddress ||
     (data?.pickupLocation
@@ -51,7 +54,31 @@ export default function RequestDetails({data}: Props) {
     (data?.destinationLocation
       ? `${data.destinationLocation.latitude}, ${data.destinationLocation.longitude}`
       : 'N/A');
-  const requestTime = formatDate(data?.creationDate || data?.requestDate || null);
+  const requestTime = formatDate(data?.dateAssigned || data?.creationDate || data?.requestDate || null);
+
+  const handleAssign = async () => {
+    if (!data?.id) return toast.error('Booking ID is missing');
+    if (!selectedDriverId) return toast.error('Please select a driver');
+    if (!selectedResponderId) return toast.error('Please select a responder');
+
+    setIsAssigning(true);
+    try {
+      await dispatch(
+        assignAmbulanceBooking({
+          ambulanceBookingId: data.id,
+          driverId: selectedDriverId,
+          respondentId: selectedResponderId,
+        }),
+      ).unwrap();
+      toast.success('Booking assigned successfully');
+      setOpen(false);
+      onAssigned?.();
+    } catch (error) {
+      toast.error((error as string) || 'Failed to assign booking');
+    } finally {
+      setIsAssigning(false);
+    }
+  };
 
   useEffect(() => {
     const loadAssignees = async () => {
@@ -105,7 +132,7 @@ export default function RequestDetails({data}: Props) {
           <DialogHeader className="flex w-full items-center justify-between">
             <DialogTitle className="flex w-full items-center justify-between border-b">
               <span className="text-gray-800 text-2xl font-semibold py-3">
-                Ambulance Request
+                Ambulance Booking
               </span>
 
               <button
@@ -124,25 +151,30 @@ export default function RequestDetails({data}: Props) {
               <div className="flex items-center justify-end">
 
                 <div className="flex items-center gap-3">
-                  <Button type="button" className="py-2.5 w-36 rounded-md">
-                    Accept & Dispatch
+                  <Button
+                    type="button"
+                    className="py-2.5 w-36 rounded-md"
+                    onClick={handleAssign}
+                    disabled={isAssigning || isLoadingAssignees}
+                  >
+                    {isAssigning ? 'Assigning...' : 'Accept & Dispatch'}
                   </Button>
                 </div>
               </div>
               <div className="mt-6">
                 <h1 className="text-primary border-b text-lg py-2">
-                  Request Details
+                  Booking Details
                 </h1>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-6 w-full text-lg">
                 <div className="space-y-3 ">
                   <div className="grid grid-cols-2  ">
                     <span className=" text-gray-600">Client Name: </span>
-                    <span className="text-gray-900">{data?.clientName || 'N/A'}</span>
+                    <span className="text-gray-900">{data?.assignedByUser || data?.clientName || 'N/A'}</span>
                   </div>
                   <div className="grid grid-cols-2 ">
-                    <span className=" text-gray-600">Request Type: </span>
-                    <span className="text-gray-900">{emergencyType}</span>
+                    <span className=" text-gray-600">Booking Type: </span>
+                    <span className="text-gray-900">{bookingType}</span>
                   </div>
                 </div>
 

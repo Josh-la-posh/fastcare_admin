@@ -135,6 +135,7 @@ const Request = () => {
       id: request.id,
       location: getPickupAddress(request),
       request_id: request.id.slice(-8).toUpperCase(), 
+      client_name: request.bookingInitiator || 'N/A',
       type: request.ambulanceType || 'General',
       no: getAmbulanceDisplay(request),
       time: formatDate(request.dateAssigned ?? null),
@@ -183,11 +184,20 @@ const Request = () => {
     },
     {
       accessorKey: 'client_name',
+      header: 'Client Name',
+      cell: ({row}) => (
+        <span className={row.original.isNew ? 'font-semibold text-gray-900' : ''}>
+          {row.original.client_name || 'N/A'}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'amountPaid',
       header: 'Amount Paid',
       cell: ({row}) => (
         <span className={row.original.isNew ? 'font-semibold text-gray-900' : ''}>
           {typeof row.original.amountPaid === 'number'
-            ? `₦${row.original.amountPaid.toLocaleString()}`
+            ? `NGN ${row.original.amountPaid.toLocaleString()}`
             : 'N/A'}
         </span>
       ),
@@ -429,3 +439,5 @@ const Request = () => {
 };
 
 export default Request;
+
+

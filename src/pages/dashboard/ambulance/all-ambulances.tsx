@@ -155,10 +155,10 @@ const AllAmbulances = () => {
         </span>
       ),
     },
-    {
-      accessorKey: 'location',
-      header: 'Location',
-    },
+    // {
+    //   accessorKey: 'location',
+    //   header: 'Location',
+    // },
     {
       accessorKey: 'address',
       header: 'Address',
@@ -247,7 +247,7 @@ const AllAmbulances = () => {
 
               <input
                 type="text"
-                placeholder="Search by plate, ID, type, or location"
+                placeholder="Search by plate, ID, type"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 className="border rounded-lg hidden lg:block px-4 py-2 lg:w-96 lg:max-w-2xl focus:outline-none"

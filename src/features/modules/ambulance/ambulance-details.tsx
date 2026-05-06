@@ -20,9 +20,20 @@ const formatLocation = (location: Ambulance['location']) => {
   return `${location.latitude}, ${location.longitude}`;
 };
 
-const formatMoney = (value: number | null | undefined) => {
-  if (value === null || value === undefined) return 'N/A';
-  return `$${value.toFixed(2)}`;
+// const formatMoney = (value: number | null | undefined) => {
+//   if (value === null || value === undefined) return 'N/A';
+//   return `$${value.toFixed(2)}`;
+// };
+
+// Helper function to format price
+const formatMoney = (price: number | null | undefined) => {
+  if (price === null || price === undefined) return 'N/A';
+  return new Intl.NumberFormat('en-NG', {
+    style: 'currency',
+    currency: 'NGN',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(price);
 };
 
 export default function AmbulanceDetails({data}: Props) {

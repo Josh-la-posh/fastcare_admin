@@ -170,11 +170,17 @@ export default function RequestDetails({data, onAssigned}: Props) {
                 <div className="space-y-3 ">
                   <div className="grid grid-cols-2  ">
                     <span className=" text-gray-600">Client Name: </span>
-                    <span className="text-gray-900">{data?.assignedByUser || data?.clientName || 'N/A'}</span>
+                    <span className="text-gray-900">
+                      {data?.bookingInitiator || data?.assignedByUser || data?.clientName || 'N/A'}
+                    </span>
                   </div>
                   <div className="grid grid-cols-2 ">
                     <span className=" text-gray-600">Booking Type: </span>
                     <span className="text-gray-900">{bookingType}</span>
+                  </div>
+                  <div className="grid grid-cols-2 ">
+                    <span className=" text-gray-600">Timestamp: </span>
+                    <span className="text-gray-900">{requestTime}</span>
                   </div>
                 </div>
 
@@ -190,10 +196,6 @@ export default function RequestDetails({data, onAssigned}: Props) {
                   <div className="grid grid-cols-2 ">
                     <span className=" text-gray-600">Destination: </span>
                     <span className="text-gray-900">{destinationAddress}</span>
-                  </div>
-                  <div className="grid grid-cols-2 ">
-                    <span className=" text-gray-600">Timestamp: </span>
-                    <span className="text-gray-900">{requestTime}</span>
                   </div>
                 </div>
               </div>

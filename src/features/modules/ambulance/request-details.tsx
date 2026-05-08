@@ -19,10 +19,11 @@ import {Label} from '@/components/ui/label';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/services/store';
 import {assignAmbulanceBooking, fetchDrivers, fetchRespondents} from '@/services/thunks';
+import type {AmbulanceRequest} from '@/types';
 import toast from 'react-hot-toast';
 
 type Props = {
-  data?: any;
+  data?: AmbulanceRequest;
   onAssigned?: () => void;
 };
 

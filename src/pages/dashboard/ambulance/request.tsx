@@ -135,7 +135,7 @@ const Request = () => {
       id: request.id,
       location: getPickupAddress(request),
       request_id: request.id.slice(-8).toUpperCase(), 
-      client_name: request.bookingInitiator || 'N/A',
+      client_name: request.patientName || request.assignedByUser || 'N/A',
       type: request.ambulanceType || 'General',
       no: getAmbulanceDisplay(request),
       time: formatDate(request.dateAssigned ?? null),

@@ -27,7 +27,16 @@ import { setEmergencyFilters, setEmergencyPage, setEmergencyPageSize } from '@/s
 
 interface EmergencyRow { patientName: string; doctorName: string; date: string; duration: string; responseTime: string; status: string; }
 
-interface UserReportRow { date: string; userCount: number; }
+interface UserReportRow {
+  firstName: string;
+  lastName: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  countryCode: string;
+  role: string;
+  creationDate: string;
+}
 interface AppointmentRow { patientName: string; doctorName: string | null; date: string | null; duration: string | null; }
 
 const UnifiedReports = () => {
@@ -63,19 +72,26 @@ const UnifiedReports = () => {
   const [patientDateFilter, setPatientDateFilter] = useState('');
   const [doctorDateFilter, setDoctorDateFilter] = useState('');
 
-  // Fetch patient reports only once (when list is empty)
+  const toDateRange = (date: string) =>
+    date ? { FromDate: `${date}T00:00:00`, ToDate: `${date}T23:59:59` } : {};
+
+  // Fetch patient reports
   useEffect(() => { 
-    if (patientList.length === 0 && !loadingPatient) {
-      dispatch(fetchPatientReports({ Page: patientFilters.Page || 1, PageSize: patientFilters.PageSize || 10 })); 
-    }
-  }, [dispatch, patientList.length, loadingPatient]);
+    dispatch(fetchPatientReports({
+      ...toDateRange(patientDateFilter),
+      Page: patientFilters.Page || 1,
+      PageSize: patientFilters.PageSize || 10,
+    })); 
+  }, [dispatch, patientFilters.Page, patientFilters.PageSize, patientDateFilter]);
   
-  // Fetch doctor reports only once (when list is empty)
+  // Fetch doctor reports
   useEffect(() => { 
-    if (doctorList.length === 0 && !loadingDoctor) {
-      dispatch(fetchDoctorReports({ Page: doctorFilters.Page || 1, PageSize: doctorFilters.PageSize || 10 })); 
-    }
-  }, [dispatch, doctorList.length, loadingDoctor]);
+    dispatch(fetchDoctorReports({
+      ...toDateRange(doctorDateFilter),
+      Page: doctorFilters.Page || 1,
+      PageSize: doctorFilters.PageSize || 10,
+    })); 
+  }, [dispatch, doctorFilters.Page, doctorFilters.PageSize, doctorDateFilter]);
   
   useEffect(() => { dispatch(fetchAppointmentReports({ ...apptFilters })); }, [dispatch, apptFilters]);
 
@@ -83,7 +99,7 @@ const UnifiedReports = () => {
   const filteredPatientList = useMemo(() => {
     if (!patientDateFilter) return patientList;
     return patientList.filter(item => {
-      const itemDate = item.date?.includes('T') ? item.date.split('T')[0] : item.date;
+      const itemDate = item.creationDate?.includes('T') ? item.creationDate.split('T')[0] : item.creationDate;
       return itemDate === patientDateFilter;
     });
   }, [patientList, patientDateFilter]);
@@ -91,51 +107,31 @@ const UnifiedReports = () => {
   const filteredDoctorList = useMemo(() => {
     if (!doctorDateFilter) return doctorList;
     return doctorList.filter(item => {
-      const itemDate = item.date?.includes('T') ? item.date.split('T')[0] : item.date;
+      const itemDate = item.creationDate?.includes('T') ? item.creationDate.split('T')[0] : item.creationDate;
       return itemDate === doctorDateFilter;
     });
   }, [doctorList, doctorDateFilter]);
 
   // Users table - Patient
   const patientColumns: ColumnDef<UserReportRow>[] = [
-    { accessorKey: 'date', header: 'Date', cell: ({ getValue }) => { const raw = getValue<string>(); return raw?.includes('T') ? raw.split('T')[0] : raw; } },
-    { id: 'type', header: 'Type', cell: () => 'Patient' },
-    { accessorKey: 'userCount', header: 'Number of Users' },
-    { id: 'action', header: 'Action', cell: ({ row }) => (
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          const dateVal = (row.original as UserReportRow).date;
-          if (dateVal) navigate(`/reports/users/user-details/${encodeURIComponent(dateVal)}?type=patient`);
-        }}
-        className="text-primary hover:underline font-medium"
-      >
-        View details
-      </button>
-    )},
+    { accessorKey: 'creationDate', header: 'Date', cell: ({ getValue }) => { const raw = getValue<string>(); return raw?.includes('T') ? raw.split('T')[0] : raw; } },
+    { accessorKey: 'name', header: 'Name' },
+    { accessorKey: 'email', header: 'Email' },
+    { accessorKey: 'phoneNumber', header: 'Phone Number' },
+    { accessorKey: 'countryCode', header: 'Country Code' },
+    { accessorKey: 'role', header: 'Role' },
   ];
   const patientTable = useReactTable({ data: filteredPatientList as UserReportRow[], columns: patientColumns, getCoreRowModel: getCoreRowModel() });
   const patientEmpty = !loadingPatient && filteredPatientList.length === 0;
 
   // Users table - Doctor
   const doctorColumns: ColumnDef<UserReportRow>[] = [
-    { accessorKey: 'date', header: 'Date', cell: ({ getValue }) => { const raw = getValue<string>(); return raw?.includes('T') ? raw.split('T')[0] : raw; } },
-    { id: 'type', header: 'Type', cell: () => 'Doctor' },
-    { accessorKey: 'userCount', header: 'Number of Users' },
-    { id: 'action', header: 'Action', cell: ({ row }) => (
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          const dateVal = (row.original as UserReportRow).date;
-          if (dateVal) navigate(`/reports/users/user-details/${encodeURIComponent(dateVal)}?type=doctor`);
-        }}
-        className="text-primary hover:underline font-medium"
-      >
-        View details
-      </button>
-    )},
+    { accessorKey: 'creationDate', header: 'Date', cell: ({ getValue }) => { const raw = getValue<string>(); return raw?.includes('T') ? raw.split('T')[0] : raw; } },
+    { accessorKey: 'name', header: 'Name' },
+    { accessorKey: 'email', header: 'Email' },
+    { accessorKey: 'phoneNumber', header: 'Phone Number' },
+    { accessorKey: 'countryCode', header: 'Country Code' },
+    { accessorKey: 'role', header: 'Role' },
   ];
   const doctorTable = useReactTable({ data: filteredDoctorList as UserReportRow[], columns: doctorColumns, getCoreRowModel: getCoreRowModel() });
   const doctorEmpty = !loadingDoctor && filteredDoctorList.length === 0;

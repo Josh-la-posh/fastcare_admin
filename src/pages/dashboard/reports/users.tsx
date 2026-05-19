@@ -15,20 +15,22 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import {Pagination} from '@/components/ui/pagination';
-import {useNavigate} from 'react-router-dom';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/services/store';
 import {fetchPatientReports} from '@/services/thunks';
 import {setPatientPage, setPatientPageSize} from '@/services/slice/userReportsSlice';
 
 interface UserReportRow {
-  date: string;
-  userCount: number;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  countryCode: string;
+  role: string;
+  creationDate: string;
 }
 
 const Users = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
   const {patientList, patientMeta, loadingPatient, errorPatient, patientFilters} = useSelector(
     (s: RootState) => s.userReports,
   );
@@ -42,36 +44,18 @@ const Users = () => {
 
   const columns: ColumnDef<UserReportRow>[] = [
     {
-      accessorKey: 'date',
+      accessorKey: 'creationDate',
       header: 'Date',
       cell: ({getValue}) => {
         const raw = getValue<string>();
-        // Show only date portion if includes T
         return raw?.includes('T') ? raw.split('T')[0] : raw;
       },
     },
-
-    {
-      accessorKey: 'userCount',
-      header: 'Number of Users',
-    },
-
-    {
-      id: 'action',
-      header: 'Action',
-      cell: ({row}) => (
-        <div
-          onClick={() =>
-            navigate(
-              `/reports/users/user-details/${encodeURIComponent(row.original.date)}`,
-            )
-          }
-          className="flex text-center w-36 justify-center cursor-pointer font-semibold items-center gap-2 bg-[#E4F1FC] p-2 rounded-md text-[#135E9B]"
-        >
-          View Details
-        </div>
-      ),
-    },
+    { accessorKey: 'name', header: 'Name' },
+    { accessorKey: 'email', header: 'Email' },
+    { accessorKey: 'phoneNumber', header: 'Phone Number' },
+    { accessorKey: 'countryCode', header: 'Country Code' },
+    { accessorKey: 'role', header: 'Role' },
   ];
 
   const table = useReactTable({

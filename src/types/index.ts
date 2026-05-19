@@ -694,8 +694,14 @@ export interface AdminUsersState {
 // -----------------------------
 
 export interface UserReportItem {
-  date: string; // ISO date string (e.g. 2020-05-08T00:00:00 or 2020-05-08)
-  userCount: number;
+  firstName: string;
+  lastName: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  countryCode: string;
+  role: string;
+  creationDate: string;
 }
 
 export interface UserReportDetailItem {

@@ -1739,20 +1739,53 @@ export const toggleAdminUserActive = createAsyncThunk(
 export const fetchPatientReports = createAsyncThunk(
   'userReports/fetchPatients',
   async (
-    params: { Page?: number; PageSize?: number } | undefined,
+    params: { FromDate?: string; ToDate?: string; Page?: number; PageSize?: number } | undefined,
     { rejectWithValue }
   ) => {
     try {
-      const res = await apiClient.get('/Account/patients-report/summary', { params });
-      const rawList: unknown = res.data.data || [];
+      const res = await apiClient.get('/Report/signups-report/patients', { params });
+      const payload = res.data;
+      const rawList: unknown = Array.isArray(payload)
+        ? payload
+        : (payload?.data || payload?.items || []);
       const list = Array.isArray(rawList) ? rawList.map(item => {
-        const d = item as { date?: string; userCount?: number };
+        const d = item as {
+          firstName?: string;
+          lastName?: string;
+          name?: string;
+          email?: string;
+          phoneNumber?: string;
+          countryCode?: string;
+          role?: string;
+          creationDate?: string;
+        };
         return {
-          date: d.date || '',
-          userCount: typeof d.userCount === 'number' ? d.userCount : 0,
+          firstName: d.firstName || '',
+          lastName: d.lastName || '',
+          name: d.name || '',
+          email: d.email || '',
+          phoneNumber: d.phoneNumber || '',
+          countryCode: d.countryCode || '',
+          role: d.role || 'Patient',
+          creationDate: d.creationDate || '',
         };
       }) : [];
-      return { list, metaData: res.data.metaData || null };
+      const requestPage = params?.Page || 1;
+      const requestPageSize = params?.PageSize || 20;
+      const inferredMeta =
+        payload?.metaData ||
+        payload?.metadata ||
+        payload?.pagination ||
+        {
+          totalCount: list.length,
+          totalPages: 1,
+          pageSize: requestPageSize,
+          currentPage: requestPage,
+          hasNext: false,
+          hasPrevious: requestPage > 1,
+        };
+
+      return { list, metaData: inferredMeta };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, 'Failed to fetch patient reports'));
     }
@@ -1762,22 +1795,99 @@ export const fetchPatientReports = createAsyncThunk(
 export const fetchDoctorReports = createAsyncThunk(
   'userReports/fetchDoctors',
   async (
-    params: { Page?: number; PageSize?: number } | undefined,
+    params: { FromDate?: string; ToDate?: string; Page?: number; PageSize?: number } | undefined,
     { rejectWithValue }
   ) => {
     try {
-      const res = await apiClient.get('/Account/doctors-report/summary', { params });
-      const rawList: unknown = res.data.data || [];
+      const res = await apiClient.get('/Report/signups-report/doctors', { params });
+      const payload = res.data;
+      const rawList: unknown = Array.isArray(payload)
+        ? payload
+        : (payload?.data || payload?.items || []);
       const list = Array.isArray(rawList) ? rawList.map(item => {
-        const d = item as { date?: string; userCount?: number };
+        const d = item as {
+          firstName?: string;
+          lastName?: string;
+          name?: string;
+          email?: string;
+          phoneNumber?: string;
+          countryCode?: string;
+          role?: string;
+          creationDate?: string;
+        };
         return {
-          date: d.date || '',
-          userCount: typeof d.userCount === 'number' ? d.userCount : 0,
+          firstName: d.firstName || '',
+          lastName: d.lastName || '',
+          name: d.name || '',
+          email: d.email || '',
+          phoneNumber: d.phoneNumber || '',
+          countryCode: d.countryCode || '',
+          role: d.role || 'Doctor',
+          creationDate: d.creationDate || '',
         };
       }) : [];
-      return { list, metaData: res.data.metaData || null };
+      const requestPage = params?.Page || 1;
+      const requestPageSize = params?.PageSize || 20;
+      const inferredMeta =
+        payload?.metaData ||
+        payload?.metadata ||
+        payload?.pagination ||
+        {
+          totalCount: list.length,
+          totalPages: 1,
+          pageSize: requestPageSize,
+          currentPage: requestPage,
+          hasNext: false,
+          hasPrevious: requestPage > 1,
+        };
+
+      return { list, metaData: inferredMeta };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, 'Failed to fetch doctor reports'));
+    }
+  }
+);
+
+export const exportPatientSignupReports = createAsyncThunk(
+  'userReports/exportPatientSignups',
+  async (
+    params: { FromDate?: string; ToDate?: string; Page?: number; PageSize?: number; format: 'CSV' | 'Excel' },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get('/Report/export-signups-report/patients', {
+        params,
+        responseType: 'blob',
+      });
+      const isCsv = params.format === 'CSV';
+      const blob = new Blob([res.data], {
+        type: isCsv ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      return { blob, format: params.format };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to export patient signup reports'));
+    }
+  }
+);
+
+export const exportDoctorSignupReports = createAsyncThunk(
+  'userReports/exportDoctorSignups',
+  async (
+    params: { FromDate?: string; ToDate?: string; Page?: number; PageSize?: number; format: 'CSV' | 'Excel' },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get('/Report/export-signups-report/doctors', {
+        params,
+        responseType: 'blob',
+      });
+      const isCsv = params.format === 'CSV';
+      const blob = new Blob([res.data], {
+        type: isCsv ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      return { blob, format: params.format };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to export doctor signup reports'));
     }
   }
 );

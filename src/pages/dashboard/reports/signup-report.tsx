@@ -1,14 +1,14 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/layout/dashboard-layout';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/services/store';
-import { fetchPatientReports, fetchDoctorReports } from '@/services/thunks';
+import { fetchPatientReports, fetchDoctorReports, exportPatientSignupReports, exportDoctorSignupReports } from '@/services/thunks';
 import { setPatientPage, setPatientPageSize, setDoctorPage, setDoctorPageSize } from '@/services/slice/userReportsSlice';
 import { Pagination } from '@/components/ui/pagination';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -19,11 +19,19 @@ import {
 } from '@/components/ui/table';
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 
-interface UserReportRow { date: string; userCount: number; }
+interface UserReportRow {
+  firstName: string;
+  lastName: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  countryCode: string;
+  role: string;
+  creationDate: string;
+}
 
 const SignupReport = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
   const { 
     patientList, 
     doctorList, 
@@ -41,80 +49,66 @@ const SignupReport = () => {
   const [signupTab, setSignupTab] = useState('patient');
 
   // Frontend date filters
-  const [patientDateFilter, setPatientDateFilter] = useState('');
-  const [doctorDateFilter, setDoctorDateFilter] = useState('');
+  const [patientStartDate, setPatientStartDate] = useState('');
+  const [patientEndDate, setPatientEndDate] = useState('');
+  const [doctorStartDate, setDoctorStartDate] = useState('');
+  const [doctorEndDate, setDoctorEndDate] = useState('');
+  const [exportingPatient, setExportingPatient] = useState(false);
+  const [exportingDoctor, setExportingDoctor] = useState(false);
 
-  // Fetch patient reports only once (when list is empty)
-  useEffect(() => { 
-    if (patientList.length === 0 && !loadingPatient) {
-      dispatch(fetchPatientReports({ Page: patientFilters.Page || 1, PageSize: patientFilters.PageSize || 10 })); 
-    }
-  }, [dispatch, patientList.length, loadingPatient]);
+  const toDateRange = (startDate: string, endDate: string) => {
+    if (!startDate && !endDate) return {};
+    const from = startDate || endDate;
+    const to = endDate || startDate;
+    return {
+      FromDate: `${from}T00:00:00`,
+      ToDate: `${to}T23:59:59`,
+    };
+  };
   
-  // Fetch doctor reports only once (when list is empty)
+  // Fetch patient reports
   useEffect(() => { 
-    if (doctorList.length === 0 && !loadingDoctor) {
-      dispatch(fetchDoctorReports({ Page: doctorFilters.Page || 1, PageSize: doctorFilters.PageSize || 10 })); 
-    }
-  }, [dispatch, doctorList.length, loadingDoctor]);
+    dispatch(fetchPatientReports({
+      ...toDateRange(patientStartDate, patientEndDate),
+      Page: patientFilters.Page || 1,
+      PageSize: patientFilters.PageSize || 10,
+    }));
+  }, [dispatch, patientFilters.Page, patientFilters.PageSize, patientStartDate, patientEndDate]);
+  
+  // Fetch doctor reports
+  useEffect(() => { 
+    dispatch(fetchDoctorReports({
+      ...toDateRange(doctorStartDate, doctorEndDate),
+      Page: doctorFilters.Page || 1,
+      PageSize: doctorFilters.PageSize || 10,
+    }));
+  }, [dispatch, doctorFilters.Page, doctorFilters.PageSize, doctorStartDate, doctorEndDate]);
 
   // Frontend filtered lists
-  const filteredPatientList = useMemo(() => {
-    if (!patientDateFilter) return patientList;
-    return patientList.filter(item => {
-      const itemDate = item.date?.includes('T') ? item.date.split('T')[0] : item.date;
-      return itemDate === patientDateFilter;
-    });
-  }, [patientList, patientDateFilter]);
+  const filteredPatientList = useMemo(() => patientList, [patientList]);
 
-  const filteredDoctorList = useMemo(() => {
-    if (!doctorDateFilter) return doctorList;
-    return doctorList.filter(item => {
-      const itemDate = item.date?.includes('T') ? item.date.split('T')[0] : item.date;
-      return itemDate === doctorDateFilter;
-    });
-  }, [doctorList, doctorDateFilter]);
+  const filteredDoctorList = useMemo(() => doctorList, [doctorList]);
 
   // Users table - Patient
   const patientColumns: ColumnDef<UserReportRow>[] = [
-    { accessorKey: 'date', header: 'Date', cell: ({ getValue }) => { const raw = getValue<string>(); return raw?.includes('T') ? raw.split('T')[0] : raw; } },
-    { id: 'type', header: 'Type', cell: () => 'Patient' },
-    { accessorKey: 'userCount', header: 'Number of Users' },
-    { id: 'action', header: 'Action', cell: ({ row }) => (
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          const dateVal = (row.original as UserReportRow).date;
-          if (dateVal) navigate(`/reports/users/user-details/${encodeURIComponent(dateVal)}?type=patient`);
-        }}
-        className="text-primary hover:underline font-medium"
-      >
-        View details
-      </button>
-    )},
+    { accessorKey: 'creationDate', header: 'Date', cell: ({ getValue }) => { const raw = getValue<string>(); return raw?.includes('T') ? raw.split('T')[0] : raw; } },
+    { accessorKey: 'name', header: 'Name' },
+    { accessorKey: 'email', header: 'Email' },
+    { accessorKey: 'phoneNumber', header: 'Phone Number' },
+    { accessorKey: 'countryCode', header: 'Country Code' },
+    { accessorKey: 'role', header: 'Role' },
   ];
   const patientTable = useReactTable({ data: filteredPatientList as UserReportRow[], columns: patientColumns, getCoreRowModel: getCoreRowModel() });
   const patientEmpty = !loadingPatient && filteredPatientList.length === 0;
 
   // Users table - Doctor
   const doctorColumns: ColumnDef<UserReportRow>[] = [
-    { accessorKey: 'date', header: 'Date', cell: ({ getValue }) => { const raw = getValue<string>(); return raw?.includes('T') ? raw.split('T')[0] : raw; } },
-    { id: 'type', header: 'Type', cell: () => 'Doctor' },
-    { accessorKey: 'userCount', header: 'Number of Users' },
-    { id: 'action', header: 'Action', cell: ({ row }) => (
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          const dateVal = (row.original as UserReportRow).date;
-          if (dateVal) navigate(`/reports/users/user-details/${encodeURIComponent(dateVal)}?type=doctor`);
-        }}
-        className="text-primary hover:underline font-medium"
-      >
-        View details
-      </button>
-    )},
+    { accessorKey: 'creationDate', header: 'Date', cell: ({ getValue }) => { const raw = getValue<string>(); return raw?.includes('T') ? raw.split('T')[0] : raw; } },
+    { accessorKey: 'name', header: 'Name' },
+    { accessorKey: 'email', header: 'Email' },
+    { accessorKey: 'phoneNumber', header: 'Phone Number' },
+    { accessorKey: 'countryCode', header: 'Country Code' },
+    { accessorKey: 'role', header: 'Role' },
   ];
   const doctorTable = useReactTable({ data: filteredDoctorList as UserReportRow[], columns: doctorColumns, getCoreRowModel: getCoreRowModel() });
   const doctorEmpty = !loadingDoctor && filteredDoctorList.length === 0;
@@ -134,31 +128,118 @@ const SignupReport = () => {
 
             <TabsContent value="patient" className="focus:outline-none" hidden={signupTab !== 'patient'}>
               {/* Date Filter */}
-              <div className="flex items-center gap-3 mb-4">
-                <Input
-                  type="date"
-                  value={patientDateFilter}
-                  onChange={(e) => setPatientDateFilter(e.target.value)}
-                  className="w-48"
-                  max={new Date().toISOString().split('T')[0]}
-                />
-                {patientDateFilter && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPatientDateFilter('')}
-                  >
-                    Clear
-                  </Button>
-                )}
+              <div className="mb-4 rounded-md border bg-gray-50/70 p-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-xs font-medium text-gray-600">Start Date</span>
+                      <Input
+                        type="date"
+                        value={patientStartDate}
+                        onChange={(e) => setPatientStartDate(e.target.value)}
+                        className="w-full min-w-[180px] bg-white"
+                        max={new Date().toISOString().split('T')[0]}
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-xs font-medium text-gray-600">End Date</span>
+                      <Input
+                        type="date"
+                        value={patientEndDate}
+                        onChange={(e) => setPatientEndDate(e.target.value)}
+                        className="w-full min-w-[180px] bg-white"
+                        max={new Date().toISOString().split('T')[0]}
+                      />
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {(patientStartDate || patientEndDate) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setPatientStartDate('');
+                          setPatientEndDate('');
+                        }}
+                      >
+                        Clear
+                      </Button>
+                    )}
+                    <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" disabled={loadingPatient || !filteredPatientList.length || exportingPatient}>
+                      {exportingPatient ? 'Exporting...' : 'Export'}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={async () => {
+                        try {
+                          setExportingPatient(true);
+                          const res = await dispatch(exportPatientSignupReports({
+                            ...toDateRange(patientStartDate, patientEndDate),
+                            Page: patientFilters.Page || 1,
+                            PageSize: patientFilters.PageSize || 20,
+                            format: 'CSV',
+                          })).unwrap();
+                          const { blob } = res as { blob: Blob };
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          const rangeLabel = (patientStartDate || patientEndDate)
+                            ? `${patientStartDate || patientEndDate}_to_${patientEndDate || patientStartDate}`
+                            : 'all';
+                          a.href = url;
+                          a.download = `patient-signups-${rangeLabel}.csv`;
+                          document.body.appendChild(a);
+                          a.click();
+                          a.remove();
+                          URL.revokeObjectURL(url);
+                        } catch (e) { console.error(e); } finally { setExportingPatient(false); }
+                      }}
+                    >
+                      CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={async () => {
+                        try {
+                          setExportingPatient(true);
+                          const res = await dispatch(exportPatientSignupReports({
+                            ...toDateRange(patientStartDate, patientEndDate),
+                            Page: patientFilters.Page || 1,
+                            PageSize: patientFilters.PageSize || 20,
+                            format: 'Excel',
+                          })).unwrap();
+                          const { blob } = res as { blob: Blob };
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          const rangeLabel = (patientStartDate || patientEndDate)
+                            ? `${patientStartDate || patientEndDate}_to_${patientEndDate || patientStartDate}`
+                            : 'all';
+                          a.href = url;
+                          a.download = `patient-signups-${rangeLabel}.xlsx`;
+                          document.body.appendChild(a);
+                          a.click();
+                          a.remove();
+                          URL.revokeObjectURL(url);
+                        } catch (e) { console.error(e); } finally { setExportingPatient(false); }
+                      }}
+                    >
+                      Excel
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
               </div>
               <div className="flex-1 h-full overflow-y-scroll">
                 {loadingPatient ? (
                   <div className="flex items-center justify-center h-64 text-sm text-gray-500">Loading patient signup reports...</div>
                 ) : patientEmpty ? (
                   <div className="flex flex-col items-center justify-center h-64 text-gray-600">
-                    <p className="font-medium">No patient signup report data {patientDateFilter ? 'for this date' : 'yet'}</p>
-                    <p className="text-sm">{patientDateFilter ? 'Try selecting a different date.' : 'Reports will appear once patients register.'}</p>
+                    <p className="font-medium">No patient signup report data {(patientStartDate || patientEndDate) ? 'for this date range' : 'yet'}</p>
+                    <p className="text-sm">{(patientStartDate || patientEndDate) ? 'Try selecting a different date range.' : 'Reports will appear once patients register.'}</p>
                   </div>
                 ) : (
                   <div className="h-full overflow-auto">
@@ -182,7 +263,7 @@ const SignupReport = () => {
                         ))}
                       </TableBody>
                     </Table>
-                    {!patientDateFilter && (
+                    {!(patientStartDate || patientEndDate) && (
                     <div className="p-4 flex items-center justify-end">
                       <Pagination
                         totalEntriesSize={patientMeta?.totalCount || patientList.length}
@@ -202,31 +283,118 @@ const SignupReport = () => {
 
             <TabsContent value="doctor" className="focus:outline-none" hidden={signupTab !== 'doctor'}>
               {/* Date Filter */}
-              <div className="flex items-center gap-3 mb-4">
-                <Input
-                  type="date"
-                  value={doctorDateFilter}
-                  onChange={(e) => setDoctorDateFilter(e.target.value)}
-                  className="w-48"
-                  max={new Date().toISOString().split('T')[0]}
-                />
-                {doctorDateFilter && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setDoctorDateFilter('')}
-                  >
-                    Clear
-                  </Button>
-                )}
+              <div className="mb-4 rounded-md border bg-gray-50/70 p-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-xs font-medium text-gray-600">Start Date</span>
+                      <Input
+                        type="date"
+                        value={doctorStartDate}
+                        onChange={(e) => setDoctorStartDate(e.target.value)}
+                        className="w-full min-w-[180px] bg-white"
+                        max={new Date().toISOString().split('T')[0]}
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1.5">
+                      <span className="text-xs font-medium text-gray-600">End Date</span>
+                      <Input
+                        type="date"
+                        value={doctorEndDate}
+                        onChange={(e) => setDoctorEndDate(e.target.value)}
+                        className="w-full min-w-[180px] bg-white"
+                        max={new Date().toISOString().split('T')[0]}
+                      />
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {(doctorStartDate || doctorEndDate) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setDoctorStartDate('');
+                          setDoctorEndDate('');
+                        }}
+                      >
+                        Clear
+                      </Button>
+                    )}
+                    <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" disabled={loadingDoctor || !filteredDoctorList.length || exportingDoctor}>
+                      {exportingDoctor ? 'Exporting...' : 'Export'}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={async () => {
+                        try {
+                          setExportingDoctor(true);
+                          const res = await dispatch(exportDoctorSignupReports({
+                            ...toDateRange(doctorStartDate, doctorEndDate),
+                            Page: doctorFilters.Page || 1,
+                            PageSize: doctorFilters.PageSize || 20,
+                            format: 'CSV',
+                          })).unwrap();
+                          const { blob } = res as { blob: Blob };
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          const rangeLabel = (doctorStartDate || doctorEndDate)
+                            ? `${doctorStartDate || doctorEndDate}_to_${doctorEndDate || doctorStartDate}`
+                            : 'all';
+                          a.href = url;
+                          a.download = `doctor-signups-${rangeLabel}.csv`;
+                          document.body.appendChild(a);
+                          a.click();
+                          a.remove();
+                          URL.revokeObjectURL(url);
+                        } catch (e) { console.error(e); } finally { setExportingDoctor(false); }
+                      }}
+                    >
+                      CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={async () => {
+                        try {
+                          setExportingDoctor(true);
+                          const res = await dispatch(exportDoctorSignupReports({
+                            ...toDateRange(doctorStartDate, doctorEndDate),
+                            Page: doctorFilters.Page || 1,
+                            PageSize: doctorFilters.PageSize || 20,
+                            format: 'Excel',
+                          })).unwrap();
+                          const { blob } = res as { blob: Blob };
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          const rangeLabel = (doctorStartDate || doctorEndDate)
+                            ? `${doctorStartDate || doctorEndDate}_to_${doctorEndDate || doctorStartDate}`
+                            : 'all';
+                          a.href = url;
+                          a.download = `doctor-signups-${rangeLabel}.xlsx`;
+                          document.body.appendChild(a);
+                          a.click();
+                          a.remove();
+                          URL.revokeObjectURL(url);
+                        } catch (e) { console.error(e); } finally { setExportingDoctor(false); }
+                      }}
+                    >
+                      Excel
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
               </div>
               <div className="flex-1 h-full overflow-y-scroll">
                 {loadingDoctor ? (
                   <div className="flex items-center justify-center h-64 text-sm text-gray-500">Loading doctor signup reports...</div>
                 ) : doctorEmpty ? (
                   <div className="flex flex-col items-center justify-center h-64 text-gray-600">
-                    <p className="font-medium">No doctor signup report data {doctorDateFilter ? 'for this date' : 'yet'}</p>
-                    <p className="text-sm">{doctorDateFilter ? 'Try selecting a different date.' : 'Reports will appear once doctors register.'}</p>
+                    <p className="font-medium">No doctor signup report data {(doctorStartDate || doctorEndDate) ? 'for this date range' : 'yet'}</p>
+                    <p className="text-sm">{(doctorStartDate || doctorEndDate) ? 'Try selecting a different date range.' : 'Reports will appear once doctors register.'}</p>
                   </div>
                 ) : (
                   <div className="h-full overflow-auto">
@@ -250,7 +418,7 @@ const SignupReport = () => {
                         ))}
                       </TableBody>
                     </Table>
-                    {!doctorDateFilter && (
+                    {!(doctorStartDate || doctorEndDate) && (
                     <div className="p-4 flex items-center justify-end">
                       <Pagination
                         totalEntriesSize={doctorMeta?.totalCount || doctorList.length}

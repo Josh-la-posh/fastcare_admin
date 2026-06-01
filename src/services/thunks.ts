@@ -72,10 +72,27 @@ export const resetPasswordUser = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const res = await apiClient.post('/auth/password/reset', payload);
+      const res = await apiClient.post('/Auth/password/reset', payload);
       return res.data;
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, 'Password reset failed'));
+    }
+  }
+);
+
+export const requestPasswordResetCode = createAsyncThunk(
+  'auth/requestPasswordResetCode',
+  async (
+    payload: { email: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await apiClient.get('/Auth/password/reset', {
+        params: { email: payload.email },
+      });
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to request password reset code'));
     }
   }
 );

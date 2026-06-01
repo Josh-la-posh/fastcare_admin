@@ -20,6 +20,7 @@ import { loginUser } from '@/services/thunks';
 import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/services/store';
+import { ROUTES } from '@/router/routes';
 
 const formSchema = z.object({
   email: z.string().email({message: 'Email address is required.'}),
@@ -157,15 +158,13 @@ const SignIn = () => {
                     </FormItem>
                   )}
                 />
-{/* 
-                <p>
-                  <span
-                    className="font-medium cursor-pointer text-green-600 text-[16px]"
-                    onClick={() => navigate('/auth/create-account')}
-                  >
-                    Forgot your password?
-                  </span>
-                </p> */}
+                <button
+                  type="button"
+                  className="font-medium text-green-600 text-[16px]"
+                  onClick={() => navigate(ROUTES.forgot)}
+                >
+                  Forgot password?
+                </button>
               </div>
             </div>
 

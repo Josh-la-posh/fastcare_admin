@@ -25,7 +25,7 @@ export default function DriverBookings() {
   const user = useSelector((s: RootState) => s.auth.user);
 
   useEffect(() => {
-    dispatch(fetchDriverBookings());
+    dispatch(fetchDriverBookings({}));
   }, [dispatch]);
 
   const handleLogout = () => {

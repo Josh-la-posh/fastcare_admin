@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { AppDispatch, RootState } from '@/services/store';
 import { fetchDriverBookings, updateBookingStatus } from '@/services/thunks';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, MapPin, Ambulance, User, DollarSign, Ruler } from 'lucide-react';
+import { ArrowLeft, MapPin, Ambulance, User, DollarSign, Ruler, Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Mirrors: Pending=1, EnRoute, Arrived, Completed, Cancelled
@@ -16,10 +16,31 @@ const STATUS_FLOW: Record<string, string | null> = {
   Cancelled: null,
 };
 
+// Action button = advance to the next stage
+// Pending → on the road, EnRoute → reached pickup, Arrived → reached destination
 const STATUS_LABELS: Record<string, string> = {
-  Pending: 'Mark En Route',
+  Pending: 'Start Trip',
   EnRoute: 'Mark Arrived',
   Arrived: 'Mark Completed',
+};
+
+// Driver-facing badge label for each stage (states are unchanged)
+const STATUS_DISPLAY: Record<string, string> = {
+  Pending: 'Pending',
+  EnRoute: 'On the way',
+  Arrived: 'Arrived',
+  Completed: 'Completed',
+  Cancelled: 'Cancelled',
+};
+
+type LatLng = { latitude: number; longitude: number } | null | undefined;
+
+// Google Maps directions deep link — prefer coordinates, fall back to a text address
+const mapsDirectionsUrl = (loc: LatLng, address?: string | null) => {
+  const dest = loc ? `${loc.latitude},${loc.longitude}` : address;
+  return dest
+    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}`
+    : null;
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -74,6 +95,21 @@ export default function BookingDetail() {
   const nextStatus = STATUS_FLOW[currentStatus];
   const actionLabel = STATUS_LABELS[currentStatus];
   const statusClass = STATUS_COLORS[currentStatus] ?? 'bg-gray-100 text-gray-700';
+  const statusLabel = STATUS_DISPLAY[currentStatus] ?? currentStatus;
+
+  // Navigate button follows the driver's active leg:
+  // heading to pickup while Pending/EnRoute, heading to destination once Arrived.
+  const headingToPickup = currentStatus === 'Pending' || currentStatus === 'EnRoute';
+  const headingToDropoff = currentStatus === 'Arrived';
+  const pickupNavUrl = headingToPickup
+    ? mapsDirectionsUrl(booking.pickupLocation, booking.pickupAddress)
+    : null;
+  const dropoffNavUrl = headingToDropoff
+    ? mapsDirectionsUrl(
+        booking.destinationLocation ?? booking.dropoffLocation,
+        booking.destinationAddress ?? booking.dropoffAddress,
+      )
+    : null;
 
   const handleStatusUpdate = () => {
     if (!nextStatus || !id) return;
@@ -97,7 +133,7 @@ export default function BookingDetail() {
         {/* Status badge */}
         <div className="flex items-center justify-between">
           <span className={`text-sm font-medium px-3 py-1.5 rounded-full ${statusClass}`}>
-            {currentStatus}
+            {statusLabel}
           </span>
           <span className="text-xs text-gray-400">{booking.dateAssigned ?? booking.creationDate}</span>
         </div>
@@ -110,16 +146,42 @@ export default function BookingDetail() {
               <div className="w-0.5 h-6 bg-gray-200" />
               <MapPin className="w-4 h-4 text-red-500" />
             </div>
-            <div className="space-y-3">
-              <div>
-                <p className="text-xs text-gray-400">Pickup</p>
-                <p className="text-sm font-medium text-gray-800">{booking.pickupAddress ?? '—'}</p>
+            <div className="space-y-3 flex-1">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-400">Pickup</p>
+                  <p className="text-sm font-medium text-gray-800">{booking.pickupAddress ?? '—'}</p>
+                </div>
+                {pickupNavUrl && (
+                  <a
+                    href={pickupNavUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 inline-flex items-center gap-1 rounded-md bg-indigo-50 text-indigo-600 text-xs font-medium px-2 py-1 hover:bg-indigo-100 transition-colors"
+                  >
+                    <Navigation className="w-3 h-3" />
+                    Navigate
+                  </a>
+                )}
               </div>
-              <div>
-                <p className="text-xs text-gray-400">Drop-off</p>
-                <p className="text-sm font-medium text-gray-800">
-                  {booking.destinationAddress ?? booking.dropoffAddress ?? '—'}
-                </p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-400">Drop-off</p>
+                  <p className="text-sm font-medium text-gray-800">
+                    {booking.destinationAddress ?? booking.dropoffAddress ?? '—'}
+                  </p>
+                </div>
+                {dropoffNavUrl && (
+                  <a
+                    href={dropoffNavUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 inline-flex items-center gap-1 rounded-md bg-indigo-50 text-indigo-600 text-xs font-medium px-2 py-1 hover:bg-indigo-100 transition-colors"
+                  >
+                    <Navigation className="w-3 h-3" />
+                    Navigate
+                  </a>
+                )}
               </div>
             </div>
           </div>
@@ -169,7 +231,7 @@ export default function BookingDetail() {
 
         {!nextStatus && currentStatus !== 'Cancelled' && (
           <div className="text-center py-3 text-sm text-gray-400">
-            This booking is {currentStatus.toLowerCase()}.
+            This booking is marked {statusLabel}.
           </div>
         )}
       </div>

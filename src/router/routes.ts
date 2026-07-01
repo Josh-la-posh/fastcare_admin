@@ -90,4 +90,9 @@ export const ROUTES = {
 
   hmo: '/hmo-management',
   settings: '/settings',
+
+  driver: {
+    bookings: '/driver/bookings',
+    bookingDetail: '/driver/bookings/:id',
+  },
 };

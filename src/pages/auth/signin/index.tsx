@@ -56,7 +56,9 @@ const SignIn = () => {
   useEffect(() => {
     if (user && token) {
       // Role-based landing
-      if (user.userRole === 'AmbulanceProviderAdmin') {
+      if (user.userRole === 'Driver') {
+        navigate(ROUTES.driver.bookings, { replace: true });
+      } else if (user.userRole === 'AmbulanceProviderAdmin') {
         navigate('/ambulance/amenities', { replace: true });
       } else {
         navigate('/hospitals/all-hospitals', { replace: true });

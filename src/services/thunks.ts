@@ -2207,3 +2207,34 @@ export const exportAppFeedbacks = createAsyncThunk(
     }
   }
 );
+
+export const fetchDriverBookings = createAsyncThunk(
+  'driverBookings/fetchMine',
+  async (params: { Page?: number; PageSize?: number } = {}, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.get('/AmbulanceBookings/my-bookings', {
+        params: { PageSize: params.PageSize ?? 20, Page: params.Page ?? 1 },
+      });
+      return {
+        bookings: res.data?.pagedList ?? [],
+        metaData: res.data?.metaData ?? null,
+      };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to fetch your bookings'));
+    }
+  }
+);
+
+export const updateBookingStatus = createAsyncThunk(
+  'driverBookings/updateStatus',
+  async (payload: { id: string; status: string }, { rejectWithValue }) => {
+    try {
+      await apiClient.patch(`/AmbulanceBookings/${payload.id}/status`, {
+        status: payload.status,
+      });
+      return { id: payload.id, status: payload.status };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, 'Failed to update booking status'));
+    }
+  }
+);

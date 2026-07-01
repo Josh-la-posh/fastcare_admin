@@ -6,7 +6,6 @@ import { fetchDriverBookings } from '@/services/thunks';
 import { logout } from '@/services/slice/authSlice';
 import { ROUTES } from '@/router/routes';
 import { MapPin, Clock, LogOut } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import logo from '/images/faslogo.png';
 

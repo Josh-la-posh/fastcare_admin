@@ -5,7 +5,7 @@ import { AppDispatch, RootState } from '@/services/store';
 import { fetchDriverBookings } from '@/services/thunks';
 import { logout } from '@/services/slice/authSlice';
 import { ROUTES } from '@/router/routes';
-import { MapPin, Clock, LogOut } from 'lucide-react';
+import { MapPin, Clock, LogOut, ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import logo from '/images/faslogo.png';
 
@@ -16,6 +16,15 @@ const STATUS_COLORS: Record<string, string> = {
   Arrived: 'bg-purple-100 text-purple-800',
   Completed: 'bg-green-100 text-green-800',
   Cancelled: 'bg-red-100 text-red-800',
+};
+
+// Driver-facing badge label for each stage (states are unchanged)
+const STATUS_DISPLAY: Record<string, string> = {
+  Pending: 'Pending',
+  EnRoute: 'On the way',
+  Arrived: 'Arrived',
+  Completed: 'Completed',
+  Cancelled: 'Cancelled',
 };
 
 export default function DriverBookings() {
@@ -89,7 +98,7 @@ export default function DriverBookings() {
                     </p>
                   </div>
                   <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusClass}`}>
-                    {booking.status ?? 'Unknown'}
+                    {STATUS_DISPLAY[booking.status ?? ''] ?? booking.status ?? 'Unknown'}
                   </span>
                 </div>
 
@@ -104,12 +113,20 @@ export default function DriverBookings() {
                   </div>
                 </div>
 
-                {booking.dateAssigned && (
-                  <div className="flex items-center gap-1.5 mt-3 text-xs text-gray-400">
-                    <Clock className="w-3 h-3" />
-                    <span>{booking.dateAssigned}</span>
-                  </div>
-                )}
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
+                  {booking.dateAssigned ? (
+                    <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                      <Clock className="w-3 h-3" />
+                      <span>{booking.dateAssigned}</span>
+                    </div>
+                  ) : (
+                    <span />
+                  )}
+                  <span className="flex items-center gap-0.5 text-xs font-semibold text-indigo-600">
+                    See detail
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
               </button>
             );
           })}

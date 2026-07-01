@@ -17,7 +17,14 @@ const ProtectedRoutes = () => {
       navigate(ROUTES.signin);
       return;
     }
-    if (user?.userRole.toLowerCase() === 'ambulanceprovideradmin') {
+    const role = user?.userRole.toLowerCase();
+    if (role === 'driver') {
+      if (!location.pathname.startsWith('/driver')) {
+        navigate(ROUTES.driver.bookings, { replace: true });
+      }
+      return;
+    }
+    if (role === 'ambulanceprovideradmin') {
       const allowedPrefixes = ['/ambulance', '/help-desk', '/settings'];
       const path = location.pathname;
       const allowed = allowedPrefixes.some(p => path.startsWith(p));

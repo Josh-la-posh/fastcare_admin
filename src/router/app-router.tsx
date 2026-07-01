@@ -35,6 +35,8 @@ import Articles from '@/pages/dashboard/helpdesk/articles';
 import ArticleDetails from '@/pages/dashboard/helpdesk/article-details';
 import Feedbacks from '@/pages/dashboard/helpdesk/feedback';
 import ProtectedRoutes from './ProtectedRoutes';
+import DriverBookings from '@/pages/driver/bookings';
+import BookingDetail from '@/pages/driver/booking-detail';
 
 import AllDoctors from '@/pages/dashboard/doctors/all-doctors';
 import { AllHospitals } from '@/pages/dashboard/hospitals/all-hospitals';
@@ -94,6 +96,10 @@ export const AppRouter = () => {
         <Route path={ROUTES.helpdesk.articles} element={<Articles />} />
         <Route path={ROUTES.helpdesk.details} element={<ArticleDetails />} />
         <Route path={ROUTES.helpdesk.feedback} element={<Feedbacks />} />
+
+        {/* Driver mobile view */}
+        <Route path={ROUTES.driver.bookings} element={<DriverBookings />} />
+        <Route path={ROUTES.driver.bookingDetail} element={<BookingDetail />} />
       </Route>
     </Routes>
   );

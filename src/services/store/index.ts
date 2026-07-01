@@ -25,6 +25,7 @@ import driversReducer from '../slice/driverSlice'
 import respondentsReducer from '../slice/respondentsSlice'
 import ambulanceRequestsReducer from '../slice/ambulanceRequestSlice'
 import amenitiesReducer from '../slice/amenitiesSlice'
+import driverBookingsReducer from '../slice/driverBookingsSlice'
 
 
 export const store = configureStore({
@@ -55,6 +56,7 @@ export const store = configureStore({
     respondents: respondentsReducer,
     ambulanceRequests: ambulanceRequestsReducer,
     amenities: amenitiesReducer,
+    driverBookings: driverBookingsReducer,
   },
 });
 

@@ -47,7 +47,7 @@ export default function BookingDetail() {
 
   useEffect(() => {
     if (bookings.length === 0) {
-      dispatch(fetchDriverBookings());
+      dispatch(fetchDriverBookings({}));
     }
   }, [dispatch, bookings.length]);
 

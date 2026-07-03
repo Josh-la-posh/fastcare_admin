@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { AppDispatch, RootState } from '@/services/store';
@@ -27,15 +27,39 @@ const STATUS_DISPLAY: Record<string, string> = {
   Cancelled: 'Cancelled',
 };
 
+// Priority order: active trip first, then pending, down to completed/cancelled.
+// Used both for the filter chips and to sort the booking list.
+const STATUS_ORDER = ['EnRoute', 'Arrived', 'Pending', 'Completed', 'Cancelled'];
+const STATUS_PRIORITY: Record<string, number> = STATUS_ORDER.reduce(
+  (acc, status, i) => ({ ...acc, [status]: i }),
+  {} as Record<string, number>,
+);
+
+type StatusFilter = 'All' | (typeof STATUS_ORDER)[number];
+const FILTER_OPTIONS: StatusFilter[] = ['All', ...STATUS_ORDER];
+
 export default function DriverBookings() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { bookings, loading } = useSelector((s: RootState) => s.driverBookings);
   const user = useSelector((s: RootState) => s.auth.user);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
 
   useEffect(() => {
     dispatch(fetchDriverBookings());
   }, [dispatch]);
+
+  // Sort by status priority (active trip → pending → completed), then apply the
+  // selected status filter.
+  const visibleBookings = useMemo(() => {
+    const sorted = [...bookings].sort(
+      (a, b) =>
+        (STATUS_PRIORITY[a.status ?? ''] ?? 99) - (STATUS_PRIORITY[b.status ?? ''] ?? 99),
+    );
+    return statusFilter === 'All'
+      ? sorted
+      : sorted.filter(b => b.status === statusFilter);
+  }, [bookings, statusFilter]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -61,8 +85,35 @@ export default function DriverBookings() {
       <div className="px-4 py-5">
         <h1 className="text-lg font-semibold text-gray-900 mb-1">My Bookings</h1>
         <p className="text-sm text-gray-500 mb-4">
-          {loading ? 'Loading…' : `${bookings.length} booking${bookings.length !== 1 ? 's' : ''} assigned to you`}
+          {loading
+            ? 'Loading…'
+            : `${visibleBookings.length} booking${visibleBookings.length !== 1 ? 's' : ''}${
+                statusFilter === 'All' ? ' assigned to you' : ''
+              }`}
         </p>
+
+        {/* Status filter — active trip first, then pending, down to completed */}
+        {!loading && bookings.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-3 mb-1 -mx-4 px-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {FILTER_OPTIONS.map(option => {
+              const label = option === 'All' ? 'All' : STATUS_DISPLAY[option] ?? option;
+              const active = statusFilter === option;
+              return (
+                <button
+                  key={option}
+                  onClick={() => setStatusFilter(option)}
+                  className={`shrink-0 text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+                    active
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {loading && (
           <div className="space-y-3">
@@ -79,8 +130,17 @@ export default function DriverBookings() {
           </div>
         )}
 
+        {!loading && bookings.length > 0 && visibleBookings.length === 0 && (
+          <div className="text-center py-16 text-gray-400">
+            <p className="text-4xl mb-3">🔍</p>
+            <p className="font-medium">
+              No {STATUS_DISPLAY[statusFilter] ?? statusFilter} bookings
+            </p>
+          </div>
+        )}
+
         <div className="space-y-3">
-          {bookings.map(booking => {
+          {visibleBookings.map(booking => {
             const statusClass = STATUS_COLORS[booking.status ?? ''] ?? 'bg-gray-100 text-gray-700';
             return (
               <button

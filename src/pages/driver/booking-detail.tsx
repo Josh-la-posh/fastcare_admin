@@ -111,9 +111,33 @@ export default function BookingDetail() {
       )
     : null;
 
-  const handleStatusUpdate = () => {
+  // Best-effort read of the driver's current position. Location is optional:
+  // if geolocation is unavailable, denied, or times out, we resolve to null
+  // and the status still updates.
+  const getCurrentLocation = (): Promise<{ latitude: number; longitude: number } | null> =>
+    new Promise(resolve => {
+      if (!('geolocation' in navigator)) {
+        resolve(null);
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        pos => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+        () => resolve(null),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+      );
+    });
+
+  const handleStatusUpdate = async () => {
     if (!nextStatus || !id) return;
-    dispatch(updateBookingStatus({ id, status: nextStatus }));
+    const location = await getCurrentLocation();
+    dispatch(
+      updateBookingStatus({
+        id,
+        status: nextStatus,
+        latitude: location?.latitude ?? null,
+        longitude: location?.longitude ?? null,
+      }),
+    );
   };
 
   return (

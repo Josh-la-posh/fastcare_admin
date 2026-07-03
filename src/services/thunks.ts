@@ -2227,10 +2227,20 @@ export const fetchDriverBookings = createAsyncThunk(
 
 export const updateBookingStatus = createAsyncThunk(
   'driverBookings/updateStatus',
-  async (payload: { id: string; status: string }, { rejectWithValue }) => {
+  async (
+    payload: {
+      id: string;
+      status: string;
+      latitude?: number | null;
+      longitude?: number | null;
+    },
+    { rejectWithValue }
+  ) => {
     try {
       await apiClient.patch(`/AmbulanceBookings/${payload.id}/status`, {
         status: payload.status,
+        latitude: payload.latitude ?? null,
+        longitude: payload.longitude ?? null,
       });
       return { id: payload.id, status: payload.status };
     } catch (error) {

@@ -35,4 +35,4 @@ jobs:
           ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
 
       - name: Sync dist to server
-        run: rsync -az --delete dist/ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/var/www/fastcare/"
+        run: rsync -az --delete dist/ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/var/www/backoffice.fastcare.ng/"

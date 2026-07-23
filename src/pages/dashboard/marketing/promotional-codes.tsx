@@ -466,7 +466,7 @@ const PromotionalCodesPage = () => {
                   <div className="relative">
                     <Input
                       className="w-48 pl-10"
-                      placeholder="Filter by influencer name"
+                      label="Influencer name"
                       value={nameFilter}
                       onChange={e => { setInfluencerPage(1); setNameFilter(e.target.value); }}
                     />
@@ -477,7 +477,7 @@ const PromotionalCodesPage = () => {
                   <div className="relative">
                     <Input
                       className="w-48 pl-10"
-                      placeholder="Filter by coupon code"
+                      label="Coupon code"
                       value={codeFilter}
                       onChange={e => { setInfluencerPage(1); setCodeFilter(e.target.value); }}
                     />
@@ -516,7 +516,7 @@ const PromotionalCodesPage = () => {
                   <div className="relative">
                     <Input
                       className="w-48 pl-10"
-                      placeholder="Filter by promo code"
+                      label="Promo code"
                       value={promoCodeFilter}
                       onChange={e => { setPromoPage(1); setPromoCodeFilter(e.target.value); }}
                     />

@@ -497,7 +497,7 @@ const ReferralCodesPage = () => {
       </Dialog>
       {/* Generate Code Dialog */}
       <Dialog open={generateDialogOpen} onOpenChange={(o) => { if (!o) closeGenerateDialog(); }}>
-        <DialogContent className="max-w-md p-0 overflow-hidden">
+        <DialogContent className="max-h-[95vh] max-w-md overflow-y-auto p-0">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b">
             <DialogTitle className="text-lg font-semibold">Generate Code</DialogTitle>

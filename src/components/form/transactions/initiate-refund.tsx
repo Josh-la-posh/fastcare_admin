@@ -94,7 +94,7 @@ export default function InitiateARefund() {
       <DialogTrigger asChild>
         <Button className="py-3 w-36 rounded-md">Initiate a refund</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-xl h-[98%] overflow-hidden">
+      <DialogContent className="max-h-[95vh] max-w-xl overflow-y-auto">
         <DialogHeader className="flex w-full items-center justify-between">
           <DialogTitle className="flex w-full items-center justify-between border-b py-2">
             <span className="text-gray-800 text-2xl font-normal py-3">

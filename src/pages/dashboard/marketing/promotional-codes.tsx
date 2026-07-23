@@ -754,7 +754,7 @@ const PromotionalCodesPage = () => {
 
       {/* Detail Modal */}
       <Dialog open={detailOpen} onOpenChange={(o) => { if (!o) { setDetailOpen(false); } }}>
-        <DialogContent className="z-[100] max-h-[80vh] max-w-5xl overflow-y-auto">
+        <DialogContent className="z-[100] max-h-[95vh] max-w-5xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Influencer Code Detail</DialogTitle>
           </DialogHeader>
@@ -845,7 +845,7 @@ const PromotionalCodesPage = () => {
 
       {/* Promo Detail Modal */}
       <Dialog open={promoDetailOpen} onOpenChange={(o) => { if (!o) { setPromoDetailOpen(false); } }}>
-        <DialogContent className="z-[100] max-h-[80vh] max-w-3xl overflow-y-auto">
+        <DialogContent className="z-[100] max-h-[95vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Promo Code Detail</DialogTitle>
           </DialogHeader>
@@ -902,7 +902,7 @@ const PromotionalCodesPage = () => {
 
       {/* Generate Code Dialog */}
       <Dialog open={generateDialogOpen} onOpenChange={(o) => { if (!o) closeGenerateDialog(); }}>
-        <DialogContent className="max-w-md p-0 overflow-hidden">
+        <DialogContent className="max-h-[95vh] max-w-md overflow-y-auto p-0">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b">
             <DialogTitle className="text-lg font-semibold">Generate Code</DialogTitle>

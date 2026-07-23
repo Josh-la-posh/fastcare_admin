@@ -24,7 +24,7 @@ export default function ResponderDetails({data}: Props) {
             <EyeIcon className="w-4 h-4 cursor-pointer" />
           </div>
         </DialogTrigger>
-        <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-xl max-h-[95vh] overflow-y-auto">
           <DialogHeader className="flex w-full items-center justify-between">
             <DialogTitle className="flex w-full items-center justify-between border-b">
               <span className="text-gray-800 text-2xl font-semibold py-3">

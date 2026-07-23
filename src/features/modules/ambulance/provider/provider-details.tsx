@@ -35,7 +35,7 @@ export default function ProvidersDetails({data, open, setOpen}: Props) {
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-xl max-h-[95vh] overflow-y-auto">
           <DialogHeader className="flex w-full items-center justify-between">
             <DialogTitle className="flex w-full items-center justify-between border-b">
               <span className="text-gray-800 text-2xl font-semibold py-3">

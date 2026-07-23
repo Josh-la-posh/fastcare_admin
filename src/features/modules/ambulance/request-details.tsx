@@ -129,7 +129,7 @@ export default function RequestDetails({data, onAssigned}: Props) {
             <span>View</span>
           </button>
         </DialogTrigger>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto">
           <DialogHeader className="flex w-full items-center justify-between">
             <DialogTitle className="flex w-full items-center justify-between border-b">
               <span className="text-gray-800 text-2xl font-semibold py-3">

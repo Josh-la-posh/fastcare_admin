@@ -327,7 +327,7 @@ const AdCampaigns = () => {
           resetForm();
         }
       }}>
-        <DialogContent className="max-w-md h-[95%] overflow-scroll">
+        <DialogContent className="max-h-[95vh] max-w-md overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Ad Campaign</DialogTitle>
           </DialogHeader>

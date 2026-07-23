@@ -274,7 +274,7 @@ export default function AddHospital() {
       <DialogTrigger asChild>
         <Button className="py-2 w-36 rounded-md">Add Hospital</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-5xl h-[95%]">
+      <DialogContent className="max-h-[95vh] max-w-5xl overflow-y-auto">
         <DialogHeader className="flex w-full items-center justify-between">
           <DialogTitle className="flex w-full items-center justify-between border-b py-2">
             <span className="text-gray-800 text-xl font-normal py-2">

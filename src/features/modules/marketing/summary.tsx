@@ -72,7 +72,7 @@ export default function Summary({ open, onOpenChange, base, selected, loadingDet
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="z-[100] max-h-[80vh] max-w-5xl overflow-y-auto">
+      <DialogContent className="z-[100] max-h-[95vh] max-w-5xl overflow-y-auto">
         <DialogHeader className="flex w-full items-center justify-between">
           <DialogTitle className="flex w-full items-center justify-between border-b">
             <span className="py-3 text-2xl font-semibold text-gray-800">Summary</span>

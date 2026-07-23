@@ -62,6 +62,8 @@ const ReferralCodePage = () => {
   const [columnFilters, setColumnFilters] = useState<ColumnFilter[]>([]); // retained for table internal needs (currently unused)
   const [codeFilter, setCodeFilter] = useState<string | undefined>(undefined);
   const [staffNameFilter, setStaffNameFilter] = useState<string | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [userTypeFilter, setUserTypeFilter] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -74,8 +76,10 @@ const ReferralCodePage = () => {
       PageSize: pageSize,
       StaffName: staffNameFilter || searchTerm || undefined,
       Code: codeFilter || undefined,
+      Status: statusFilter,
+      UserType: userTypeFilter,
     }));
-  }, [dispatch, page, pageSize, searchTerm, codeFilter, staffNameFilter]);
+  }, [dispatch, page, pageSize, searchTerm, codeFilter, staffNameFilter, statusFilter, userTypeFilter]);
 
   // Map API codes to table rows
   const mappedRows: ReferralRow[] = useMemo(() => (
@@ -194,14 +198,20 @@ const ReferralCodePage = () => {
   });
 
   // Function to apply filters from FilterDialog
-  const handleApplyFilter = (filters: { Code?: string; StaffName?: string }) => {
+  const handleApplyFilter = (filters: { Code?: string; StaffName?: string; Status?: string; UserType?: string }) => {
     setCodeFilter(filters.Code);
     setStaffNameFilter(filters.StaffName);
+    setStatusFilter(filters.Status);
+    setUserTypeFilter(filters.UserType);
+    setPage(1);
     // table column filters not required for server filtering
   };
   const handleResetFilter = () => {
     setCodeFilter(undefined);
     setStaffNameFilter(undefined);
+    setStatusFilter(undefined);
+    setUserTypeFilter(undefined);
+    setPage(1);
   };
 
   // Dynamic claimStats derived from summary; fallbacks for loading/error states
@@ -253,7 +263,7 @@ const ReferralCodePage = () => {
               />
             </div> */}
             <div className="flex gap-4 items-center">
-              <MarketingFilter onApply={handleApplyFilter} onReset={handleResetFilter} />
+              <MarketingFilter onApply={handleApplyFilter} onReset={handleResetFilter} showReferralOptions />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="py-2.5 w-fit" disabled={loadingList}>
@@ -264,7 +274,13 @@ const ReferralCodePage = () => {
                 <DropdownMenuContent align="end" className="w-40">
                   <DropdownMenuItem onClick={() => {
                     // CSV (format 0)
-                    dispatch(exportReferralCodes({ format: 0, Code: undefined, StaffName: searchTerm || undefined }))
+                    dispatch(exportReferralCodes({
+                      format: 0,
+                      Code: codeFilter || undefined,
+                      StaffName: staffNameFilter || searchTerm || undefined,
+                      Status: statusFilter,
+                      UserType: userTypeFilter,
+                    }))
                       .unwrap()
                       .then(p => {
                         const blob = p.blob as Blob;
@@ -278,7 +294,13 @@ const ReferralCodePage = () => {
                   }} className="cursor-pointer flex items-center gap-2"><Download size={14}/> CSV</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => {
                     // Excel (format 1)
-                    dispatch(exportReferralCodes({ format: 1, Code: undefined, StaffName: searchTerm || undefined }))
+                    dispatch(exportReferralCodes({
+                      format: 1,
+                      Code: codeFilter || undefined,
+                      StaffName: staffNameFilter || searchTerm || undefined,
+                      Status: statusFilter,
+                      UserType: userTypeFilter,
+                    }))
                       .unwrap()
                       .then(p => {
                         const blob = p.blob as Blob;

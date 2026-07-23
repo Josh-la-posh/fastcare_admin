@@ -658,6 +658,8 @@ export interface ReferralCodesState {
     PageSize?: number;
     Code?: string;
     StaffName?: string;
+    Status?: string;
+    UserType?: string;
   };
 }
 

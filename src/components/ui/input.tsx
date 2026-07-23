@@ -58,8 +58,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <label
             htmlFor={inputId}
             className={cn(
-              'absolute left-3 -top-2.5 bg-gray-50 px-1 text-md font-medium text-gray-900 cursor-text transition-all duration-200',
-              'peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-gray-900 peer-placeholder-shown:text-md',
+              'absolute left-7 -top-2 bg-gray-50 px-1 text-md font-medium text-gray-900 cursor-text transition-all duration-200',
+              'peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-gray-500 peer-placeholder-shown:text-md',
               'peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-primary',
               error && 'text-red-600 peer-focus:text-red-600',
             )}

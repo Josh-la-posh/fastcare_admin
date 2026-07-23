@@ -61,7 +61,7 @@ const ReferralCodesPage = () => {
   const [pageSize, setPageSize] = useState(10);
   const [codeFilter, setCodeFilter] = useState('');
   const [staffFilter, setStaffFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -89,7 +89,7 @@ const ReferralCodesPage = () => {
       PageSize: pageSize, 
       Code: codeFilter || undefined, 
       StaffName: staffFilter || undefined,
-      Status: statusFilter ? Number(statusFilter) : undefined 
+      Status: statusFilter === 'all' ? undefined : statusFilter
     }));
   }, [dispatch, page, pageSize, codeFilter, staffFilter, statusFilter]);
 
@@ -320,15 +320,15 @@ const ReferralCodesPage = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="1">Active</SelectItem>
-                  <SelectItem value="0">Inactive</SelectItem>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
-              {(codeFilter || staffFilter || statusFilter) && (
+              {(codeFilter || staffFilter || statusFilter !== 'all') && (
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => { setCodeFilter(''); setStaffFilter(''); setStatusFilter(''); setPage(1); }}
+                  onClick={() => { setCodeFilter(''); setStaffFilter(''); setStatusFilter('all'); setPage(1); }}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   Clear filters

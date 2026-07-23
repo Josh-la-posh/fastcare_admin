@@ -72,8 +72,8 @@ const PromotionalCodesPage = () => {
   const [influencerPage, setInfluencerPage] = useState(1);
   const [influencerPageSize, setInfluencerPageSize] = useState(10);
   const [nameFilter, setNameFilter] = useState('');
-  const [codeFilter] = useState('');
-  const [statusFilter] = useState<string>('');
+  const [codeFilter, setCodeFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   // Detail modal state
   const [detailOpen, setDetailOpen] = useState(false);
@@ -85,6 +85,7 @@ const PromotionalCodesPage = () => {
   const [promoPage, setPromoPage] = useState(1);
   const [promoPageSize, setPromoPageSize] = useState(10);
   const [promoCodeFilter, setPromoCodeFilter] = useState('');
+  const [promoStatusFilter, setPromoStatusFilter] = useState<string>('all');
 
   // Generate Code Dialog State
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
@@ -125,7 +126,7 @@ const PromotionalCodesPage = () => {
         PageSize: influencerPageSize,
         Name: nameFilter || undefined,
         CouponCode: codeFilter || undefined,
-        Status: statusFilter ? Number(statusFilter) : undefined,
+        Status: statusFilter === 'all' ? undefined : statusFilter,
       }));
     }
   }, [dispatch, activeTab, influencerPage, influencerPageSize, nameFilter, codeFilter, statusFilter]);
@@ -136,9 +137,11 @@ const PromotionalCodesPage = () => {
       dispatch(fetchPromoCodes({
         Page: promoPage,
         PageSize: promoPageSize,
+        Code: promoCodeFilter || undefined,
+        Status: promoStatusFilter === 'all' ? undefined : promoStatusFilter,
       }));
     }
-  }, [dispatch, activeTab, promoPage, promoPageSize]);
+  }, [dispatch, activeTab, promoPage, promoPageSize, promoCodeFilter, promoStatusFilter]);
 
   // Stats cards
   const stats = [
@@ -229,7 +232,7 @@ const PromotionalCodesPage = () => {
         PageSize: influencerPageSize,
         Name: nameFilter || undefined,
         CouponCode: codeFilter || undefined,
-        Status: statusFilter ? Number(statusFilter) : undefined,
+        Status: statusFilter === 'all' ? undefined : statusFilter,
       }));
     } catch (error) {
       toast.error(typeof error === 'string' ? error : 'Failed to activate influencer code');
@@ -248,7 +251,7 @@ const PromotionalCodesPage = () => {
         PageSize: influencerPageSize,
         Name: nameFilter || undefined,
         CouponCode: codeFilter || undefined,
-        Status: statusFilter ? Number(statusFilter) : undefined,
+        Status: statusFilter === 'all' ? undefined : statusFilter,
       }));
     } catch (error) {
       toast.error(typeof error === 'string' ? error : 'Failed to deactivate influencer code');
@@ -263,7 +266,12 @@ const PromotionalCodesPage = () => {
       if (selectedPromoId === id) {
         dispatch(fetchPromoCodeById(id));
       }
-      dispatch(fetchPromoCodes({Page: promoPage, PageSize: promoPageSize}));
+      dispatch(fetchPromoCodes({
+        Page: promoPage,
+        PageSize: promoPageSize,
+        Code: promoCodeFilter || undefined,
+        Status: promoStatusFilter === 'all' ? undefined : promoStatusFilter,
+      }));
       dispatch(fetchPromoCodeSummary());
     } catch (error) {
       toast.error(typeof error === 'string' ? error : 'Failed to activate promo code');
@@ -277,7 +285,12 @@ const PromotionalCodesPage = () => {
       if (selectedPromoId === id) {
         dispatch(fetchPromoCodeById(id));
       }
-      dispatch(fetchPromoCodes({Page: promoPage, PageSize: promoPageSize}));
+      dispatch(fetchPromoCodes({
+        Page: promoPage,
+        PageSize: promoPageSize,
+        Code: promoCodeFilter || undefined,
+        Status: promoStatusFilter === 'all' ? undefined : promoStatusFilter,
+      }));
       dispatch(fetchPromoCodeSummary());
     } catch (error) {
       toast.error(typeof error === 'string' ? error : 'Failed to deactivate promo code');
@@ -301,7 +314,7 @@ const PromotionalCodesPage = () => {
       format,
       CouponCode: codeFilter || undefined,
       Name: nameFilter || undefined,
-      Status: statusFilter ? Number(statusFilter) : undefined,
+      Status: statusFilter === 'all' ? undefined : statusFilter,
     }))
       .unwrap()
       .then(payload => {
@@ -405,15 +418,6 @@ const PromotionalCodesPage = () => {
     return firstName.trim() && lastName.trim() && userName.trim() && email.trim();
   };
 
-  const filteredPromoList = promoList.filter(item => {
-    const query = promoCodeFilter.trim().toLowerCase();
-    if (!query) return true;
-    return (
-      item.code.toLowerCase().includes(query) ||
-      item.title.toLowerCase().includes(query)
-    );
-  });
-
   return (
     <DashboardLayout>
       <div className="bg-gray-100 min-h-screen overflow-auto">
@@ -462,7 +466,7 @@ const PromotionalCodesPage = () => {
                   <div className="relative">
                     <Input
                       className="w-48 pl-10"
-                      placeholder="Search user's name"
+                      placeholder="Filter by influencer name"
                       value={nameFilter}
                       onChange={e => { setInfluencerPage(1); setNameFilter(e.target.value); }}
                     />
@@ -470,14 +474,49 @@ const PromotionalCodesPage = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </div>
-                  <Button variant="outline" size="sm">Filter</Button>
+                  <div className="relative">
+                    <Input
+                      className="w-48 pl-10"
+                      placeholder="Filter by coupon code"
+                      value={codeFilter}
+                      onChange={e => { setInfluencerPage(1); setCodeFilter(e.target.value); }}
+                    />
+                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <Select value={statusFilter} onValueChange={(value) => { setInfluencerPage(1); setStatusFilter(value); }}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="All Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {(nameFilter || codeFilter || statusFilter !== 'all') && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setNameFilter('');
+                        setCodeFilter('');
+                        setStatusFilter('all');
+                        setInfluencerPage(1);
+                      }}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      Clear filters
+                    </Button>
+                  )}
                 </>
               ) : (
                 <>
                   <div className="relative">
                     <Input
                       className="w-48 pl-10"
-                      placeholder="Search by code"
+                      placeholder="Filter by promo code"
                       value={promoCodeFilter}
                       onChange={e => { setPromoPage(1); setPromoCodeFilter(e.target.value); }}
                     />
@@ -485,7 +524,30 @@ const PromotionalCodesPage = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </div>
-                  <Button variant="outline" size="sm">Filter</Button>
+                  <Select value={promoStatusFilter} onValueChange={(value) => { setPromoPage(1); setPromoStatusFilter(value); }}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="All Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {(promoCodeFilter || promoStatusFilter !== 'all') && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setPromoCodeFilter('');
+                        setPromoStatusFilter('all');
+                        setPromoPage(1);
+                      }}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      Clear filters
+                    </Button>
+                  )}
                 </>
               )}
             </div>
@@ -521,7 +583,7 @@ const PromotionalCodesPage = () => {
                   <TableHeader>
                     <TableRow className="bg-gray-50">
                       <TableHead className="whitespace-nowrap">Date</TableHead>
-                      <TableHead className="whitespace-nowrap">Referral Code</TableHead>
+                      <TableHead className="whitespace-nowrap">Coupon Code</TableHead>
                       <TableHead className="whitespace-nowrap">Name</TableHead>
                       <TableHead className="whitespace-nowrap">Email</TableHead>
                       <TableHead className="whitespace-nowrap">Reg. Users</TableHead>
@@ -614,14 +676,14 @@ const PromotionalCodesPage = () => {
                           <Loader height="h-12" />
                         </TableCell>
                       </TableRow>
-                    ) : filteredPromoList.length === 0 ? (
+                    ) : promoList.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-10 text-sm text-gray-500">
                           No promo codes found
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredPromoList.map(item => {
+                      promoList.map(item => {
                         const statusInfo = getPromoStatusLabel(item.status);
                         return (
                           <TableRow key={item.id} className="hover:bg-gray-50">

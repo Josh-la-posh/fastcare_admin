@@ -1320,7 +1320,7 @@ export const fetchReferralSummary = createAsyncThunk(
 export const fetchReferralCodes = createAsyncThunk(
   "referrals/fetchCodes",
   async (
-    params: { Page?: number; PageSize?: number; Code?: string; StaffName?: string; Status?: number } | undefined,
+    params: { Page?: number; PageSize?: number; Code?: string; StaffName?: string; Status?: string; UserType?: string } | undefined,
     { rejectWithValue }
   ) => {
     try {
@@ -1347,7 +1347,7 @@ export const fetchReferralCodeById = createAsyncThunk(
 export const exportReferralCodes = createAsyncThunk(
   "referrals/exportCodes",
   async (
-    params: { format: number; Code?: string; StaffName?: string },
+    params: { format: number; Code?: string; StaffName?: string; Status?: string; UserType?: string },
     { rejectWithValue }
   ) => {
     try {
@@ -1440,7 +1440,7 @@ export const fetchMarketingCampaignSummary = createAsyncThunk(
 export const fetchMarketingCampaigns = createAsyncThunk(
   "marketingCampaigns/fetchAll",
   async (
-    params: { Page?: number; PageSize?: number; CouponCode?: string; Name?: string; Status?: number } | undefined,
+    params: { Page?: number; PageSize?: number; CouponCode?: string; Name?: string; Status?: string } | undefined,
     { rejectWithValue }
   ) => {
     try {
@@ -1491,7 +1491,7 @@ export const fetchMarketingCampaignById = createAsyncThunk(
 export const exportMarketingCampaigns = createAsyncThunk(
   "marketingCampaigns/export",
   async (
-    params: { format: number; CouponCode?: string; Name?: string; Status?: number },
+    params: { format: number; CouponCode?: string; Name?: string; Status?: string },
     { rejectWithValue }
   ) => {
     try {
@@ -1619,7 +1619,7 @@ export const toggleAdCampaignStatus = createAsyncThunk(
 export const fetchPromoCodes = createAsyncThunk(
   "promoCodes/fetchAll",
   async (
-    params: { Page?: number; PageSize?: number } | undefined,
+    params: { Page?: number; PageSize?: number; Code?: string; Status?: string } | undefined,
     { rejectWithValue }
   ) => {
     try {

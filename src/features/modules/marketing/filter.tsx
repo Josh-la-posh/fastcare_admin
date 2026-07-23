@@ -5,27 +5,50 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {Label} from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Filter } from 'lucide-react';
-// removed select components as filters now only use text inputs
 
 import {useState} from 'react';
 
+type MarketingFilters = {
+  Code?: string;
+  StaffName?: string;
+  Status?: string;
+  UserType?: string;
+};
+
 interface MarketingFilterProps {
-  onApply: (filters: { Code?: string; StaffName?: string }) => void;
+  onApply: (filters: MarketingFilters) => void;
   onReset: () => void;
+  showReferralOptions?: boolean;
 }
 
-export const MarketingFilter = ({onApply, onReset}: MarketingFilterProps) => {
+export const MarketingFilter = ({onApply, onReset, showReferralOptions = false}: MarketingFilterProps) => {
   const [code, setCode] = useState<string>('');
   const [staffName, setStaffName] = useState<string>('');
+  const [status, setStatus] = useState<string>('all');
+  const [userType, setUserType] = useState<string>('all');
 
   const handleApply = () => {
-    onApply({ Code: code || undefined, StaffName: staffName || undefined });
+    onApply({
+      Code: code || undefined,
+      StaffName: staffName || undefined,
+      Status: status === 'all' ? undefined : status,
+      UserType: userType === 'all' ? undefined : userType,
+    });
   };
 
   const handleReset = () => {
     setCode('');
     setStaffName('');
+    setStatus('all');
+    setUserType('all');
     onReset();
   };
 
@@ -65,6 +88,36 @@ export const MarketingFilter = ({onApply, onReset}: MarketingFilterProps) => {
               onChange={e => setStaffName(e.target.value)}
             />
           </div>
+          {showReferralOptions && (
+            <>
+              <div className="flex flex-col gap-2">
+                <Label>Status</Label>
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label>User Type</Label>
+                <Select value={userType} onValueChange={setUserType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select user type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All User Types</SelectItem>
+                    <SelectItem value="Patient">Patient</SelectItem>
+                    <SelectItem value="Staff">Staff</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Buttons */}

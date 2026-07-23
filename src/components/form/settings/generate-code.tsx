@@ -72,7 +72,7 @@ export default function GenerateCode() {
       <DialogTrigger asChild>
         <Button className="py-3 w-40 rounded-md">Generate New Code</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader className="flex w-full items-center justify-between">
           <DialogTitle className="flex w-full items-center justify-between border-b py-2">
             <div>
@@ -97,7 +97,7 @@ export default function GenerateCode() {
               <ChevronDown className={`w-4 h-4 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
             </div>
             {dropdownOpen && (
-              <div className="absolute z-50 top-full mt-1 w-full rounded-md border border-gray-200 bg-white shadow-md max-h-64 overflow-auto">
+              <div className="z-50 top-full mt-1 w-full rounded-md border border-gray-200 bg-white shadow-md max-h-64 overflow-auto">
                 <div className="p-2 border-b bg-gray-50 sticky top-0">
                   <input
                     value={filter}

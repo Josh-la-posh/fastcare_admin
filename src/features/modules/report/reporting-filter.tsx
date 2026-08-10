@@ -1,9 +1,30 @@
 import {Button} from '@/components/ui/button';
 import {Label} from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 import {useState} from 'react';
 
-export const ReportingFilter = ({onApply, onReset}: any) => {
+interface ReportingFilterProps {
+  onApply: (filters: {
+    startDate?: string | null;
+    endDate?: string | null;
+    doctor?: string;
+    hospital?: string;
+    clinic?: string;
+    duration?: string;
+    appointment?: string;
+    status?: string;
+  }) => void;
+  onReset: () => void;
+}
+
+export const ReportingFilter = ({onApply, onReset}: ReportingFilterProps) => {
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
 
@@ -12,6 +33,7 @@ export const ReportingFilter = ({onApply, onReset}: any) => {
   const [clinic, setClinic] = useState<string>('');
   const [duration, setDuration] = useState<string>('');
   const [appointment, setAppointment] = useState<string>('');
+  const [status, setStatus] = useState<string>('');
 
   const handleApply = () => {
     onApply({
@@ -22,6 +44,7 @@ export const ReportingFilter = ({onApply, onReset}: any) => {
       clinic,
       duration,
       appointment,
+      status,
     });
   };
 
@@ -33,6 +56,7 @@ export const ReportingFilter = ({onApply, onReset}: any) => {
     setClinic('');
     setDoctor('');
     setHospital('');
+    setStatus('');
     onReset();
   };
 
@@ -115,6 +139,24 @@ export const ReportingFilter = ({onApply, onReset}: any) => {
             value={duration}
             onChange={e => setDuration(e.target.value)}
           />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label>Status</Label>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="PENDING">PENDING</SelectItem>
+              <SelectItem value="CONFIRMED">CONFIRMED</SelectItem>
+              <SelectItem value="WAITING">WAITING</SelectItem>
+              <SelectItem value="COMPLETED">COMPLETED</SelectItem>
+              <SelectItem value="RESCHEDULED">RESCHEDULED</SelectItem>
+              <SelectItem value="UNATTENDED">UNATTENDED</SelectItem>
+              <SelectItem value="CANCELLED">CANCELLED</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* <div className="flex flex-col gap-2">

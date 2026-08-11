@@ -75,7 +75,7 @@ const Providers = () => {
               }}
               className="cursor-pointer w-4 h-4"
             />
-            <Trash className="text-red-500 w-4 h-4 cursor-pointer" />
+            {/* <Trash className="text-red-500 w-4 h-4 cursor-pointer" /> */}
           </div>
         );
       },

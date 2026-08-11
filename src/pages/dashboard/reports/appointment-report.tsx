@@ -14,7 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import { ReportingFilter } from '@/features/modules/report/reporting-filter';
+import { ReportingFilter, type ReportingFilterValues } from '@/features/modules/report/reporting-filter';
 
 interface AppointmentRow { patientName: string; doctorName: string | null; date: string | null; duration: string | null; }
 
@@ -42,7 +42,7 @@ const AppointmentReport = () => {
           <div className="flex flex-col h-[750px]">
             <div className="bg-white p-4 rounded-md mb-4">
               <ReportingFilter
-                onApply={(f: { startDate?: string; endDate?: string; doctor?: string; hospital?: string; clinic?: string; duration?: string }) => {
+                onApply={(f: ReportingFilterValues) => {
                   const payload: Partial<typeof apptFilters> = {};
                   if (f.startDate) payload.StartDate = f.startDate;
                   if (f.endDate) payload.EndDate = f.endDate;

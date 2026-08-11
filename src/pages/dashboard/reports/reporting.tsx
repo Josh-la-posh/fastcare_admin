@@ -17,7 +17,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import {ReportingFilter} from '@/features/modules/report/reporting-filter';
+import {ReportingFilter, type ReportingFilterValues} from '@/features/modules/report/reporting-filter';
 import {Pagination} from '@/components/ui/pagination';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '@/services/store';
@@ -90,17 +90,7 @@ const Reporting = () => {
   const totalPages = metaData?.totalPages || 1;
   const empty = !loading && list.length === 0;
 
-  interface RawFilterFormValues {
-    startDate?: string;
-    endDate?: string;
-    doctor?: string;
-    hospital?: string;
-    clinic?: string;
-    duration?: string;
-    appointment?: string;
-  }
-
-  const handleApplyFilter = (f: RawFilterFormValues) => {
+    const handleApplyFilter = (f: ReportingFilterValues) => {
     const payload: Partial<typeof filters> = {};
     if (f.startDate) payload.StartDate = f.startDate; // assume already yyyy-mm-dd
     if (f.endDate) payload.EndDate = f.endDate;

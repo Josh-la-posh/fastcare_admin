@@ -10,17 +10,19 @@ import {
 
 import {useState} from 'react';
 
+export interface ReportingFilterValues {
+  startDate?: string | null;
+  endDate?: string | null;
+  doctor?: string;
+  hospital?: string;
+  clinic?: string;
+  duration?: string;
+  appointment?: string;
+  status?: string;
+}
+
 interface ReportingFilterProps {
-  onApply: (filters: {
-    startDate?: string | null;
-    endDate?: string | null;
-    doctor?: string;
-    hospital?: string;
-    clinic?: string;
-    duration?: string;
-    appointment?: string;
-    status?: string;
-  }) => void;
+  onApply: (filters: ReportingFilterValues) => void;
   onReset: () => void;
 }
 

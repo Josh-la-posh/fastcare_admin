@@ -24,7 +24,7 @@ import {
 } from '@tanstack/react-table';
 
 import {Pagination} from '@/components/ui/pagination';
-import {EyeIcon, Trash} from 'lucide-react';
+import {EyeIcon} from 'lucide-react';
 import AddProviders from '@/components/form/ambulance/providers/add-provider';
 
 import {fetchAmbulanceProviders} from '@/services/thunks';

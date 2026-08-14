@@ -752,6 +752,7 @@ export interface AppointmentReportItem {
   doctorName: string | null;
   date: string | null; // ISO or yyyy-mm-dd
   duration: string | null; // e.g. "1 hour(s)"
+  status: string | null;
 }
 
 export interface AppointmentReportsState {

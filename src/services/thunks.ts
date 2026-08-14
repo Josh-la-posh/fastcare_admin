@@ -534,13 +534,13 @@ export const updateProfile = createAsyncThunk(
 
 export const fetchAmbulanceProviders = createAsyncThunk<
   AmbulanceProvider[], // type of returned data
-  { page: number; pageSize: number } // argument type
+  { page: number; pageSize: number; isActive?: boolean } // argument type
 >(
   "providers/fetchAmbulanceProviders",
-  async ({ page, pageSize }, { rejectWithValue }) => {
+  async ({ page, pageSize, isActive }, { rejectWithValue }) => {
     try {
       const res = await apiClient.get("/AmbulanceProviders", {
-        params: { Page: page, PageSize: pageSize },
+        params: { Page: page, PageSize: pageSize, isActive },
       });
       return res.data.data.flat(); 
     } catch (error) {
@@ -1996,6 +1996,7 @@ export const fetchAppointmentReports = createAsyncThunk(
       DoctorName?: string;
       HospitalId?: string;
       ClinicId?: string;
+      Status?: string;
       Page?: number;
       PageSize?: number;
     } | undefined,
@@ -2005,7 +2006,13 @@ export const fetchAppointmentReports = createAsyncThunk(
       const res = await apiClient.get('/Appointment/filtered', { params });
       const rawList: unknown = res.data.data || [];
       const list = Array.isArray(rawList) ? rawList.map(item => {
-        const d = item as { patientName?: string; doctorName?: string | null; date?: string | null; duration?: string | null; status?: string | null };
+        const d = item as {
+          patientName?: string;
+          doctorName?: string | null;
+          date?: string | null;
+          duration?: string | null;
+          status?: string | null;
+        };
         return {
           patientName: d.patientName || '',
           doctorName: d.doctorName ?? null,
@@ -2032,6 +2039,7 @@ export const exportAppointmentReports = createAsyncThunk(
       DoctorName?: string;
       HospitalId?: string;
       ClinicId?: string;
+      Status?: string;
     },
     { rejectWithValue }
   ) => {

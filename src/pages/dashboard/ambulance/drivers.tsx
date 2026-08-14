@@ -171,8 +171,8 @@ const Drivers = () => {
 
   return (
     <DashboardLayout>
-      <div className="bg-gray-100 overflow-scroll h-full">
-        <div className="lg:mx-8 mt-10 bg-white rounded-md flex flex-col h-[500px] mb-36">
+      <div className="bg-gray-100 overflow-visible min-h-full">
+        <div className="lg:mx-8 mt-10 bg-white rounded-md flex flex-col mb-36">
           <div className="flex flex-wrap gap-4 justify-between items-center p-6">
             <div className="flex items-center gap-8">
               <h1 className="text-xl text-gray-800">
@@ -184,8 +184,8 @@ const Drivers = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-auto lg:px-0 lg:mt-4">
-            <Table className="min-w-[600px]">
+          <div className="lg:px-0 lg:mt-4">
+            <Table className="min-w-full">
               <TableHeader className="border border-[#CDE5F9]">
                 {table.getHeaderGroups().map(headerGroup => (
                   <TableRow key={headerGroup.id}>

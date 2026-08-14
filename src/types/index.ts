@@ -769,6 +769,7 @@ export interface AppointmentReportsState {
     DoctorName?: string;
     HospitalId?: string;
     ClinicId?: string;
+    Status?: string;
     Page?: number;
     PageSize?: number;
   };

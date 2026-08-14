@@ -372,9 +372,12 @@ const UnifiedReports = () => {
                         const match = f.duration.match(/\d+/);
                         if (match) payload.MinDuration = parseInt(match[0], 10);
                       }
+                      if (f.status) {
+                        payload.Status = f.status.toUpperCase();
+                      }
                       dispatch(setAppointmentFilters(payload));
                     }}
-                    onReset={() => dispatch(setAppointmentFilters({ StartDate: undefined, EndDate: undefined, DoctorName: undefined, HospitalId: undefined, ClinicId: undefined, MinDuration: undefined }))}
+                    onReset={() => dispatch(setAppointmentFilters({ StartDate: undefined, EndDate: undefined, DoctorName: undefined, HospitalId: undefined, ClinicId: undefined, MinDuration: undefined, Status: undefined }))}
                   />
                 </div>
                 <div className="flex-1 overflow-auto">

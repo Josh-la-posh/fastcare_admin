@@ -16,7 +16,7 @@ import {
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { ReportingFilter, type ReportingFilterValues } from '@/features/modules/report/reporting-filter';
 
-interface AppointmentRow { patientName: string; doctorName: string | null; date: string | null; duration: string | null; }
+interface AppointmentRow { patientName: string; doctorName: string | null; date: string | null; duration: string | null; status: string | null; }
 
 const AppointmentReport = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -28,6 +28,7 @@ const AppointmentReport = () => {
   const apptColumns: ColumnDef<AppointmentRow>[] = [
     { accessorKey: 'date', header: 'Date', cell: ({ getValue }) => { const raw = getValue<string | null>(); return raw && raw.includes('T') ? raw.split('T')[0] : raw || '-'; } },
     { accessorKey: 'patientName', header: 'Patient Name', cell: ({ getValue }) => getValue<string | null>() || '-' },
+    { accessorKey: 'status', header: 'Status', cell: ({ getValue }) => getValue<string | null>() || '-' },
     { accessorKey: 'duration', header: 'Session Duration', cell: ({ getValue }) => getValue<string | null>() || '-' },
   ];
   const apptTable = useReactTable({ data: apptList as AppointmentRow[], columns: apptColumns, getCoreRowModel: getCoreRowModel() });

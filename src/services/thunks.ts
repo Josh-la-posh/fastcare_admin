@@ -2005,12 +2005,13 @@ export const fetchAppointmentReports = createAsyncThunk(
       const res = await apiClient.get('/Appointment/filtered', { params });
       const rawList: unknown = res.data.data || [];
       const list = Array.isArray(rawList) ? rawList.map(item => {
-        const d = item as { patientName?: string; doctorName?: string | null; date?: string | null; duration?: string | null };
+        const d = item as { patientName?: string; doctorName?: string | null; date?: string | null; duration?: string | null; status?: string | null };
         return {
           patientName: d.patientName || '',
           doctorName: d.doctorName ?? null,
           date: d.date ?? null,
           duration: d.duration ?? null,
+          status: d.status ?? null,
         };
       }) : [];
       return { list, metaData: res.data.metaData || null };

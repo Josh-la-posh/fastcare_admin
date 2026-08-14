@@ -37,7 +37,7 @@ interface UserReportRow {
   role: string;
   creationDate: string;
 }
-interface AppointmentRow { patientName: string; doctorName: string | null; date: string | null; duration: string | null; }
+interface AppointmentRow { patientName: string; doctorName: string | null; date: string | null; duration: string | null; status: string | null; }
 
 const UnifiedReports = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -141,6 +141,7 @@ const UnifiedReports = () => {
     { accessorKey: 'date', header: 'Date', cell: ({ getValue }) => { const raw = getValue<string | null>(); return raw && raw.includes('T') ? raw.split('T')[0] : raw || '-'; } },
     // { accessorKey: 'doctorName', header: 'Doctor in charge', cell: ({ getValue }) => getValue<string | null>() || '-' },
     { accessorKey: 'patientName', header: 'Patient Name', cell: ({ getValue }) => getValue<string | null>() || '-' },
+    { accessorKey: 'status', header: 'Status', cell: ({ getValue }) => getValue<string | null>() || '-' },
     { accessorKey: 'duration', header: 'Session Duration', cell: ({ getValue }) => getValue<string | null>() || '-' },
   ];
   const apptTable = useReactTable({ data: apptList as AppointmentRow[], columns: apptColumns, getCoreRowModel: getCoreRowModel() });

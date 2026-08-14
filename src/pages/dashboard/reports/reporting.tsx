@@ -36,6 +36,7 @@ interface AppointmentRow {
   doctorName: string | null;
   date: string | null;
   duration: string | null;
+  status: string | null;
 }
 
 const Reporting = () => {
@@ -76,6 +77,11 @@ const Reporting = () => {
       cell: ({getValue}) => getValue<string | null>() || '-',
     },
     {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({getValue}) => getValue<string | null>() || '-',
+    },
+    {
       accessorKey: 'duration',
       header: 'Session Duration',
       cell: ({getValue}) => getValue<string | null>() || '-',
@@ -90,19 +96,20 @@ const Reporting = () => {
   const totalPages = metaData?.totalPages || 1;
   const empty = !loading && list.length === 0;
 
-    const handleApplyFilter = (f: ReportingFilterValues) => {
+  const handleApplyFilter = (f: ReportingFilterValues) => {
     const payload: Partial<typeof filters> = {};
-    if (f.startDate) payload.StartDate = f.startDate; // assume already yyyy-mm-dd
+    if (f.startDate) payload.StartDate = f.startDate;
     if (f.endDate) payload.EndDate = f.endDate;
     if (f.doctor) payload.DoctorName = f.doctor;
     if (f.hospital) payload.HospitalId = f.hospital;
     if (f.clinic) payload.ClinicId = f.clinic;
     if (f.duration) {
-      // parse the duration input as minutes and wrap in ticks object
       const match = f.duration.match(/\d+/);
       if (match) payload.MinDuration = parseInt(match[0], 10);
     }
-    // appointment filter currently unused (not in API spec) so ignored
+    if (f.status) {
+      payload.Status = f.status.toUpperCase();
+    }
     dispatch(setAppointmentFilters(payload));
   };
 
@@ -115,6 +122,7 @@ const Reporting = () => {
         HospitalId: undefined,
         ClinicId: undefined,
         MinDuration: undefined,
+        Status: undefined,
       }),
     );
   };
@@ -129,6 +137,7 @@ const Reporting = () => {
         DoctorName: filters.DoctorName,
         HospitalId: filters.HospitalId,
         ClinicId: filters.ClinicId,
+        Status: filters.Status,
       }),
     )
       .unwrap()

@@ -201,7 +201,7 @@ export const DashboardLayout = ({children, searchBar}: Props) => {
       // Restrict top-level sections (previous requirement)
       working = working.map(section => ({
         ...section,
-        children: section.children.filter(c => ['Ambulance','Help desk','Settings'].includes(c.name))
+        children: section.children.filter(c => ['Ambulance'].includes(c.name))
       }));
     }
 

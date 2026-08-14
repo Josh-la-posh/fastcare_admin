@@ -26,6 +26,13 @@ import {
 import {Pagination} from '@/components/ui/pagination';
 import {EyeIcon} from 'lucide-react';
 import AddProviders from '@/components/form/ambulance/providers/add-provider';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 import {fetchAmbulanceProviders} from '@/services/thunks';
 import {AmbulanceProvider} from '@/types';
@@ -48,10 +55,21 @@ const Providers = () => {
   const [pageSize, setPageSize] = useState(10);
   const [selectedProvider, setSelectedProvider] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
-    dispatch(fetchAmbulanceProviders({page, pageSize}));
-  }, [dispatch, page, pageSize]);
+    dispatch(
+      fetchAmbulanceProviders({
+        page,
+        pageSize,
+        ...(statusFilter === 'active'
+          ? {isActive: true}
+          : statusFilter === 'inactive'
+            ? {isActive: false}
+            : {}),
+      }),
+    );
+  }, [dispatch, page, pageSize, statusFilter]);
 
   const columns: ColumnDef<AmbulanceProvider>[] = [
     {accessorKey: 'registrationNumber', header: () => <span className="whitespace-nowrap">Registration Number</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('registrationNumber')}</span>},
@@ -60,6 +78,18 @@ const Providers = () => {
     {accessorKey: 'email', header: () => <span className="whitespace-nowrap">Company Email</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('email')}</span>},
     {accessorKey: 'phoneNumber', header: () => <span className="whitespace-nowrap">Phone Number</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('phoneNumber')}</span>},
     {accessorKey: 'serviceCharge', header: () => <span className="whitespace-nowrap">Service Charge</span>, cell: ({row}) => <span className="whitespace-nowrap">{row.getValue('serviceCharge')}</span>},
+    {
+      accessorKey: 'isActive',
+      header: () => <span className="whitespace-nowrap">Status</span>,
+      cell: ({row}) => {
+        const isActive = row.getValue('isActive');
+        return (
+          <span className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+            {isActive ? 'ACTIVE' : 'INACTIVE'}
+          </span>
+        );
+      },
+    },
     {
       id: 'action',
       header: () => <span className="whitespace-nowrap">Action</span>,
@@ -102,7 +132,25 @@ const Providers = () => {
         <div className="lg:mx-8 mt-10 bg-white rounded-md flex flex-col  mb-36">
           <div className="flex flex-wrap gap-4 justify-between items-center p-6">
             <h1 className="text-lg text-gray-800">All Providers</h1>
-            <AddProviders />
+            <div className="flex flex-wrap items-center gap-4">
+              <Select
+                value={statusFilter}
+                onValueChange={value => {
+                  setStatusFilter(value);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">ACTIVE</SelectItem>
+                  <SelectItem value="inactive">INACTIVE</SelectItem>
+                </SelectContent>
+              </Select>
+              <AddProviders />
+            </div>
           </div>
 
           <div className="flex-1 ">
@@ -114,7 +162,7 @@ const Providers = () => {
               <div className="p-6 text-red-500 text-center">{error}</div>
             ) : (
               <>
-                <Table className="min-w-[600px]">
+                <Table className="min-w-[900px]">
                   <TableHeader className="border border-[#CDE5F9]">
                     {table.getHeaderGroups().map(headerGroup => (
                       <TableRow key={headerGroup.id}>

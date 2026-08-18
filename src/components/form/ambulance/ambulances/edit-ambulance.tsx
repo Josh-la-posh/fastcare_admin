@@ -161,6 +161,7 @@ export default function EditAmbulance({data}: Props) {
         pricePerKm: type === 'Emergency' ? Number(pricePerKm) || 0 : 0,
         baseRateFee: type === 'Emergency' ? 0 : Number(baseRateFee) || 0,
         plateNumber: plateNumber.trim(),
+        address: address.trim(),
         location: geocoded,
         amenitiesIds: selectedAmenityIds,
         type,

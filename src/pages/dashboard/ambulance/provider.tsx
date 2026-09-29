@@ -242,6 +242,19 @@ const Providers = () => {
           open={open}
           setOpen={setOpen}
           data={selectedProvider}
+          onStatusChanged={async () => {
+            await dispatch(
+              fetchAmbulanceProviders({
+                page,
+                pageSize,
+                ...(statusFilter === 'active'
+                  ? {isActive: true}
+                  : statusFilter === 'inactive'
+                    ? {isActive: false}
+                    : {}),
+              }),
+            );
+          }}
         />
       </div>
     </DashboardLayout>

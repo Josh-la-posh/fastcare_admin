@@ -7,13 +7,16 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {useState} from 'react';
+import {Button} from '@/components/ui/button';
 
 
 type Props = {
   data?: any;
+  onStatusAction?: () => void;
+  statusUpdating?: boolean;
 };
 
-export default function ResponderDetails({data}: Props) {
+export default function ResponderDetails({data, onStatusAction, statusUpdating}: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -45,7 +48,19 @@ export default function ResponderDetails({data}: Props) {
           {data ? (
             <div className="">
               <div className="flex items-center justify-end">
-
+                {onStatusAction && (
+                  <Button
+                    size="sm"
+                    variant={data.isActive ? 'destructive' : 'default'}
+                    disabled={statusUpdating}
+                    onClick={() => {
+                      setOpen(false);
+                      onStatusAction();
+                    }}
+                  >
+                    {data.isActive ? 'Deactivate' : 'Activate'}
+                  </Button>
+                )}
                 {/* <div className="flex items-center gap-3">
                   <Button variant="ghost" className="py-2.5 w-36 rounded-md">
                     Edit

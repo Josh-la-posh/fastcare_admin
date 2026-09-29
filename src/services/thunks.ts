@@ -600,12 +600,13 @@ export const fetchAmbulances = createAsyncThunk(
           paginated?: boolean;
           Page?: number;
           PageSize?: number;
+          isActive?: boolean;
         }
       | undefined,
     { rejectWithValue }
   ) => {
     try {
-      const { ambulanceProviderId, paginated, Page, PageSize } = params || {};
+      const { ambulanceProviderId, paginated, Page, PageSize, isActive } = params || {};
       const shouldUsePaginated = paginated ?? !ambulanceProviderId;
       const url = shouldUsePaginated
         ? "/ambulances/paginated"
@@ -616,11 +617,40 @@ export const fetchAmbulances = createAsyncThunk(
         params: {
           ...(Page ? { Page } : {}),
           ...(PageSize ? { PageSize } : {}),
+          ...(isActive !== undefined ? { isActive } : {}),
         },
       });
-      return res.data?.data ?? res.data ?? [];
+      const data = res.data?.data ?? res.data ?? [];
+      return {
+        ambulances: Array.isArray(data) ? data : [],
+        metaData: res.data?.metaData ?? null,
+      };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to fetch ambulances"));
+    }
+  }
+);
+
+export const activateAmbulance = createAsyncThunk(
+  "ambulances/activate",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/ambulances/${id}/activate`);
+      return { ...(res.data?.data ?? res.data ?? {}), id, isActive: true };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to activate ambulance"));
+    }
+  }
+);
+
+export const deactivateAmbulance = createAsyncThunk(
+  "ambulances/deactivate",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/ambulances/${id}/deactivate`);
+      return { ...(res.data?.data ?? res.data ?? {}), id, isActive: false };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to deactivate ambulance"));
     }
   }
 );
@@ -637,12 +667,13 @@ export const fetchDrivers = createAsyncThunk(
           Page?: number;
           PageSize?: number;
           paginated?: boolean;
+          isActive?: boolean;
         }
       | undefined,
     { rejectWithValue }
   ) => {
     try {
-      const { Page, PageSize, paginated } = params || {};
+      const { Page, PageSize, paginated, isActive } = params || {};
       const shouldUsePaginated = Boolean(paginated || Page || PageSize);
 
       if (shouldUsePaginated) {
@@ -650,6 +681,7 @@ export const fetchDrivers = createAsyncThunk(
           params: {
             ...(Page ? { Page } : {}),
             ...(PageSize ? { PageSize } : {}),
+            ...(isActive !== undefined ? { isActive } : {}),
           },
         });
         return {
@@ -666,6 +698,30 @@ export const fetchDrivers = createAsyncThunk(
       };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to fetch drivers"));
+    }
+  }
+);
+
+export const activateDriver = createAsyncThunk(
+  "drivers/activate",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/ambulanceDrivers/${id}/activate`);
+      return { ...(res.data?.data ?? res.data ?? {}), id, isActive: true };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to activate driver"));
+    }
+  }
+);
+
+export const deactivateDriver = createAsyncThunk(
+  "drivers/deactivate",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/ambulanceDrivers/${id}/deactivate`);
+      return { ...(res.data?.data ?? res.data ?? {}), id, isActive: false };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to deactivate driver"));
     }
   }
 );
@@ -763,12 +819,13 @@ export const fetchRespondents = createAsyncThunk(
           Page?: number;
           PageSize?: number;
           paginated?: boolean;
+          isActive?: boolean;
         }
       | undefined,
     { rejectWithValue }
   ) => {
     try {
-      const { Page, PageSize, paginated } = params || {};
+      const { Page, PageSize, paginated, isActive } = params || {};
       const shouldUsePaginated = Boolean(paginated || Page || PageSize);
 
       if (shouldUsePaginated) {
@@ -776,6 +833,7 @@ export const fetchRespondents = createAsyncThunk(
           params: {
             ...(Page ? { Page } : {}),
             ...(PageSize ? { PageSize } : {}),
+            ...(isActive !== undefined ? { isActive } : {}),
           },
         });
         return {
@@ -792,6 +850,30 @@ export const fetchRespondents = createAsyncThunk(
       };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error, "Failed to fetch respondents"));
+    }
+  }
+);
+
+export const activateRespondent = createAsyncThunk(
+  "respondents/activate",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/ambulanceRespondents/${id}/activate`);
+      return { ...(res.data?.data ?? res.data ?? {}), id, isActive: true };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to activate respondent"));
+    }
+  }
+);
+
+export const deactivateRespondent = createAsyncThunk(
+  "respondents/deactivate",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await apiClient.put(`/ambulanceRespondents/${id}/deactivate`);
+      return { ...(res.data?.data ?? res.data ?? {}), id, isActive: false };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error, "Failed to deactivate respondent"));
     }
   }
 );

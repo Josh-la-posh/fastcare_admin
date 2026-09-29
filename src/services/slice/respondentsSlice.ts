@@ -2,7 +2,7 @@ import { Respondent, RespondentsState } from "@/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import toast from "react-hot-toast";
-import { fetchRespondents, fetchRespondentsById } from "../thunks";
+import { activateRespondent, deactivateRespondent, fetchRespondents, fetchRespondentsById } from "../thunks";
 
 
 const initialState: RespondentsState = {
@@ -40,6 +40,14 @@ const respondentsSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
         toast.error("Failed to fetch respondents");
+      })
+      .addCase(activateRespondent.fulfilled, (state, action) => {
+        const item = state.respondents.find(row => row.id === action.payload.id);
+        if (item) Object.assign(item, action.payload);
+      })
+      .addCase(deactivateRespondent.fulfilled, (state, action) => {
+        const item = state.respondents.find(row => row.id === action.payload.id);
+        if (item) Object.assign(item, action.payload);
       })
       // Fetch responder by ID
       .addCase(fetchRespondentsById.pending, (state) => {

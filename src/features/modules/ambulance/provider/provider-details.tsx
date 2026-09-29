@@ -16,9 +16,10 @@ type Props = {
   data?: AmbulanceProvider;
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  onStatusChanged?: () => void | Promise<void>;
 };
 
-export default function ProvidersDetails({data, open, setOpen}: Props) {
+export default function ProvidersDetails({data, open, setOpen, onStatusChanged}: Props) {
 
    const [openConfirm, setOpenConfirm] = useState(false);
    const [openReject, setOpenReject] = useState(false);
@@ -67,18 +68,21 @@ export default function ProvidersDetails({data, open, setOpen}: Props) {
                 </div>
 
                 <div className='flex items-center gap-3'>
-                  <Button
-                   onClick={handleApprove}
-                    className="py-2 bg-green-500 w-28 border-none"
-                  >
-                    Activate
-                  </Button>
-                  <Button
-                    onClick={handleReject}
-                    className="py-2 w-28 bg-red-100 text-red-500 border border-red-500"
-                  >
-                    Deactivate
-                  </Button>
+                  {data.isActive ? (
+                    <Button
+                      onClick={handleReject}
+                      className="py-2 w-28 bg-red-100 text-red-500 border border-red-500"
+                    >
+                      Deactivate
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={handleApprove}
+                      className="py-2 bg-green-500 w-28 border-none"
+                    >
+                      Activate
+                    </Button>
+                  )}
                 </div>
               </div>
               <div className="mt-6">
@@ -120,8 +124,8 @@ export default function ProvidersDetails({data, open, setOpen}: Props) {
         </DialogContent>
       </Dialog>
 
-      <ActivateProvider open={openConfirm} setOpen={setOpenConfirm} data={data} />
-      <DeactivateProvider open={openReject} setOpen={setOpenReject} data={data} />
+      <ActivateProvider open={openConfirm} setOpen={setOpenConfirm} data={data} onStatusChanged={onStatusChanged} />
+      <DeactivateProvider open={openReject} setOpen={setOpenReject} data={data} onStatusChanged={onStatusChanged} />
     </>
   );
 }

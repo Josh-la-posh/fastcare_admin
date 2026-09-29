@@ -19,9 +19,10 @@ type Props = {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   data?: AmbulanceProvider;
+  onStatusChanged?: () => void | Promise<void>;
 };
 
-export default function DeactivateProvider({open, setOpen, data}: Props) {
+export default function DeactivateProvider({open, setOpen, data, onStatusChanged}: Props) {
   const [openSuccess, setOpenSuccess] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -34,6 +35,7 @@ export default function DeactivateProvider({open, setOpen, data}: Props) {
 
     try {
       await dispatch(deactivateAmbulanceProvider(data.id)).unwrap();
+      await onStatusChanged?.();
 
       setOpenSuccess(true);
       

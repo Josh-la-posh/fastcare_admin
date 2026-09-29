@@ -215,6 +215,7 @@ export interface AmbulanceProvider {
   email: string;
   phoneNumber: string;
   serviceCharge: number;
+  isActive: boolean;
 }
 
 export interface AmbulanceProviderState {
@@ -237,10 +238,12 @@ export interface Ambulance {
   baseRateFee: number | null;
   address: string | null;
   location: { latitude: number; longitude: number } | null;
+  isActive: boolean;
 }
 
 export interface AllAmbulancesState {
   ambulances: Ambulance[];
+  metaData: MetaData | null;
   loading: boolean;
   error: string | null;
 }
@@ -293,6 +296,7 @@ export interface Driver {
   licenseNumber: string;
   certificationStatus: string;
   ambulanceProviderId: string;
+  isActive: boolean;
 }
 
 export interface DriverState {
@@ -313,6 +317,7 @@ export interface Respondent {
   professionalLicense: string;
   certificationStatus: string;
   ambulanceProviderId: string;
+  isActive: boolean;
 }
 
 export interface RespondentsState {

@@ -32,6 +32,17 @@ import AmbulanceDetails from '@/features/modules/ambulance/ambulance-details';
 import AddAmbulance from '@/components/form/ambulance/ambulances/add-ambulance';
 import { fetchAmbulances } from '@/services/thunks';
 import { Loader } from '@/components/ui/loading';
+import {Button} from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import toast from 'react-hot-toast';
+import { activateAmbulance, deactivateAmbulance } from '@/services/thunks';
+import StatusConfirmation from '@/features/modules/ambulance/status-confirmation';
 
 
 const formatLocation = (location: { latitude: number; longitude: number } | null) => {
@@ -52,7 +63,7 @@ const formatPrice = (price: number | null) => {
 
 const AllAmbulances = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { ambulances, loading, error } = useSelector((state: RootState) => state.allAmbulances);
+  const { ambulances, loading, error, metaData } = useSelector((state: RootState) => state.allAmbulances);
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -61,12 +72,18 @@ const AllAmbulances = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'active' | 'inactive'>('active');
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [statusTarget, setStatusTarget] = useState<{id: string; isActive: boolean} | null>(null);
 
-     useEffect(() => {
-        if(!ambulances.length){
-          dispatch(fetchAmbulances());
-        }
-      }, [dispatch, ambulances.length]);
+  useEffect(() => {
+    dispatch(fetchAmbulances({
+      paginated: true,
+      Page: page,
+      PageSize: pageSize,
+      isActive: statusFilter === 'active',
+    }));
+  }, [dispatch, page, pageSize, statusFilter]);
 
   // useEffect(() => {
   //   dispatch(fetchAmbulances());
@@ -84,10 +101,32 @@ const AllAmbulances = () => {
       email: 'N/A', // Not in API, you might need to add this field
       address: ambulance.address || 'Address not specified',
       status: ambulance.status,
+      isActive: ambulance.isActive ?? statusFilter === 'active',
       base_rate_fee: formatPrice(ambulance.baseRateFee),
       rawData: ambulance, // Keep original data for actions
     }));
-  }, [ambulances]);
+  }, [ambulances, statusFilter]);
+
+  const handleStatusChange = async () => {
+    if (!statusTarget) return;
+    const {id, isActive} = statusTarget;
+    setTogglingId(id);
+    try {
+      await dispatch(isActive ? deactivateAmbulance(id) : activateAmbulance(id)).unwrap();
+      toast.success(`Ambulance ${isActive ? 'deactivated' : 'activated'} successfully`);
+      setStatusTarget(null);
+      await dispatch(fetchAmbulances({
+        paginated: true,
+        Page: page,
+        PageSize: pageSize,
+        isActive: statusFilter === 'active',
+      }));
+    } catch (message) {
+      toast.error(String(message));
+    } finally {
+      setTogglingId(null);
+    }
+  };
 
   // Filter ambulances based on search term
   const filteredAmbulances = useMemo(() => {
@@ -102,11 +141,7 @@ const AllAmbulances = () => {
     );
   }, [transformedAmbulances, searchTerm]);
 
-  const totalPages = Math.ceil(filteredAmbulances.length / pageSize);
-  const paginatedAmbulances = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredAmbulances.slice(start, start + pageSize);
-  }, [filteredAmbulances, page, pageSize]);
+  const totalPages = metaData?.totalPages || 1;
 
   const columns: ColumnDef<any>[] = [
     // {
@@ -135,7 +170,11 @@ const AllAmbulances = () => {
       accessorKey: 'Type',
       header: 'Type',
       cell: ({row}) => (
-        <span className="capitalize">{row.original.Type}</span>
+        <span className="capitalize block max-w-[180px] truncate" title={row.original.Type}>
+          {row.original.Type.length > 45
+            ? `${row.original.Type.slice(0, 45)}...`
+            : row.original.Type}
+        </span>
       ),
     },
     {
@@ -176,11 +215,31 @@ const AllAmbulances = () => {
         return (
           <div className="flex items-center gap-4">
             <div>
-              <AmbulanceDetails data={row.original.rawData} />
+              <AmbulanceDetails
+                data={{...row.original.rawData, isActive: row.original.isActive}}
+                statusUpdating={togglingId === row.original.id}
+                onStatusAction={() => setStatusTarget({
+                  id: row.original.id,
+                  isActive: row.original.isActive,
+                })}
+              />
             </div>
             <div>
               <EditAmbulance data={row.original.rawData} />
             </div>
+            <Button
+              size="sm"
+              variant={row.original.isActive ? 'destructive' : 'default'}
+              disabled={togglingId === row.original.id}
+              onClick={() => setStatusTarget({
+                id: row.original.id,
+                isActive: row.original.isActive,
+              })}
+            >
+              {togglingId === row.original.id
+                ? 'Updating...'
+                : row.original.isActive ? 'Deactivate' : 'Activate'}
+            </Button>
             {/* <div>
               <Trash className="text-red-500 w-4 h-4 cursor-pointer" />
             </div> */}
@@ -191,7 +250,7 @@ const AllAmbulances = () => {
   ];
 
   const table = useReactTable({
-    data: paginatedAmbulances,
+    data: filteredAmbulances,
     columns,
     state: {
       sorting,
@@ -225,7 +284,12 @@ const AllAmbulances = () => {
         <div className="flex justify-center items-center h-64">
           <div className="text-lg text-red-500">Error: {error}</div>
           <button 
-            onClick={() => dispatch(fetchAmbulances())}
+            onClick={() => dispatch(fetchAmbulances({
+              paginated: true,
+              Page: page,
+              PageSize: pageSize,
+              isActive: statusFilter === 'active',
+            }))}
             className="ml-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Retry
@@ -254,6 +318,21 @@ const AllAmbulances = () => {
               />
             </div>
             <div className="flex gap-4 items-center">
+              <Select
+                value={statusFilter}
+                onValueChange={(value: 'active' | 'inactive') => {
+                  setStatusFilter(value);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Deactivated</SelectItem>
+                </SelectContent>
+              </Select>
               <AddAmbulance />
             </div>
           </div>
@@ -325,8 +404,8 @@ const AllAmbulances = () => {
           {/* Pagination */}
           <div className="p-4 flex items-center justify-end">
             <Pagination
-              totalEntriesSize={filteredAmbulances.length}
-              currentPage={page}
+              totalEntriesSize={metaData?.totalCount || filteredAmbulances.length}
+              currentPage={metaData?.currentPage || page}
               totalPages={totalPages}
               onPageChange={setPage}
               pageSize={pageSize}
@@ -337,6 +416,14 @@ const AllAmbulances = () => {
             />
           </div>
         </div>
+        <StatusConfirmation
+          open={Boolean(statusTarget)}
+          setOpen={open => !open && setStatusTarget(null)}
+          entityName="Ambulance"
+          isActive={statusTarget?.isActive ?? true}
+          loading={Boolean(togglingId)}
+          onConfirm={handleStatusChange}
+        />
       </div>
     </DashboardLayout>
   );

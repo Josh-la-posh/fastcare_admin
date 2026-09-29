@@ -8,11 +8,14 @@ import {
 } from '@/components/ui/dialog';
 import {useMemo, useState} from 'react';
 import {Ambulance} from '@/types';
+import {Button} from '@/components/ui/button';
 
 type Props = {
   data?: Ambulance & {
     type?: string;
   };
+  onStatusAction?: () => void;
+  statusUpdating?: boolean;
 };
 
 const formatLocation = (location: Ambulance['location']) => {
@@ -36,7 +39,7 @@ const formatMoney = (price: number | null | undefined) => {
   }).format(price);
 };
 
-export default function AmbulanceDetails({data}: Props) {
+export default function AmbulanceDetails({data, onStatusAction, statusUpdating}: Props) {
   const [open, setOpen] = useState(false);
 
   const ambulanceType = useMemo(() => {
@@ -70,6 +73,21 @@ export default function AmbulanceDetails({data}: Props) {
 
         {data ? (
           <div className="mt-2 space-y-3">
+            {onStatusAction && (
+              <div className="flex justify-end">
+                <Button
+                  size="sm"
+                  variant={data.isActive ? 'destructive' : 'default'}
+                  disabled={statusUpdating}
+                  onClick={() => {
+                    setOpen(false);
+                    onStatusAction();
+                  }}
+                >
+                  {data.isActive ? 'Deactivate' : 'Activate'}
+                </Button>
+              </div>
+            )}
             {/* <div className="grid grid-cols-2">
               <span className="text-gray-600">Ambulance ID:</span>
               <span className="text-gray-900">{data.id}</span>

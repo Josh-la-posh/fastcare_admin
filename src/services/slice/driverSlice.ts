@@ -2,7 +2,7 @@ import { Driver, DriverState } from "@/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import toast from "react-hot-toast";
-import { addDriver, fetchDrivers } from "../thunks";
+import { activateDriver, addDriver, deactivateDriver, fetchDrivers } from "../thunks";
 
 const initialState: DriverState = {
   drivers: [],
@@ -61,6 +61,14 @@ const driverSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
         toast.error("Failed to fetch drivers");
+      })
+      .addCase(activateDriver.fulfilled, (state, action) => {
+        const item = state.drivers.find(row => row.id === action.payload.id);
+        if (item) Object.assign(item, action.payload);
+      })
+      .addCase(deactivateDriver.fulfilled, (state, action) => {
+        const item = state.drivers.find(row => row.id === action.payload.id);
+        if (item) Object.assign(item, action.payload);
       })
       // Add Driver
       .addCase(addDriver.pending, (state) => {

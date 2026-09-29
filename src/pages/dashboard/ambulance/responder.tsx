@@ -25,8 +25,12 @@ import EditResponder from '@/components/form/ambulance/responder/edit-responder'
 import AddResponder from '@/components/form/ambulance/responder/add-responder';
 import { AppDispatch, RootState } from '@/services/store';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchRespondents } from '@/services/thunks';
+import { activateRespondent, deactivateRespondent, fetchRespondents } from '@/services/thunks';
 import { Loader } from '@/components/ui/loading';
+import {Button} from '@/components/ui/button';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
+import toast from 'react-hot-toast';
+import StatusConfirmation from '@/features/modules/ambulance/status-confirmation';
 
 
 const Responders = () => {
@@ -39,6 +43,9 @@ const Responders = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [columnFilters, setColumnFilters] = useState<any[]>([]);
   const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<'active' | 'inactive'>('active');
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [statusTarget, setStatusTarget] = useState<{id: string; isActive: boolean} | null>(null);
   const pageSize = 10;
 
   useEffect(() => {
@@ -47,9 +54,10 @@ const Responders = () => {
         Page: page,
         PageSize: 10,
         paginated: true,
+        isActive: statusFilter === 'active',
       }),
     );
-  }, [dispatch, page]);
+  }, [dispatch, page, statusFilter]);
 
   // Transform respondents data to match your table structure
   const tableData = useMemo(() => {
@@ -64,8 +72,25 @@ const Responders = () => {
       address: respondent.address,
       date: '2023-01-01', 
       action: '',
+      isActive: respondent.isActive ?? statusFilter === 'active',
     }));
-  }, [respondents]);
+  }, [respondents, statusFilter]);
+
+  const handleStatusChange = async () => {
+    if (!statusTarget) return;
+    const {id, isActive} = statusTarget;
+    setTogglingId(id);
+    try {
+      await dispatch(isActive ? deactivateRespondent(id) : activateRespondent(id)).unwrap();
+      toast.success(`Respondent ${isActive ? 'deactivated' : 'activated'} successfully`);
+      setStatusTarget(null);
+      await dispatch(fetchRespondents({Page: page, PageSize: pageSize, paginated: true, isActive: statusFilter === 'active'}));
+    } catch (message) {
+      toast.error(String(message));
+    } finally {
+      setTogglingId(null);
+    }
+  };
 
   const totalPages = metaData?.totalPages || 1;
 
@@ -112,11 +137,31 @@ const Responders = () => {
         return (
           <div className="flex items-center gap-4">
             <div>
-              <ResponderDetails data={row.original} />
+              <ResponderDetails
+                data={row.original}
+                statusUpdating={togglingId === row.original.id}
+                onStatusAction={() => setStatusTarget({
+                  id: row.original.id,
+                  isActive: row.original.isActive,
+                })}
+              />
             </div>
             <div>
               <EditResponder data={row.original} />
             </div>
+            <Button
+              size="sm"
+              variant={row.original.isActive ? 'destructive' : 'default'}
+              disabled={togglingId === row.original.id}
+              onClick={() => setStatusTarget({
+                id: row.original.id,
+                isActive: row.original.isActive,
+              })}
+            >
+              {togglingId === row.original.id
+                ? 'Updating...'
+                : row.original.isActive ? 'Deactivate' : 'Activate'}
+            </Button>
           </div>
         );
       },
@@ -173,6 +218,19 @@ const Responders = () => {
               <h1 className="text-xl text-gray-800">Created Responders</h1>
             </div>
             <div className="flex gap-4 items-center">
+              <Select
+                value={statusFilter}
+                onValueChange={(value: 'active' | 'inactive') => {
+                  setStatusFilter(value);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Deactivated</SelectItem>
+                </SelectContent>
+              </Select>
               <AddResponder />
             </div>
           </div>
@@ -254,6 +312,14 @@ const Responders = () => {
             />
           </div>
         </div>
+        <StatusConfirmation
+          open={Boolean(statusTarget)}
+          setOpen={open => !open && setStatusTarget(null)}
+          entityName="Respondent"
+          isActive={statusTarget?.isActive ?? true}
+          loading={Boolean(togglingId)}
+          onConfirm={handleStatusChange}
+        />
       </div>
     </DashboardLayout>
   );

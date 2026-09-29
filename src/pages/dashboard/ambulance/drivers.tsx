@@ -29,8 +29,12 @@ import DriverDetails from '@/features/modules/ambulance/driver-details';
 import { AppDispatch, RootState } from '@/services/store';
 import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
-import { fetchDrivers } from '@/services/thunks';
+import { activateDriver, deactivateDriver, fetchDrivers } from '@/services/thunks';
 import { Loader } from '@/components/ui/loading';
+import {Button} from '@/components/ui/button';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
+import toast from 'react-hot-toast';
+import StatusConfirmation from '@/features/modules/ambulance/status-confirmation';
 
 const Drivers = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -38,6 +42,9 @@ const Drivers = () => {
   const [rowSelection, setRowSelection] = useState({});
   const [columnFilters, setColumnFilters] = useState<any[]>([]);
   const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<'active' | 'inactive'>('active');
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [statusTarget, setStatusTarget] = useState<{id: string; isActive: boolean} | null>(null);
   const pageSize = 10;
 
   const dispatch = useDispatch<AppDispatch>();
@@ -47,8 +54,9 @@ const Drivers = () => {
       Page: page,
       PageSize: 10,
       paginated: true,
+      isActive: statusFilter === 'active',
     }));
-  }, [dispatch, page]);
+  }, [dispatch, page, statusFilter]);
 
   // Safe data transformation - handle undefined/empty drivers
   const transformedDrivers = useMemo(() => {
@@ -65,8 +73,25 @@ const Drivers = () => {
       address: driver.address,
       date: '2023-01-01', 
       rawData: driver, // Keep original data for details
+      isActive: driver.isActive ?? statusFilter === 'active',
     }));
-  }, [drivers]);
+  }, [drivers, statusFilter]);
+
+  const handleStatusChange = async () => {
+    if (!statusTarget) return;
+    const {id, isActive} = statusTarget;
+    setTogglingId(id);
+    try {
+      await dispatch(isActive ? deactivateDriver(id) : activateDriver(id)).unwrap();
+      toast.success(`Driver ${isActive ? 'deactivated' : 'activated'} successfully`);
+      setStatusTarget(null);
+      await dispatch(fetchDrivers({Page: page, PageSize: pageSize, paginated: true, isActive: statusFilter === 'active'}));
+    } catch (message) {
+      toast.error(String(message));
+    } finally {
+      setTogglingId(null);
+    }
+  };
 
   const hasServerPagination = Boolean(metaData);
   const totalPages = metaData?.totalPages || Math.ceil(transformedDrivers.length / pageSize) || 1;
@@ -117,11 +142,31 @@ const Drivers = () => {
         return (
           <div className="flex items-center gap-4">
             <div>
-              <DriverDetails data={row.original.rawData} />
+              <DriverDetails
+                data={{...row.original.rawData, isActive: row.original.isActive}}
+                statusUpdating={togglingId === row.original.id}
+                onStatusAction={() => setStatusTarget({
+                  id: row.original.id,
+                  isActive: row.original.isActive,
+                })}
+              />
             </div>
             <div>
               <EditDriver data={row.original.rawData} />
             </div>
+            <Button
+              size="sm"
+              variant={row.original.isActive ? 'destructive' : 'default'}
+              disabled={togglingId === row.original.id}
+              onClick={() => setStatusTarget({
+                id: row.original.id,
+                isActive: row.original.isActive,
+              })}
+            >
+              {togglingId === row.original.id
+                ? 'Updating...'
+                : row.original.isActive ? 'Deactivate' : 'Activate'}
+            </Button>
           </div>
         );
       },
@@ -180,6 +225,19 @@ const Drivers = () => {
               </h1>
             </div>
             <div className="flex gap-4 items-center">
+              <Select
+                value={statusFilter}
+                onValueChange={(value: 'active' | 'inactive') => {
+                  setStatusFilter(value);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Deactivated</SelectItem>
+                </SelectContent>
+              </Select>
               <AddDriver />
             </div>
           </div>
@@ -259,6 +317,14 @@ const Drivers = () => {
             />
           </div>
         </div>
+        <StatusConfirmation
+          open={Boolean(statusTarget)}
+          setOpen={open => !open && setStatusTarget(null)}
+          entityName="Driver"
+          isActive={statusTarget?.isActive ?? true}
+          loading={Boolean(togglingId)}
+          onConfirm={handleStatusChange}
+        />
       </div>
     </DashboardLayout>
   );

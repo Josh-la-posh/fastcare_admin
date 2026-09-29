@@ -7,13 +7,16 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {useState} from 'react';
+import {Button} from '@/components/ui/button';
 
 
 type Props = {
   data?: any;
+  onStatusAction?: () => void;
+  statusUpdating?: boolean;
 };
 
-export default function DriverDetails({data}: Props) {
+export default function DriverDetails({data, onStatusAction, statusUpdating}: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -44,6 +47,21 @@ export default function DriverDetails({data}: Props) {
           {/* Doctor Details Section */}
           {data ? (
             <div className="">
+              {onStatusAction && (
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    variant={data.isActive ? 'destructive' : 'default'}
+                    disabled={statusUpdating}
+                    onClick={() => {
+                      setOpen(false);
+                      onStatusAction();
+                    }}
+                  >
+                    {data.isActive ? 'Deactivate' : 'Activate'}
+                  </Button>
+                </div>
+              )}
               {/* <div className="flex items-center justify-between">
                 <div className="flex items-center gap-6">
                   <h1 className="text-primary  text-lg">

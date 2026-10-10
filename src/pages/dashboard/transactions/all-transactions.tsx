@@ -231,7 +231,7 @@ const AllTransactions = () => {
     const hospitalNorm = normalize(appliedFilters.hospital);
     const typeNorm = normalize(appliedFilters.type);
     interface ExtraParams {
-      Page?: number; PageSize?: number; Status?: string | number; HospitalName?: string; PatientName?: string; Date?: string; ServiceType?: string;
+      Page?: number; PageSize?: number; Status?: string | number; HospitalName?: string; PatientName?: string; StartDate?: string; EndDate?: string; ServiceType?: string;
       [key: string]: unknown;
     }
     const params: ExtraParams = {
@@ -240,7 +240,8 @@ const AllTransactions = () => {
       Status: mapStatusForApi(appliedFilters.status),
       HospitalName: hospitalNorm,
       PatientName: patientNorm,
-      Date: (appliedFilters.date as string | undefined) || undefined,
+      StartDate: (appliedFilters.startDate as string | undefined) || undefined,
+      EndDate: (appliedFilters.endDate as string | undefined) || undefined,
       ServiceType: typeNorm,
     };
     // Add alternative casing keys only if patientNorm exists
@@ -311,7 +312,8 @@ const AllTransactions = () => {
               Status: appliedFilters.status as string | undefined,
               HospitalName: appliedFilters.hospital as string | undefined,
               PatientName: appliedFilters.patient as string | undefined,
-              Date: appliedFilters.date as string | undefined,
+              StartDate: appliedFilters.startDate as string | undefined,
+              EndDate: appliedFilters.endDate as string | undefined,
               ServiceType: appliedFilters.type as string | undefined,
             }));
           }}>Retry</Button>
@@ -354,7 +356,8 @@ const AllTransactions = () => {
                         Status: mapStatusForApi(appliedFilters.status),
                         HospitalName: appliedFilters.hospital as string | undefined,
                         PatientName: appliedFilters.patient as string | undefined,
-                        Date: appliedFilters.date as string | undefined,
+                        StartDate: appliedFilters.startDate as string | undefined,
+                        EndDate: appliedFilters.endDate as string | undefined,
                         ServiceType: appliedFilters.type as string | undefined,
                       })).then(res => {
                         const action = res as { payload?: { blob: Blob; params: { format: number } } };
@@ -377,7 +380,8 @@ const AllTransactions = () => {
                         Status: mapStatusForApi(appliedFilters.status),
                         HospitalName: appliedFilters.hospital as string | undefined,
                         PatientName: appliedFilters.patient as string | undefined,
-                        Date: appliedFilters.date as string | undefined,
+                        StartDate: appliedFilters.startDate as string | undefined,
+                        EndDate: appliedFilters.endDate as string | undefined,
                         ServiceType: appliedFilters.type as string | undefined,
                       })).then(res => {
                         const action = res as { payload?: { blob: Blob; params: { format: number } } };

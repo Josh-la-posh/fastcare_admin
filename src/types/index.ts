@@ -512,7 +512,8 @@ export interface TransactionsState {
     Status?: string;
     HospitalName?: string;
     PatientName?: string;
-    Date?: string; // single date filter (API appears to accept one date parameter)
+    StartDate?: string;
+    EndDate?: string;
     ServiceType?: string;
   };
   exporting?: boolean;

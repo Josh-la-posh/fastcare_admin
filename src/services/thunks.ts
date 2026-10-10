@@ -1205,7 +1205,8 @@ export const fetchTransactions = createAsyncThunk(
       Status?: string | number;
       HospitalName?: string;
       PatientName?: string;
-      Date?: string;
+      StartDate?: string;
+      EndDate?: string;
       ServiceType?: string;
     } | undefined,
     { rejectWithValue }
@@ -1235,7 +1236,8 @@ export const exportTransactions = createAsyncThunk(
       Status?: string | number; // allow numeric enum
       HospitalName?: string;
       PatientName?: string;
-      Date?: string;
+      StartDate?: string;
+      EndDate?: string;
       ServiceType?: string;
     },
     { rejectWithValue }

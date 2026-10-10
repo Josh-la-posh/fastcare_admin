@@ -10,23 +10,25 @@ import {
 import { useState } from 'react';
 
 interface TransactionFilterProps {
-  onApply: (filters: { date: string | null; status: string | null; type: string | null; patient: string; hospital: string }) => void;
+  onApply: (filters: { startDate: string | null; endDate: string | null; status: string | null; type: string | null; patient: string; hospital: string }) => void;
   onReset: () => void;
 }
 
 export const TransactionFilter = ({ onApply, onReset }: TransactionFilterProps) => {
-  const [date, setDate] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [type, setType] = useState<string | null>(null);
   const [patient, setPatient] = useState<string>('');
   const [hospital, setHospital] = useState<string>('');
 
   const handleApply = () => {
-    onApply({ date, status, type, patient, hospital });
+    onApply({ startDate, endDate, status, type, patient, hospital });
   };
 
   const handleReset = () => {
-  setDate(null);
+    setStartDate(null);
+    setEndDate(null);
     setStatus(null);
     setType(null);
     setPatient('');
@@ -48,14 +50,26 @@ export const TransactionFilter = ({ onApply, onReset }: TransactionFilterProps) 
 
       {/* Grid Form */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Single Date */}
+        {/* Date range */}
         <div className="flex flex-col gap-2">
-          <Label>Date</Label>
+          <Label>Start Date</Label>
           <input
             type="date"
             className="border border-gray-300 rounded-md py-2 px-3 outline-none"
-            value={date ?? ''}
-            onChange={e => setDate(e.target.value || null)}
+            value={startDate ?? ''}
+            onChange={e => setStartDate(e.target.value || null)}
+            max={endDate || new Date().toISOString().split('T')[0]}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label>End Date</Label>
+          <input
+            type="date"
+            className="border border-gray-300 rounded-md py-2 px-3 outline-none"
+            value={endDate ?? ''}
+            onChange={e => setEndDate(e.target.value || null)}
+            min={startDate || undefined}
             max={new Date().toISOString().split('T')[0]}
           />
         </div>

@@ -65,6 +65,8 @@ export const ROUTES = {
    signup: '/reports/signup',
    appointment: '/reports/appointment',
    emergency: '/reports/emergency',
+   settlement: '/reports/settlement',
+   payout: '/reports/payout',
    userdetails: '/reports/users/user-details/:id',
   },
 

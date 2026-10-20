@@ -14,6 +14,8 @@ import UsersDetails from '@/features/modules/report/user-details';
 import SignupReport from '@/pages/dashboard/reports/signup-report';
 import AppointmentReport from '@/pages/dashboard/reports/appointment-report';
 import EmergencyCallReport from '@/pages/dashboard/reports/emergency-report';
+import SettlementReport from '@/pages/dashboard/reports/settlement';
+import PayoutReport from '@/pages/dashboard/reports/payout';
 import Settings from '@/pages/dashboard/settings';
 import VerificationRequest from '@/pages/dashboard/doctors/request';
 
@@ -64,6 +66,8 @@ export const AppRouter = () => {
   <Route path={ROUTES.reports.signup} element={<SignupReport />} />
   <Route path={ROUTES.reports.appointment} element={<AppointmentReport />} />
   <Route path={ROUTES.reports.emergency} element={<EmergencyCallReport />} />
+  <Route path={ROUTES.reports.settlement} element={<SettlementReport />} />
+  <Route path={ROUTES.reports.payout} element={<PayoutReport />} />
   <Route path={ROUTES.reports.userdetails} element={<UsersDetails />} />
   {/* Redirect legacy paths */}
   <Route path="/reports" element={<Navigate to="/reports/signup" replace />} />

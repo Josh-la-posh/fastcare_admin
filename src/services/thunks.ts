@@ -1266,7 +1266,8 @@ export const fetchRefunds = createAsyncThunk(
       PageSize?: number;
       Status?: number; // success = 1, failed = 2 (per spec)
       PatientName?: string;
-      Date?: string;
+      StartDate?: string;
+      EndDate?: string;
     } | undefined,
     { rejectWithValue }
   ) => {
@@ -1329,7 +1330,8 @@ export const exportRefunds = createAsyncThunk(
       format: number; // excel = 0, csv = 1
       status?: number; // success = 1, failed = 2
       PatientName?: string;
-      Date?: string;
+      StartDate?: string;
+      EndDate?: string;
     },
     { rejectWithValue }
   ) => {

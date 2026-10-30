@@ -3,8 +3,6 @@ import {useEffect, useMemo, useState} from 'react';
 import {Button} from '@/components/ui/button';
 import {DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem} from '@/components/ui/dropdown-menu';
 import {Download} from 'lucide-react';
-//import {ArrowDownLeft, Edit2Icon, InfoIcon, MoreVertical} from 'lucide-react';
-
 import {
   Table,
   TableBody,
@@ -24,17 +22,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-
-// Removed duplicate dropdown import (consolidated at top)
-
-//import {Pagination} from '@/components/ui/pagination';
-
-// import {
-//   DropdownMenu,
-//   DropdownMenuContent,
-//   DropdownMenuItem,
-//   DropdownMenuTrigger,
-// } from '@/components/ui/dropdown-menu';
 
 import { RefundFilter } from '@/features/modules/transactions/refunds/refunds-filter';
 import InitiateARefund from '@/components/form/transactions/initiate-refund';
@@ -76,22 +63,6 @@ const Refunds = () => {
 
   const [open, setOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<RefundRow | undefined>(undefined);
-
-  //const [page, setPage] = useState(1);
-  //const [pageSize, setPageSize] = useState(10);
-
-  //   const filteredClaims = transactions.filter(
-  //     item =>
-  //       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //       item.claim_id.toLowerCase().includes(searchTerm.toLowerCase()),
-  //   );
-
-  //   const totalPages = Math.ceil(filteredClaims.length / pageSize);
-  //   const paginatedProviders = useMemo(() => {
-  //     const start = (page - 1) * pageSize;
-  //     return filteredClaims.slice(start, start + pageSize);
-  //   }, [filteredClaims, page]);
-
   const dispatch = useDispatch<AppDispatch>();
   const { refunds, loading, error, metaData, exporting } = useSelector((s: RootState) => s.refunds);
   const [page, setPage] = useState(1);
@@ -107,7 +78,8 @@ const Refunds = () => {
       PageSize: pageSize,
       Status: appliedFilters.status ? Number(appliedFilters.status) : undefined,
       PatientName: appliedFilters.patient as string | undefined,
-      Date: appliedFilters.startDate as string | undefined,
+      StartDate: appliedFilters.startDate as string | undefined,
+      EndDate: appliedFilters.endDate as string | undefined,
     }));
   }, [dispatch, page, pageSize, appliedFilters]);
 
@@ -292,7 +264,7 @@ const Refunds = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-44">
                   <DropdownMenuItem className="cursor-pointer" onClick={() => {
-                    dispatch(exportRefunds({ format: 0, status: appliedFilters.status ? Number(appliedFilters.status) : undefined, PatientName: appliedFilters.patient as string | undefined, Date: appliedFilters.startDate as string | undefined }))
+                    dispatch(exportRefunds({ format: 0, status: appliedFilters.status ? Number(appliedFilters.status) : undefined, PatientName: appliedFilters.patient as string | undefined, StartDate: appliedFilters.startDate as string | undefined, EndDate: appliedFilters.endDate as string | undefined }))
                       .then(res => {
                         const action = res as { payload?: { blob: Blob; params: { format: number } } };
                         if (action.payload?.blob) {
@@ -309,7 +281,7 @@ const Refunds = () => {
                       });
                   }}>CSV</DropdownMenuItem>
                   <DropdownMenuItem className="cursor-pointer" onClick={() => {
-                    dispatch(exportRefunds({ format: 1, status: appliedFilters.status ? Number(appliedFilters.status) : undefined, PatientName: appliedFilters.patient as string | undefined, Date: appliedFilters.startDate as string | undefined }))
+                    dispatch(exportRefunds({ format: 1, status: appliedFilters.status ? Number(appliedFilters.status) : undefined, PatientName: appliedFilters.patient as string | undefined, StartDate: appliedFilters.startDate as string | undefined, EndDate: appliedFilters.endDate as string | undefined }))
                       .then(res => {
                         const action = res as { payload?: { blob: Blob; params: { format: number } } };
                         if (action.payload?.blob) {
